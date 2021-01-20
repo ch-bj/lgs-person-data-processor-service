@@ -26,6 +26,14 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
+    - uses: s4u/maven-settings-action@v2.3.0
+      with:
+        servers: |
+          [{
+              "id": "github-read",
+              "username": "${{ secrets.GH_PACKAGE_USER }}",
+              "password": "${{ secrets.GH_PACKAGE_TOKEN }}"
+          }]
     - name: Maven test formatting
       run: mvn -B fmt:check
     - name: Maven run tests

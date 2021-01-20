@@ -35,7 +35,7 @@
 
   <repositories>
     <repository>
-      <id>github</id>
+      <id>github-read</id>
       <name>GitHub Datarocks Apache Maven Packages</name>
       <url>https://maven.pkg.github.com/datarocks-ag/lwgs-person-data-processor
       </url>
@@ -185,9 +185,9 @@
         <version>2.9.1</version>
         <executions>
           <execution>
-            <phase>package</phase>
+            <phase>verify</phase>
             <goals>
-              <goal>format</goal>
+              <goal>check</goal>
             </goals>
           </execution>
         </executions>
