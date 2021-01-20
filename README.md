@@ -1,6 +1,19 @@
-# Getting Started
+# LWGS Person Data Processor Service
+
+Reference implementation of wrapping the lwgs-person-data-processor library. Service allows to process and seed
+personData to the central search index, part of Landesweite Grundstückssuche (LWGS). Data is consumed via
+a RESTfull interface, and passed on through Sedex after successful processing. The service allows either full or 
+partial syncs.
 
 ## System Architecture
+
+
+## Seeding Flows
+
+### Full Sync
+
+![Full Sync Seed States](doc/images/full-sync-seed-states.png)
+
 
 ### Components Description
 
