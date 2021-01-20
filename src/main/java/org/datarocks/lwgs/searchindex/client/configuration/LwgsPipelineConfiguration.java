@@ -3,11 +3,12 @@ package org.datarocks.lwgs.searchindex.client.configuration;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import lombok.extern.slf4j.Slf4j;
-import org.datarocks.lwgs.persondataprocessor.configuration.HandlerConfiguration;
+import org.datarocks.banzai.configuration.HandlerConfiguration;
+import org.datarocks.banzai.pipeline.PipeLine;
+import org.datarocks.banzai.transformer.PassTroughTransformer;
 import org.datarocks.lwgs.persondataprocessor.configuration.model.SupportedAttributes;
 import org.datarocks.lwgs.persondataprocessor.model.Attribute;
 import org.datarocks.lwgs.persondataprocessor.model.GBPersonEvent;
-import org.datarocks.lwgs.persondataprocessor.pipeline.PipeLine;
 import org.datarocks.lwgs.persondataprocessor.processor.AttributeSubPipeline;
 import org.datarocks.lwgs.persondataprocessor.processor.attributeprocessor.AttributeGenerateSearchTerms;
 import org.datarocks.lwgs.persondataprocessor.processor.attributeprocessor.AttributePhoneticallyNormalizeAttributeValue;
@@ -16,7 +17,6 @@ import org.datarocks.lwgs.persondataprocessor.processor.attributeprocessor.Attri
 import org.datarocks.lwgs.persondataprocessor.processor.gbpersonprocessor.GBPersonEventAttributeValidator;
 import org.datarocks.lwgs.persondataprocessor.transformer.GBPersonJsonSerializer;
 import org.datarocks.lwgs.persondataprocessor.transformer.GBPersonRequestJsonDeserializer;
-import org.datarocks.lwgs.persondataprocessor.transformer.PassTroughTransformer;
 import org.datarocks.lwgs.searchindex.client.service.processor.BusinessValidationEventProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -31,6 +31,7 @@ public class LwgsPipelineConfiguration {
   private static final String PARAM_KEY_PUBLIC_KEY = "PUBLIC_KEY";
   private static final String PARAM_KEY_CIPHER = "CIPHER";
   private static final String PARAM_MESSAGE_DIGEST = "MESSAGE_DIGEST";
+  private static final String PARAM_KEY_SUPPORTED_ATTRIBUTES = "SUPPORTED_ATTRIBUTES";
 
   @Value("${lwgs.searchindex.encryption.publik-key}")
   private String publicKey;
@@ -64,7 +65,8 @@ public class LwgsPipelineConfiguration {
       String supportedAttributesSchemaJson = readSupportedAttributesSchemaJson();
 
       return HandlerConfiguration.builder()
-          .supportedAttributes(
+          .handlerConfigurationItem(
+              PARAM_KEY_SUPPORTED_ATTRIBUTES,
               SupportedAttributes.fromJson(supportedAttributesSchemaJson, supportedAttributesJson))
           .handlerConfigurationItem(PARAM_KEY_PUBLIC_KEY, publicKey)
           .handlerConfigurationItem(PARAM_KEY_CIPHER, cipherSpecification)

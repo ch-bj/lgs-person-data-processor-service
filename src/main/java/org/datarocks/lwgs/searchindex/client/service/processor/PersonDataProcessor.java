@@ -1,9 +1,9 @@
 package org.datarocks.lwgs.searchindex.client.service.processor;
 
 import lombok.extern.slf4j.Slf4j;
-import org.datarocks.lwgs.persondataprocessor.common.exception.RequiredParameterMissing;
+import org.datarocks.banzai.exception.RequiredParameterMissing;
+import org.datarocks.banzai.pipeline.PipeLine;
 import org.datarocks.lwgs.persondataprocessor.model.GBPersonEvent;
-import org.datarocks.lwgs.persondataprocessor.pipeline.PipeLine;
 import org.datarocks.lwgs.persondataprocessor.transformer.exception.InvalidJsonStructure;
 import org.datarocks.lwgs.searchindex.client.entity.type.TransactionState;
 import org.datarocks.lwgs.searchindex.client.model.PersonData;
