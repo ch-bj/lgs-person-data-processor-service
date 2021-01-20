@@ -1,0 +1,131 @@
+{
+  "properties": [
+    {
+      "name": "lwgs.searchindex.client.sedex.receipt-path",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.sedex.receipt-path."
+    },
+    {
+      "name": "lwgs.searchindex.client.sedex.base-path",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.sedex.base-path."
+    },
+    {
+      "name": "lwgs.searchindex.client.filewatcher.fixed-rate.in.milliseconds",
+      "type": "java.lang.Integer",
+      "description": "Description for lwgs.searchindex.client.filewatcher.fixed-rate.in.milliseconds."
+    },
+    {
+      "name": "lwgs.searchindex.client.sedex.outbox-path",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.sedex.outbox-path."
+    },
+    {
+      "name": "lwgs.searchindex.client.sedex.create-directories",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.sedex.create-directories."
+    },
+    {
+      "name": "lwgs.searchindex.supported-attributes-schema",
+      "type": "org.springframework.core.io.Resource",
+      "description": "Description for lwgs.searchindex.supported-attributes-schema."
+    },
+    {
+      "name": "lwgs.searchindex.supported-attributes-path",
+      "type": "org.springframework.core.io.Resource",
+      "description": "Description for lwgs.searchindex.supported-attributes-path."
+    },
+    {
+      "name": "lwgs.searchindex.encryption.message-digest",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.encryption.message-digest."
+    },
+    {
+      "name": "lwgs.searchindex.encryption.publik-key",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.encryption.publik-key."
+    },
+    {
+      "name": "lwgs.searchindex.encryption.cypher-specification",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.encryption.cypher-specification."
+    },
+    {
+      "name": "security.enable-csrf",
+      "type": "java.lang.Boolean",
+      "description": "Description for security.enable-csrf."
+    },
+    {
+      "name": "lwgs.searchindex.client.security.auth.header",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.security.auth.header.",
+      "defaultValue": "Authorization"
+    },
+    {
+      "name": "lwgs.searchindex.client.security.auth.prefix",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.security.auth.prefix.",
+      "defaultValue": "token"
+    },
+    {
+      "name": "lwgs.searchindex.client.security.auth.api-key",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.security.auth.api-key."
+    },
+    {
+      "name": "lwgs.searchindex.client.sedex.sender-id",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.sedex.sender-id."
+    },
+    {
+      "name": "lwgs.searchindex.client.sedex.recipient-id",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.sedex.recipient-id."
+    },
+    {
+      "name": "lwgs.searchindex.client.sedex.message.type",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.sedex.message.type."
+    },
+    {
+      "name": "lwgs.searchindex.client.sedex.message.class",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.sedex.message.class."
+    },
+    {
+      "name": "lwgs.searchindex.client.sync.partial.scheduling-type",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.sync.partial.scheduling-type."
+    },
+    {
+      "name": "lwgs.searchindex.client.sync.partial.cron-schedule",
+      "type": "java.lang.String",
+      "description": "Description for lwgs.searchindex.client.sync.partial.cron-schedule."
+    },
+    {
+      "name": "lwgs.searchindex.client.sync.partial.fixed-delay",
+      "type": "java.lang.Integer",
+      "description": "Description for lwgs.searchindex.client.sync.partial.fixed-delay."
+    },
+    {
+      "name": "lwgs.searchindex.client.sedex.file-writer.fixed-delay",
+      "type": "java.lang.Integer",
+      "description": "Description for lwgs.searchindex.client.sedex.file-writer.fixed-delay."
+    },
+    {
+      "name": "lwgs.searchindex.client.sedex.file-writer.failure.throttling.base",
+      "type": "java.lang.Integer",
+      "description": "Description for lwgs.searchindex.client.sedex.file-writer.failure.throttling.base."
+    },
+    {
+      "name": "lwgs.searchindex.client.sedex.file-writer.failure.throttling.max",
+      "type": "java.lang.Integer",
+      "description": "Description for lwgs.searchindex.client.sedex.file-writer.failure.throttling.max."
+    },
+    {
+      "name": "lwgs.searchindex.client.sync.full.fixed-delay",
+      "type": "java.lang.Integer",
+      "description": "Description for lwgs.searchindex.client.sync.full.fixed-delay."
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+version: "3.9"
+services:
+  backend:
+    build: .
+    ports:
+      - 80:8080
+    volumes:
+      - logvolume:/var/log
+      - dbvolume:/hsqldb/data
+    links:
+      - rabbitmq
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    volumes:
+      - ./docker/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+      - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - ./rabbitmq/data:/var/lib/rabbitmq/mnesia/rabbit@lwgs-rabbit
+      - ./rabbitmq/logs:/var/log/rabbitmq/log
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 15692:15692
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    links:
+      - rabbitmq
+      - backend
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    links:
+      - prometheus
+volumes:
+  logvolume: {}
+  dbvolume: {}

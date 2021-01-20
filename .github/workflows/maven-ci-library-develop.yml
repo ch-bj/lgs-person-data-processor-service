@@ -1,0 +1,38 @@
+
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Java CI with Maven for library develop (mvn deploy)
+
+on:
+  push:
+    branches:
+    - 'develop'
+    - 'release'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - uses: actions/cache@v1
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+    - name: Maven test formatting
+      run: mvn -B fmt:check
+    - name: Maven run tests
+      run: mvn -B test
+    - name: Maven verify build package
+      run: mvn -B package
+    - name: Maven deploy to mvn repository
+      run: mvn -B deploy
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

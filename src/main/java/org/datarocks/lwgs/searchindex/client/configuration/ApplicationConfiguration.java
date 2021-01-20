@@ -1,0 +1,178 @@
+package org.datarocks.lwgs.searchindex.client.configuration;
+
+import lombok.Getter;
+import org.datarocks.lwgs.searchindex.client.service.amqp.Exchanges;
+import org.datarocks.lwgs.searchindex.client.service.amqp.Queues;
+import org.datarocks.lwgs.searchindex.client.service.amqp.Topics;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+@Getter
+@Configuration
+@EnableScheduling
+public class ApplicationConfiguration {
+  @Bean
+  public TopicExchange topicExchange() {
+    return new TopicExchange(Exchanges.LWGS);
+  }
+
+  @Bean
+  public TopicExchange logTopicExchange() {
+    return new TopicExchange(Exchanges.LOG);
+  }
+
+  @Bean
+  public Queue seedPartialIncomingQueue() {
+    return new Queue(Queues.PERSONDATA_PARTIAL_INCOMING, true);
+  }
+
+  @Bean
+  public Binding seedPartialIncomingBinding(
+      TopicExchange topicExchange, Queue seedPartialIncomingQueue) {
+    return BindingBuilder.bind(seedPartialIncomingQueue)
+        .to(topicExchange)
+        .with(Topics.PERSONDATA_PARTIAL_INCOMING);
+  }
+
+  @Bean
+  public Queue seedPartialOutgoingQueue() {
+    return new Queue(Queues.PERSONDATA_PARTIAL_OUTGOING, true);
+  }
+
+  @Bean
+  public Binding seedPartialOutgoingBinding(
+      TopicExchange topicExchange, Queue seedPartialOutgoingQueue) {
+    return BindingBuilder.bind(seedPartialOutgoingQueue)
+        .to(topicExchange)
+        .with(Topics.PERSONDATA_PARTIAL_OUTGOING);
+  }
+
+  @Bean
+  public Queue seedPartialFailedQueue() {
+    return new Queue(Queues.PERSONDATA_PARTIAL_FAILED, true);
+  }
+
+  @Bean
+  public Binding seedPartialFailedBinding(
+      TopicExchange topicExchange, Queue seedPartialFailedQueue) {
+    return BindingBuilder.bind(seedPartialFailedQueue)
+        .to(topicExchange)
+        .with(Topics.PERSONDATA_PARTIAL_FAILED);
+  }
+
+  @Bean
+  public Queue seedFullIncomingQueue() {
+    return new Queue(Queues.PERSONDATA_FULL_INCOMING, true);
+  }
+
+  @Bean
+  public Binding seedFullIncomingBinding(TopicExchange topicExchange, Queue seedFullIncomingQueue) {
+    return BindingBuilder.bind(seedFullIncomingQueue)
+        .to(topicExchange)
+        .with(Topics.PERSONDATA_FULL_INCOMING);
+  }
+
+  @Bean
+  public Queue seedFullOutgoingQueue() {
+    return new Queue(Queues.PERSONDATA_FULL_OUTGOING, true);
+  }
+
+  @Bean
+  public Binding seedFullOutgoingBinding(TopicExchange topicExchange, Queue seedFullOutgoingQueue) {
+    return BindingBuilder.bind(seedFullOutgoingQueue)
+        .to(topicExchange)
+        .with(Topics.PERSONDATA_FULL_OUTGOING);
+  }
+
+  @Bean
+  public Queue seedFullFailedQueue() {
+    return new Queue(Queues.PERSONDATA_FULL_FAILED, true);
+  }
+
+  @Bean
+  public Binding seedFullFailedBinding(TopicExchange topicExchange, Queue seedFullFailedQueue) {
+    return BindingBuilder.bind(seedFullFailedQueue)
+        .to(topicExchange)
+        .with(Topics.PERSONDATA_FULL_FAILED);
+  }
+
+  @Bean
+  public Queue partialSeedQueue() {
+    return new Queue(Queues.SEDEX_OUTBOX, true);
+  }
+
+  @Bean
+  public Binding partialSeedBinding(TopicExchange topicExchange, Queue partialSeedQueue) {
+    return BindingBuilder.bind(partialSeedQueue).to(topicExchange).with(Topics.SEDEX_OUTBOX);
+  }
+
+  @Bean
+  public Queue sedexReceiptsQueue() {
+    return new Queue(Queues.SEDEX_RECEIPTS, true);
+  }
+
+  @Bean
+  public Binding sedexReceiptsBinding(TopicExchange topicExchange, Queue sedexReceiptsQueue) {
+    return BindingBuilder.bind(sedexReceiptsQueue).to(topicExchange).with(Topics.SEDEX_RECEIPTS);
+  }
+
+  @Bean
+  public Queue jobStateQueue() {
+    return new Queue(Queues.JOB_STATE, true);
+  }
+
+  @Bean
+  public Binding jobStateBinding(TopicExchange topicExchange, Queue jobStateQueue) {
+    return BindingBuilder.bind(jobStateQueue).to(topicExchange).with(Topics.CATCH_ALL);
+  }
+
+  @Bean
+  public Queue logQueue() {
+    return new Queue(Queues.LOGS, true);
+  }
+
+  @Bean
+  public Binding logBinding(TopicExchange logTopicExchange, Queue logQueue) {
+    return BindingBuilder.bind(logQueue).to(logTopicExchange).with(Topics.CATCH_ALL);
+  }
+
+  @Bean
+  public ConnectionFactory connectionFactory() {
+    return new CachingConnectionFactory();
+  }
+
+  @Bean
+  public com.rabbitmq.client.ConnectionFactory rabbitMqConnectionFactory() {
+    return new com.rabbitmq.client.ConnectionFactory();
+  }
+
+  @Bean
+  public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+    RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+    rabbitTemplate.setChannelTransacted(true);
+    return rabbitTemplate;
+  }
+
+  @Bean
+  public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+      ConnectionFactory rabbitConnectionFactory) {
+    SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+    factory.setConnectionFactory(rabbitConnectionFactory);
+    return factory;
+  }
+
+  @Bean
+  public RabbitAdmin rabbitAdmin(ConnectionFactory rabbitConnectionFactory) {
+    return new RabbitAdmin(rabbitConnectionFactory);
+  }
+}
