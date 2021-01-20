@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.datarocks.banzai.configuration.HandlerConfiguration;
 import org.datarocks.banzai.pipeline.PipeLine;
 import org.datarocks.banzai.transformer.PassTroughTransformer;
+import org.datarocks.lwgs.persondataprocessor.configuration.LWGSPersonDataProcessorParameters;
 import org.datarocks.lwgs.persondataprocessor.configuration.model.SupportedAttributes;
 import org.datarocks.lwgs.persondataprocessor.model.Attribute;
 import org.datarocks.lwgs.persondataprocessor.model.GBPersonEvent;
@@ -27,12 +28,6 @@ import org.springframework.util.FileCopyUtils;
 @Slf4j
 @Configuration
 public class LwgsPipelineConfiguration {
-
-  private static final String PARAM_KEY_PUBLIC_KEY = "PUBLIC_KEY";
-  private static final String PARAM_KEY_CIPHER = "CIPHER";
-  private static final String PARAM_MESSAGE_DIGEST = "MESSAGE_DIGEST";
-  private static final String PARAM_KEY_SUPPORTED_ATTRIBUTES = "SUPPORTED_ATTRIBUTES";
-
   @Value("${lwgs.searchindex.encryption.publik-key}")
   private String publicKey;
 
@@ -66,17 +61,17 @@ public class LwgsPipelineConfiguration {
 
       return HandlerConfiguration.builder()
           .handlerConfigurationItem(
-              PARAM_KEY_SUPPORTED_ATTRIBUTES,
+              LWGSPersonDataProcessorParameters.PARAM_KEY_SUPPORTED_ATTRIBUTES,
               SupportedAttributes.fromJson(supportedAttributesSchemaJson, supportedAttributesJson))
-          .handlerConfigurationItem(PARAM_KEY_PUBLIC_KEY, publicKey)
-          .handlerConfigurationItem(PARAM_KEY_CIPHER, cipherSpecification)
-          .handlerConfigurationItem(PARAM_MESSAGE_DIGEST, messageDigest)
+          .handlerConfigurationItem(LWGSPersonDataProcessorParameters.PARAM_KEY_PUBLIC_KEY, publicKey)
+          .handlerConfigurationItem(LWGSPersonDataProcessorParameters.PARAM_KEY_CIPHER, cipherSpecification)
+          .handlerConfigurationItem(LWGSPersonDataProcessorParameters.PARAM_KEY_MESSAGE_DIGEST, messageDigest)
           .build();
     } catch (IOException e) {
       log.error("Failed reading supported attributes file.");
       return HandlerConfiguration.builder()
-          .handlerConfigurationItem(PARAM_KEY_PUBLIC_KEY, publicKey)
-          .handlerConfigurationItem(PARAM_KEY_CIPHER, cipherSpecification)
+          .handlerConfigurationItem(LWGSPersonDataProcessorParameters.PARAM_KEY_PUBLIC_KEY, publicKey)
+          .handlerConfigurationItem(LWGSPersonDataProcessorParameters.PARAM_KEY_CIPHER, cipherSpecification)
           .build();
     }
   }
