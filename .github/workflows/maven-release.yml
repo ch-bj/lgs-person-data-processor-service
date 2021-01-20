@@ -58,7 +58,7 @@ jobs:
       - name: Setup release package workdir
         run: |
           mkdir -p release
-          cp README COPYRIGHT LICENSE doc docker Dockerfile docker-compose.yml release/
+          cp -r README COPYRIGHT LICENSE doc docker Dockerfile docker-compose.yml release/
       - name: Download artefact
         uses: actions/download-artifact@v1
         with:
