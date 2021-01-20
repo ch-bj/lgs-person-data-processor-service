@@ -30,15 +30,20 @@ jobs:
       with:
         servers: |
           [{
-              "id": "github-read",
+               "id": "github-banzai",
+               "username": "${{ secrets.GH_PACKAGE_USER }}",
+               "password": "${{ secrets.GH_PACKAGE_TOKEN }}"
+          },
+          {
+              "id": "github-lwgs-pdp",
               "username": "${{ secrets.GH_PACKAGE_USER }}",
               "password": "${{ secrets.GH_PACKAGE_TOKEN }}"
           }]
-    - name: Maven test formatting
-      run: mvn -B fmt:check
+    - name: Maven verify
+      run: mvn -B verify
     - name: Maven run tests
       run: mvn -B test
-    - name: Maven verify build package
+    - name: Maven build package
       run: mvn -B package
     - name: Maven deploy to mvn repository
       run: mvn -B deploy
