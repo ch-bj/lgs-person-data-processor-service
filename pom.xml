@@ -17,7 +17,7 @@
 
   <properties>
     <java.version>8</java.version>
-    <lwgs.person.data.processor.version>1.0.0-SNAPSHOT</lwgs.person.data.processor.version>
+    <lwgs.person.data.processor.version>1.0.0-SNAPTSHOT</lwgs.person.data.processor.version>
     <sonar.language>java</sonar.language>
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>

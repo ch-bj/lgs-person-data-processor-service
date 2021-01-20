@@ -8,22 +8,116 @@ partial syncs.
 ## System Architecture
 
 
-## Seeding Flows
+## Getting Started
 
-### Full Sync
+### Full Sync Flow
+In case of a full sync the services allows the seeding party to explicitly enable, fill and submit a seeding job.
+The following diagram shows the states of the seeding process in the full sync scenario.
 
 ![Full Sync Seed States](doc/images/full-sync-seed-states.png)
 
+#### Process
+*  Set up a new full sync job with a call to the start
+   ```sh
+   curl --request PUT \
+   --url http://<HOST>/api/v1/sync/full/trigger/start \
+   --header 'Authorization: token <API_KEY>' \
+   --header 'Content-Type: application/json'
+   ```
+   In return you'll get the following JSON confirming the new state and the ID of the newly created sync job.
+   ```json
+   {
+      "jobId": "b2630b7d-d8ec-4ffc-9e16-fc9415a972e7",
+      "seedStatus": "SEEDING"
+   }
+   ```
+*  In the state `SEEDING` you'll now send all person data which should be transmitted to the central index.
+   ```sh
+   curl --request POST \
+   --url http://<HOST>/api/v1/sync/full/person-data \
+   --header 'Authorization: token <API_KEY>' \
+   --header 'Content-Type: application/json'
+   --data '{
+   "metaData": {
+   "personType": "NATUERLICHE_PERSON",
+   "eventType": "INSERT"
+   },
+   "natuerlichePerson": {
+   "egpId": "egpId",
+   "name": "Smith",
+   "vorname": "John",
+   "jahrgang": "1970"
+   }
+   }'
+   ```
+   Each mutation will be confirmed with a transactionId.
+   ```json
+   {
+      "transactionId": "d19b0584-5c4f-4686-8b37-f618e6a90ccb"
+   }
+   ```
+*  After all data is sent to the job, it can be submitted for further processing.
+   ```sh
+   curl --request PUT \
+   --url http://<HOST>/api/v1/sync/full/trigger/submit \
+   --header 'Authorization: token <API_KEY>' \
+   --header 'Content-Type: application/json'
+   ```
+   In return you'll get the following JSON confirming the new state and the ID of the newly created sync job.
+   ```json
+   {
+      "jobId": "b2630b7d-d8ec-4ffc-9e16-fc9415a972e7",
+      "seedStatus": "SENDING"
+   }
+   ```
+* After setting the state to `SENDING` and processing all data, the aggregated, processed person data will then be 
+  wrapped in a Sedex message and written to the filesystem with the next run of the `FullSyncService`.
 
-### Components Description
 
-#### SedexFileWriterService
+### Partial Sync Flow
+
+#### Process
+*  For all mutations you want to propagate to the central index, you directly seed the person data which should be 
+   transmitted.
+   ```sh
+   curl --request POST \
+   --url http://<HOST>/api/v1/sync/partial/person-data \
+   --header 'Authorization: token <API_KEY>' \
+   --header 'Content-Type: application/json'
+   --data '{
+   "metaData": {
+   "personType": "NATUERLICHE_PERSON",
+   "eventType": "INSERT"
+   },
+   "natuerlichePerson": {
+   "egpId": "egpId",
+   "name": "Smith",
+   "vorname": "John",
+   "jahrgang": "1970"
+   }
+   }'
+   ```
+   Each mutation will be confirmed with a transactionId.
+   ```json
+   {
+      "transactionId": "d19b0584-5c4f-4686-8b37-f618e6a90ccb"
+   }
+   ```
+* The next time the configured implementation of the `PartialSyncService` will run, the processed seeds will be
+  aggregated and written to a Sedex message.
+
+
+### Sedex Integration
+
+## Components Description
+
+### SedexFileWriterService
 
 The SedexFileWriter service will receive the JobCollectedPersonData objects from the
 lwgs.sedex.outbox and create a zip file as Sedex payload. Each zip file will contain `[1..n]` zip
 entries of GBPersonEvents.
 
-##### Relevant configuration parameters
+#### Relevant configuration parameters
 
 <dl>
     <dt><strong>lwgs.searchindex.client.sedex.base-path</strong></dt>
@@ -50,7 +144,7 @@ entries of GBPersonEvents.
         <dd>Execution interval of the SedexFileWriterService in ms. Default is set to 1'000 ms.</dd>
 </dl>
 
-##### Error Handling and resolution
+#### Error Handling and resolution
 
 If the sedex/outbox folder is not accessible or in case of any other IOException the SedexFileWriter
 service will requeue the message and continue processing.
@@ -70,38 +164,10 @@ The throttling interval is calculated as following:
 
 The issues need to be resolved manually by the administrator.
 
-###### Proposed error resolution activities
+##### Proposed error resolution activities
 
 - Check if Sedex outbox exists
 - Check if Sedex outbox is accessible for search-index-client-service
 - Check if enough disk space is available for volume containing Sedex outbox
 - Check user quotas for volume
-
-# Reference Documentation
-
-For further reference, please consider the following sections:
-
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.4.1/maven-plugin/reference/html/)
-* [Create an OCI image](https://docs.spring.io/spring-boot/docs/2.4.1/maven-plugin/reference/html/#build-image)
-* [Rest Repositories](https://docs.spring.io/spring-boot/docs/2.4.1/reference/htmlsingle/#howto-use-exposing-spring-data-repositories-rest-endpoint)
-* [Spring Security](https://docs.spring.io/spring-boot/docs/2.4.1/reference/htmlsingle/#boot-features-security)
-* [Spring Boot Actuator](https://docs.spring.io/spring-boot/docs/2.4.1/reference/htmlsingle/#production-ready)
-* [Spring Batch](https://docs.spring.io/spring-boot/docs/2.4.1/reference/htmlsingle/#howto-batch-applications)
-* [Spring Data JPA](https://docs.spring.io/spring-boot/docs/2.4.1/reference/htmlsingle/#boot-features-jpa-and-spring-data)
-* [Spring Boot DevTools](https://docs.spring.io/spring-boot/docs/2.4.1/reference/htmlsingle/#using-boot-devtools)
-
-### Guides
-
-The following guides illustrate how to use some features concretely:
-
-* [Accessing JPA Data with REST](https://spring.io/guides/gs/accessing-data-rest/)
-* [Accessing Neo4j Data with REST](https://spring.io/guides/gs/accessing-neo4j-data-rest/)
-* [Accessing MongoDB Data with REST](https://spring.io/guides/gs/accessing-mongodb-data-rest/)
-* [Securing a Web Application](https://spring.io/guides/gs/securing-web/)
-* [Spring Boot and OAuth2](https://spring.io/guides/tutorials/spring-boot-oauth2/)
-* [Authenticating a User with LDAP](https://spring.io/guides/gs/authenticating-ldap/)
-* [Building a RESTful Web Service with Spring Boot Actuator](https://spring.io/guides/gs/actuator-service/)
-* [Creating a Batch Service](https://spring.io/guides/gs/batch-processing/)
-* [Accessing Data with JPA](https://spring.io/guides/gs/accessing-data-jpa/)
 
