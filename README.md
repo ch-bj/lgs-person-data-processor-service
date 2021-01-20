@@ -6,6 +6,7 @@ a RESTfull interface, and passed on through Sedex after successful processing. T
 partial syncs.
 
 ## System Architecture
+![Full Sync Seed States](doc/images/lwgs-person-data-processor-service.png)
 
 
 ## Getting Started
