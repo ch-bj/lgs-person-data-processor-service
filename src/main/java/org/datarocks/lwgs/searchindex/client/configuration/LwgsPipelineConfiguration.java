@@ -1,5 +1,7 @@
 package org.datarocks.lwgs.searchindex.client.configuration;
 
+import static org.datarocks.lwgs.persondataprocessor.configuration.LWGSPersonDataProcessorParameters.*;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import lombok.extern.slf4j.Slf4j;
@@ -27,12 +29,6 @@ import org.springframework.util.FileCopyUtils;
 @Slf4j
 @Configuration
 public class LwgsPipelineConfiguration {
-
-  private static final String PARAM_KEY_PUBLIC_KEY = "PUBLIC_KEY";
-  private static final String PARAM_KEY_CIPHER = "CIPHER";
-  private static final String PARAM_MESSAGE_DIGEST = "MESSAGE_DIGEST";
-  private static final String PARAM_KEY_SUPPORTED_ATTRIBUTES = "SUPPORTED_ATTRIBUTES";
-
   @Value("${lwgs.searchindex.encryption.publik-key}")
   private String publicKey;
 
@@ -70,7 +66,7 @@ public class LwgsPipelineConfiguration {
               SupportedAttributes.fromJson(supportedAttributesSchemaJson, supportedAttributesJson))
           .handlerConfigurationItem(PARAM_KEY_PUBLIC_KEY, publicKey)
           .handlerConfigurationItem(PARAM_KEY_CIPHER, cipherSpecification)
-          .handlerConfigurationItem(PARAM_MESSAGE_DIGEST, messageDigest)
+          .handlerConfigurationItem(PARAM_KEY_MESSAGE_DIGEST, messageDigest)
           .build();
     } catch (IOException e) {
       log.error("Failed reading supported attributes file.");
