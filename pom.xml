@@ -17,6 +17,7 @@
 
   <properties>
     <java.version>8</java.version>
+    <lwgs.person.data.processor.version>1.0.0-SNAPSHOT</lwgs.person.data.processor.version>
     <sonar.language>java</sonar.language>
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
@@ -138,9 +139,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.datarocks.lwgs.persondataprocessor</groupId>
-      <artifactId>lwgs-person-data-processor</artifactId>
-      <version>1.7.3-SNAPSHOT</version>
+      <groupId>org.datarocks.lwgs</groupId>
+      <artifactId>person-data-processor</artifactId>
+      <version>${lwgs.person.data.processor.version}</version>
     </dependency>
 
     <dependency>
