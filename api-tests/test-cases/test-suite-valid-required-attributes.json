@@ -1,0 +1,27 @@
+{
+  "testSuiteName": "TestSuiteValidRequiredAttributes",
+  "testSuiteDescription": "Valid test cases, only with required attributes",
+  "testCases": [
+    {
+      "testCaseName": "TestCase1",
+      "testCaseDescription": "Valid natural person",
+      "payload": "{\"metaData\": {\"personType\":\"NATUERLICHE_PERSON\",\"eventType\": \"INSERT\"},\"natuerlichePerson\":{\"egpId\":\"egpId\",\"name\":\"Smith\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": []
+    },
+    {
+      "testCaseName": "TestCase2",
+      "testCaseDescription": "Valid legal person",
+      "payload": "{\"metaData\": {\"personType\":\"JURISTISCHE_PERSON\",\"eventType\": \"INSERT\"},\"juristischePerson\":{\"egpId\":\"egpId\",\"name\":\"XY AG\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": []
+    },
+    {
+      "testCaseName": "TestCase2",
+      "testCaseDescription": "Valid legal person",
+      "payload": "{\"metaData\": {\"personType\":\"GEMEINSCHAFT\",\"eventType\": \"INSERT\"},\"gemeinschaft\":{\"egpId\":\"egpId\",\"name\":\"Gemeinschaft XY\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": []
+    }
+  ]
+}

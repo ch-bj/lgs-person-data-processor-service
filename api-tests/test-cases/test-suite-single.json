@@ -1,0 +1,13 @@
+{
+  "testSuiteName": "TestSuiteValidAdditionalNotSupportedAttributes",
+  "testSuiteDescription": "Valid test cases, with additional, not supported attributes, that will be dropped.",
+  "testCases": [
+    {
+      "testCaseName": "TestCase1",
+      "testCaseDescription": "Valid natural person",
+      "payload": "{\"metaData\": {\"personType\":\"NATUERLICHE_PERSON\",\"eventType\": \"INSERT\"},\"natuerlichePerson\":{\"egpId\":\"egpId\",\"name\":\"Smith\",\"vorname\":\"John\",\"jahrgang\":\"1970\",\"sitz\":\"Firmensitz\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": ["INVALID_ATTRIBUTES_DROPPED"]
+    }
+  ]
+}

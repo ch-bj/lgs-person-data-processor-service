@@ -1,0 +1,9 @@
+requests
+pytest
+pytest_tornasync
+pytest-xdist
+pytest-parallel
+pytest-stress
+pytest-repeat
+pytest_steps
+configparser

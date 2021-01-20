@@ -1,0 +1,48 @@
+{
+  "testSuiteName": "TestSuiteValidAllAttributes",
+  "testSuiteDescription": "Valid test cases, with all available attributes",
+  "testCases": [
+    {
+      "testCaseName": "TestCase1",
+      "testCaseDescription": "Valid natural person",
+      "payload": "{\"metaData\": {\"personType\":\"NATUERLICHE_PERSON\",\"eventType\": \"INSERT\"},\"natuerlichePerson\":{\"egpId\":\"egpId\",\"name\":\"Smith\",\"vorname\":\"John\",\"jahrgang\":\"1970\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": []
+    },
+    {
+      "testCaseName": "TestCase2",
+      "testCaseDescription": "Valid legal person",
+      "payload": "{\"metaData\": {\"personType\":\"JURISTISCHE_PERSON\",\"eventType\": \"INSERT\"},\"juristischePerson\":{\"egpId\":\"egpId\",\"name\":\"XY AG\",\"sitz\":\"Firmensitz\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": []
+    },
+    {
+      "testCaseName": "TestCase3",
+      "testCaseDescription": "Valid community - type EinfacheGesellschaft",
+      "payload": "{\"metaData\": {\"personType\":\"GEMEINSCHAFT\",\"eventType\": \"INSERT\"},\"gemeinschaft\":{\"egpId\":\"egpId\",\"name\":\"Gemeinschaft XY\",\"gemeinschaftArt\":\"EinfacheGesellschaft\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": []
+    },
+    {
+      "testCaseName": "TestCase4",
+      "testCaseDescription": "Valid community - type Erbengemeinschaft",
+      "payload": "{\"metaData\": {\"personType\":\"GEMEINSCHAFT\",\"eventType\": \"INSERT\"},\"gemeinschaft\":{\"egpId\":\"egpId\",\"name\":\"Gemeinschaft XY\",\"gemeinschaftArt\":\"Erbengemeinschaft\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": []
+    },
+    {
+      "testCaseName": "TestCase5",
+      "testCaseDescription": "Valid community - type Gemeinderschaft",
+      "payload": "{\"metaData\": {\"personType\":\"GEMEINSCHAFT\",\"eventType\": \"INSERT\"},\"gemeinschaft\":{\"egpId\":\"egpId\",\"name\":\"Gemeinschaft XY\",\"gemeinschaftArt\":\"Gemeinderschaft\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": []
+    },
+    {
+      "testCaseName": "TestCase6",
+      "testCaseDescription": "Valid community - type EinfacheGesellschaft",
+      "payload": "{\"metaData\": {\"personType\":\"GEMEINSCHAFT\",\"eventType\": \"INSERT\"},\"gemeinschaft\":{\"egpId\":\"egpId\",\"name\":\"Gemeinschaft XY\",\"gemeinschaftArt\":\"EinfacheGesellschaft\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": []
+    }
+  ]
+}
