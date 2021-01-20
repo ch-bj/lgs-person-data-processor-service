@@ -1,0 +1,27 @@
+{
+  "testSuiteName": "TestSuiteValidAdditionalNotSupportedAttributes",
+  "testSuiteDescription": "Valid test cases, with additional, not supported attributes, that will be dropped.",
+  "testCases": [
+    {
+      "testCaseName": "TestCase1",
+      "testCaseDescription": "Valid natural person",
+      "payload": "{\"metaData\": {\"personType\":\"NATUERLICHE_PERSON\",\"eventType\": \"INSERT\"},\"natuerlichePerson\":{\"egpId\":\"egpId\",\"name\":\"Smith\",\"vorname\":\"John\",\"jahrgang\":\"1970\",\"sitz\":\"Firmensitz\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": ["INVALID_ATTRIBUTES_DROPPED"]
+    },
+    {
+      "testCaseName": "TestCase2",
+      "testCaseDescription": "Valid legal person",
+      "payload": "{\"metaData\": {\"personType\":\"JURISTISCHE_PERSON\",\"eventType\": \"INSERT\"},\"juristischePerson\":{\"egpId\":\"egpId\",\"name\":\"XY AG\",\"sitz\":\"Firmensitz\",\"jahrgang\":\"1970\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": ["INVALID_ATTRIBUTES_DROPPED"]
+    },
+    {
+      "testCaseName": "TestCase3",
+      "testCaseDescription": "Valid community - type EinfacheGesellschaft",
+      "payload": "{\"metaData\": {\"personType\":\"GEMEINSCHAFT\",\"eventType\": \"INSERT\"},\"gemeinschaft\":{\"egpId\":\"egpId\",\"name\":\"Gemeinschaft XY\",\"gemeinschaftArt\":\"EinfacheGesellschaft\",\"jahrgang\":\"1970\"}}",
+      "expectedResult": "VALID",
+      "expectedBusinessValidationLogs": ["INVALID_ATTRIBUTES_DROPPED"]
+    }
+  ]
+}

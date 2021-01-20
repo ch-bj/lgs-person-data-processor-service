@@ -1,0 +1,20 @@
+{
+  "testSuiteName": "TestSuiteInvalid",
+  "testSuiteDescription": "Invald test cases",
+  "testCases": [
+    {
+      "testCaseName": "TestCase1",
+      "testCaseDescription": "Valid natural person",
+      "payload": "\"metaData\": {\"personType\":\"NATUERLICHE_PERSON\",\"eventType\": \"INSERT\"},\"natuerlichePerson\":{\"name\":\"Smith\",\"vorname\":\"John\",\"jahrgang\":\"1970\"}}",
+      "expectedResult": "INVALID",
+      "expectedBusinessValidationLogs": []
+    },
+    {
+      "testCaseName": "TestCase3",
+      "testCaseDescription": "Valid natural person with missing required arguments",
+      "payload": "{\"metaData\": {\"personType\":\"NATUERLICHE_PERSON\",\"eventType\": \"INSERT\"},\"natuerlichePerson\":{\"vorname\":\"John\",\"jahrgang\":\"1970\"}}",
+      "expectedResult": "INVALID",
+      "expectedBusinessValidationLogs": []
+    }
+  ]
+}
