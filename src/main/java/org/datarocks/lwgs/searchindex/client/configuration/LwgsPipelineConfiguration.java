@@ -1,12 +1,13 @@
 package org.datarocks.lwgs.searchindex.client.configuration;
 
+import static org.datarocks.lwgs.persondataprocessor.configuration.LWGSPersonDataProcessorParameters.*;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import lombok.extern.slf4j.Slf4j;
 import org.datarocks.banzai.configuration.HandlerConfiguration;
 import org.datarocks.banzai.pipeline.PipeLine;
 import org.datarocks.banzai.transformer.PassTroughTransformer;
-import org.datarocks.lwgs.persondataprocessor.configuration.LWGSPersonDataProcessorParameters;
 import org.datarocks.lwgs.persondataprocessor.configuration.model.SupportedAttributes;
 import org.datarocks.lwgs.persondataprocessor.model.Attribute;
 import org.datarocks.lwgs.persondataprocessor.model.GBPersonEvent;
@@ -61,17 +62,17 @@ public class LwgsPipelineConfiguration {
 
       return HandlerConfiguration.builder()
           .handlerConfigurationItem(
-              LWGSPersonDataProcessorParameters.PARAM_KEY_SUPPORTED_ATTRIBUTES,
+              PARAM_KEY_SUPPORTED_ATTRIBUTES,
               SupportedAttributes.fromJson(supportedAttributesSchemaJson, supportedAttributesJson))
-          .handlerConfigurationItem(LWGSPersonDataProcessorParameters.PARAM_KEY_PUBLIC_KEY, publicKey)
-          .handlerConfigurationItem(LWGSPersonDataProcessorParameters.PARAM_KEY_CIPHER, cipherSpecification)
-          .handlerConfigurationItem(LWGSPersonDataProcessorParameters.PARAM_KEY_MESSAGE_DIGEST, messageDigest)
+          .handlerConfigurationItem(PARAM_KEY_PUBLIC_KEY, publicKey)
+          .handlerConfigurationItem(PARAM_KEY_CIPHER, cipherSpecification)
+          .handlerConfigurationItem(PARAM_KEY_MESSAGE_DIGEST, messageDigest)
           .build();
     } catch (IOException e) {
       log.error("Failed reading supported attributes file.");
       return HandlerConfiguration.builder()
-          .handlerConfigurationItem(LWGSPersonDataProcessorParameters.PARAM_KEY_PUBLIC_KEY, publicKey)
-          .handlerConfigurationItem(LWGSPersonDataProcessorParameters.PARAM_KEY_CIPHER, cipherSpecification)
+          .handlerConfigurationItem(PARAM_KEY_PUBLIC_KEY, publicKey)
+          .handlerConfigurationItem(PARAM_KEY_CIPHER, cipherSpecification)
           .build();
     }
   }
