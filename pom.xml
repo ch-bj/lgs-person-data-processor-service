@@ -24,7 +24,7 @@
 
     <lwgs.person.data.processor.version>1.1.0</lwgs.person.data.processor.version>
     <hsqldb.version>2.6.1</hsqldb.version>
-    <jackson-xml.version>2.11.4</jackson-xml.version>
+    <jackson-xml.version>2.13.2</jackson-xml.version>
     <springdoc.version>1.6.8</springdoc.version>
 
     <maven-fmt.version>2.13</maven-fmt.version>
