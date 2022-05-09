@@ -51,15 +51,14 @@ jobs:
       run: mvn -B versions:set -DnewVersion=${{ steps.get_tag.outputs.TAG }}
     - name: Maven build package
       run: mvn -B package -Dmaven.test.skip
-    - name: Get jar name
-      id: get-jar-name
-      run: |
-        echo ::set-output name=jar::$(ls -1 ./target/*.jar |grep -v test)
     - name: Upload artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
-        name: lwgs-person-data-processor-service.jar
-        path: ${{ steps.get-jar-name.outputs.jar }}
+        name: lwgs-person-data-processor-service-artifacts
+        path: |
+          target/*.jar
+          !target/*-SNAPTSHOT.jar
+          !target/*-test.jar
 
   release:
     runs-on: ubuntu-latest
@@ -72,9 +71,9 @@ jobs:
           mkdir -p release
           cp -r README.md COPYRIGHT LICENSE doc docker Dockerfile docker-compose.yml release/
       - name: Download artefact
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
-          name: lwgs-person-data-processor-service.jar
+          name: lwgs-person-data-processor-service-artifacts
           path: ./release/
       - name: Create release ZIP
         run: |
