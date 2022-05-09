@@ -9,6 +9,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  REGISTRY: ghcr.io
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,6 +28,9 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
+    - name: Get the tag (without leading v)
+      id: get_tag
+      run: echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\/v/}
     - uses: s4u/maven-settings-action@v2.6.0
       with:
         servers: |
@@ -41,6 +47,8 @@ jobs:
       run: mvn -B verify
     - name: Maven run tests
       run: mvn -B test
+    - name: Maven set version
+      run: mvn -B versions:set -DnewVersion=${{ steps.get_tag.outputs.TAG }}
     - name: Maven build package
       run: mvn -B package -Dmaven.test.skip
     - name: Get jar name
@@ -115,6 +123,9 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      - name: Get the tag
+        id: get_tag
+        run: echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
       - uses: s4u/maven-settings-action@v2.6.0
         with:
           servers: |
@@ -134,4 +145,5 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Maven jib:build
-        run: mvn -B compile jib:build -Dmaven.skip.test -Djib.container.creationTime=USE_CURRENT_TIMESTAMP
+        run: |
+          mvn -B compile jib:build -Dmaven.skip.test -Djib.container.creationTime=USE_CURRENT_TIMESTAMP -Djib.to.tags=latest,${{steps.get_tag.outputs.TAG}}
