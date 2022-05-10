@@ -4,13 +4,13 @@ services:
     image: ghcr.io/datarocks-ag/lwgs-person-data-processor-service:latest
     restart: always
     ports:
-      - 80:8080
+      - "127.0.0.1:8080:8080"
     networks:
       - internal
       - default
     volumes:
-      - logvolume:/var/log
-      - dbvolume:/hsqldb/data
+      - log-data:/var/log
+      - hsqldb-data:/hsqldb/data
       - sedex:/var/sedex
     links:
       - rabbitmq
@@ -29,12 +29,15 @@ services:
     image: rabbitmq:3-management-alpine
     restart: always
     networks:
+      - default
       - internal
+    ports:
+      - "127.0.0.1:8082:15672"
     volumes:
       - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/docker-presets.conf
       - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
-      - rabbitdata:/var/lib/rabbitmq/mnesia/rabbit@lwgs-rabbit
-      - rabbitlogs:/var/log/rabbitmq/log
+      - rabbit-data:/var/lib/rabbitmq/mnesia/rabbit@lwgs-rabbit
+      - rabbit-logs:/var/log/rabbitmq/log
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
@@ -52,17 +55,25 @@ services:
     image: grafana/grafana
     restart: always
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:8081:3000"
     networks:
       - internal
       - default
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/rabbitmq.yaml
+      - ./docker/grafana/datasources.yml:/etc/grafana/provisioning/datasources/prometheus.yaml
+      - ./docker/grafana/dashboards:/dashboards
+    environment:
+      GF_INSTALL_PLUGINS: "flant-statusmap-panel,grafana-piechart-panel"
     links:
       - prometheus
 volumes:
-  logvolume: {}
-  dbvolume: {}
-  rabbitdata: {}
-  rabbitlogs: {}
+  log-data: {}
+  hsqldb-data: {}
+  rabbit-data: {}
+  rabbit-logs: {}
+  grafana-data: {}
   sedex: {}
 networks:
   internal:
