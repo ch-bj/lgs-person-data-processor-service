@@ -11,6 +11,10 @@ services:
       - rabbitmq
   rabbitmq:
     image: rabbitmq:3-management-alpine
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 15692:15692
     volumes:
       - ./docker/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
       - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf

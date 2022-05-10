@@ -34,6 +34,9 @@ config.read('api_tests.properties')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
+def get_url(key):
+  return config["endpoints"]["baseurl"] + config["endpoints"]["endpoint.job.%s.path" % key]
+
 
 def expected_states(expected_result: ExpectedResults):
     if expected_result == ExpectedResults.VALID:
@@ -72,8 +75,8 @@ def send_data_and_validate_case(test_case):
     logger.info("Description: " + test_case["testCaseDescription"])
     logger.debug("JsonPayloadData: " + test_case["payload"])
     logger.info("Expected result: " + str(expected_result))
-    response = requests.post(
-        config["endpoints"]["endpoint.job.partial.url"],
+    logger.info("Target URL: " + get_url("partial"))
+    response = requests.post(get_url("partial"),
         headers=json.loads(
             config["endpoints"]["endpoint.authentication.headers"]),
         data=test_case["payload"])
@@ -90,13 +93,12 @@ def send_data_and_validate_case(test_case):
 
     return transaction_id
 
-
 def get_transaction(transaction_id):
-    response = requests.get(config["endpoints"][
-                                "endpoint.job.transaction.url"] + "/"
-                            + transaction_id,
+    logger.info("Target URL: " + get_url("transaction") + "/" +  transaction_id)
+    response = requests.get(get_url("transaction") + "/" + transaction_id,
                             headers=json.loads(config["endpoints"][
                                                    "endpoint.authentication.headers"]))
+    logger.info(response.json())
     assert response.status_code == 200
     return response.json()
 
