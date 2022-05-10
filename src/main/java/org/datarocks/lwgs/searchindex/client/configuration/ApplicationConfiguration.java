@@ -13,6 +13,7 @@ import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -146,14 +147,23 @@ public class ApplicationConfiguration {
     return BindingBuilder.bind(logQueue).to(logTopicExchange).with(Topics.CATCH_ALL);
   }
 
+  // TODO: find proper auto-configured connection factory instead of re-setting values
   @Bean
-  public ConnectionFactory connectionFactory() {
-    return new CachingConnectionFactory();
-  }
+  public ConnectionFactory connectionFactory(
+      @Value("${spring.rabbitmq.username:guest}") String username,
+      @Value("${spring.rabbitmq.password:guest}") String password,
+      @Value("${spring.rabbitmq.host:localhost}") String host,
+      @Value("${spring.rabbitmq.port:5672}") int port,
+      @Value("${spring.rabbitmq.virtual-host:/}") String vhost) {
+    final CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
 
-  @Bean
-  public com.rabbitmq.client.ConnectionFactory rabbitMqConnectionFactory() {
-    return new com.rabbitmq.client.ConnectionFactory();
+    connectionFactory.setUsername(username);
+    connectionFactory.setPassword(password);
+    connectionFactory.setHost(host);
+    connectionFactory.setPort(port);
+    connectionFactory.setVirtualHost(vhost);
+
+    return connectionFactory;
   }
 
   @Bean
@@ -165,14 +175,14 @@ public class ApplicationConfiguration {
 
   @Bean
   public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
-      ConnectionFactory rabbitConnectionFactory) {
+      ConnectionFactory connectionFactory) {
     SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-    factory.setConnectionFactory(rabbitConnectionFactory);
+    factory.setConnectionFactory(connectionFactory);
     return factory;
   }
 
   @Bean
-  public RabbitAdmin rabbitAdmin(ConnectionFactory rabbitConnectionFactory) {
-    return new RabbitAdmin(rabbitConnectionFactory);
+  public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
+    return new RabbitAdmin(connectionFactory);
   }
 }
