@@ -1,15 +1,31 @@
 # LWGS Person Data Processor Service
 
-Reference implementation of wrapping the lwgs-person-data-processor library. Service allows to process and seed
+Reference implementation, wrapping the lwgs-person-data-processor library and implementing the 
+"LWGS Suchindex Client". Service allows to process and seed
 personData to the central search index, part of Landesweite Grundstückssuche (LWGS). Data is consumed via
 a RESTfull interface, and passed on through Sedex after successful processing. The service allows either full or 
 partial syncs.
 
-## System Architecture
-![Full Sync Seed States](doc/images/lwgs-person-data-processor-service.png)
 
 
-## Getting Started
+## System Overview
+![High Level Integration](doc/images/lwgs-pdps-high-level.png)
+
+### Interface to the Application
+
+
+### The LWGS Person Data Processor Service
+
+
+### Connection to the Central LWGS Index
+
+
+## Using the LWGS Person Data Processor Service
+
+### Introduction
+
+
+For installation details have a look at the separate installation documentation: [Installation LWGS PDPS](doc/install.md)
 
 ### Full Sync Flow
 In case of a full sync the services allows the seeding party to explicitly enable, fill and submit a seeding job.
@@ -107,10 +123,46 @@ The following diagram shows the states of the seeding process in the full sync s
 * The next time the configured implementation of the `PartialSyncService` will run, the processed seeds will be
   aggregated and written to a Sedex message.
 
+## Detailed System Description
 
-### Sedex Integration
+### Big Picture
+![Full Sync Seed States](doc/images/lwgs-person-data-processor-service.png)
 
-## Components Description
+
+### FullSyncService and PartialSyncService
+The service allows two kinds of operation, a synchronisation with a full sync of all available data
+with partial incremental syncs. In case of the full sync the integrating application will actively
+trigger start and end of the seeding with a REST call. The full sync service will check in a fix
+interval (see configuration options) for fully processed full-syncs and send content via Sedex.  
+With the partial sync, the maintainer of the seeding proxy can configure several modes which define
+when the pool of processed mutations should be bundled and send as Sedex message.
+
+#### Partial Sync Scheduling Options
+* `EVENT_DRIVEN`: Trigger sending of sedex once message was processed
+* `FIXED_DELAY`: Trigger sending after a fix delay since the last run
+* `CRON_SCHEDULE`: Trigger sending on a fix cron schedule (e.g. every night at 22:00)
+
+#### Configuration Options Sync Flows
+| Key | Default | Description |
+|-----|---------|-------------|
+| `lwgs.searchindex.client.sync.partial.scheduling-type` |`FIXED_DELAY` | Partial sync scheduling (allowed values: `EVENT_DRIVEN`, `FIXED_DELAY`, `CRON_SCHEDULE`)|
+| `lwgs.searchindex.client.sync.partial.cron-schedule` |`0 0 * * * ?` (every hour)| Cron configuration, will be used if `scheduling-type` set to `CRON_SCHEDULE`|
+| `lwgs.searchindex.client.sync.partial.fixed-delay` |`1'000` ms | Fixed delay interval in ms (with `scheduling-type` set to `FIXED_DELAY`)|
+| `lwgs.searchindex.client.sync.full.fixed-delay` |`1'000` ms | Full sync interval|
+
+##### Cron Syntax
+
+```aidl
+ ┌───────────── second (0-59)
+ │ ┌───────────── minute (0 - 59)
+ │ │ ┌───────────── hour (0 - 23)
+ │ │ │ ┌───────────── day of the month (1 - 31)
+ │ │ │ │ ┌───────────── month (1 - 12) (or JAN-DEC)
+ │ │ │ │ │ ┌───────────── day of the week (0 - 7)
+ │ │ │ │ │ │          (or MON-SUN -- 0 or 7 is Sunday)
+ │ │ │ │ │ │
+ * * * * * *
+```
 
 ### SedexFileWriterService
 
@@ -120,30 +172,19 @@ entries of GBPersonEvents.
 
 #### Relevant configuration parameters
 
-<dl>
-    <dt><strong>lwgs.searchindex.client.sedex.base-path</strong></dt>
-        <dd>Sedex base path. Default is /tmp/sedex</dd>
-    <dt><strong>lwgs.searchindex.client.sedex.receipt-path</strong></dt>
-        <dd>Sedex receipt path. Default is receipts</dd>
-    <dt><strong>lwgs.searchindex.client.sedex.outbox-path</strong></dt>
-        <dd>Sedex outbox path. Default is outbox</dd>
-    <dt><strong>lwgs.searchindex.client.sedex.create-directories</strong></dt>
-        <dd>Controls automatic creation of Sedex directories. Default is false.</dd>
-    <dt><strong>lwgs.searchindex.client.sedex.sender-id</strong></dt>
-        <dd>Configures the senderId of the outgoing sedex message.</dd>
-    <dt><strong>lwgs.searchindex.client.sedex.recipient-id</strong></dt>
-        <dd>Configures the recipientId of the outgoing sedex message.</dd>
-    <dt><strong>lwgs.searchindex.client.sedex.message.type</strong></dt>
-        <dd>Configures the messageType of the outgoing sedex message.</dd>
-    <dt><strong>lwgs.searchindex.client.sedex.message.class</strong></dt>
-        <dd>Configures the messageClass of the outgoing sedex message.</dd>
-    <dt><strong>lwgs.searchindex.client.sedex.file-writer.failure.throttling.base</strong></dt>
-        <dd>Base for throttling interval in case of errors. Throttling interval doubles on each failed retry (until _max_ is reached). Default is set to 1'000 ms.</dd>
-    <dt><strong>lwgs.searchindex.client.sedex.file-writer.failure.throttling.max</strong></dt>
-        <dd>Controls max throttling interval in ms. Default is set to 3'600'000 ms (1h).</dd>
-    <dt><strong>lwgs.searchindex.client.sedex.file-writer.fixed-delay</strong></dt>
-        <dd>Execution interval of the SedexFileWriterService in ms. Default is set to 1'000 ms.</dd>
-</dl>
+| Key | Default | Description |
+|-----|---------|-------------|
+| `lwgs.searchindex.client.sedex.base-path` |`/tmp/sedex` | Sedex base path|
+| `lwgs.searchindex.client.sedex.receipt-path` |`receipts` | Sedex receipts path|
+| `lwgs.searchindex.client.sedex.outbox-path` |`outbox` | Sedex outbox path|
+| `lwgs.searchindex.client.sedex.create-directories` |`false` | Controls automatic creation of Sedex directories|
+| `lwgs.searchindex.client.sedex.sender-id` | | Configures the senderId of the outgoing sedex message|
+| `lwgs.searchindex.client.sedex.recipient-id` | | Configures the recipientId of the outgoing sedex message|
+| `lwgs.searchindex.client.sedex.message.type` | | Configures the messageType of the outgoing sedex message|
+| `lwgs.searchindex.client.sedex.message.class` | | Configures the messageClass of the outgoing sedex message|
+| `lwgs.searchindex.client.sedex.file-writer.failure.throttling.base` |`1'000 ms` | Base for throttling interval in case of errors. Throttling interval doubles on each failed retry (until _max_ is reached).|
+| `lwgs.searchindex.client.sedex.file-writer.failure.throttling.max` | `3'600'000 ms` (1h) | Controls max throttling interval in ms|
+| `lwgs.searchindex.client.sedex.file-writer.fixed-delay` |`1'000 ms` | Execution interval of the SedexFileWriterService in ms|
 
 #### Error Handling and resolution
 
