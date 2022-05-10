@@ -30,10 +30,6 @@ services:
     restart: always
     networks:
       - internal
-    ports:
-      - 5672:5672
-      - 15672:15672
-      - 15692:15692
     volumes:
       - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/docker-presets.conf
       - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
