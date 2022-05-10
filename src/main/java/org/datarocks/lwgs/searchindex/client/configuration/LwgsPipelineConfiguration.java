@@ -29,7 +29,7 @@ import org.springframework.util.FileCopyUtils;
 @Slf4j
 @Configuration
 public class LwgsPipelineConfiguration {
-  @Value("${lwgs.searchindex.encryption.publik-key}")
+  @Value("${lwgs.searchindex.encryption.public-key}")
   private String publicKey;
 
   @Value("${lwgs.searchindex.encryption.cypher-specification}")

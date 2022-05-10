@@ -1,26 +1,16 @@
 version: "3.9"
 services:
   backend:
-    image: ghcr.io/datarocks-ag/lwgs-person-data-processor-service:latest
-    restart: always
+    build: .
     ports:
       - 80:8080
-    networks:
-      - internal
-      - default
     volumes:
       - logvolume:/var/log
       - dbvolume:/hsqldb/data
     links:
       - rabbitmq
-    environment:
-      RABBITMQ_HOST: "rabbitmq"
-      HSQLDB_FILE: "/hsqldb/data/searchindex-client"
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    restart: always
-    networks:
-      - internal
     volumes:
       - ./docker/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
       - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
@@ -29,9 +19,6 @@ services:
       - ./rabbitmq/logs:/var/log/rabbitmq/log
   prometheus:
     image: prom/prometheus
-    restart: always
-    networks:
-      - internal
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     links:
@@ -39,14 +26,10 @@ services:
       - backend
   grafana:
     image: grafana/grafana
-    restart: always
-    networks:
-      - internal
-      - default
+    ports:
+      - "127.0.0.1:3000:3000"
     links:
       - prometheus
 volumes:
   logvolume: {}
   dbvolume: {}
-networks:
-  internal:

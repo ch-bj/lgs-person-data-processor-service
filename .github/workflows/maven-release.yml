@@ -56,7 +56,7 @@ jobs:
         name: lwgs-person-data-processor-service-artifacts
         path: |
           target/*.jar
-          !target/*-SNAPTSHOT.jar
+          !target/*-SNAPSHOT.jar
           !target/*-test.jar
 
   release:
@@ -76,7 +76,7 @@ jobs:
           path: ./release/
       - name: Create release ZIP
         run: |
-          cd ./release && zip ../lwgs-person-data-processor-service.zip * && cd -
+          cd ./release && zip -r ../lwgs-person-data-processor-service.zip * && cd -
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1

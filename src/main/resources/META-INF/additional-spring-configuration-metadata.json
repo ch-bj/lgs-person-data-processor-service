@@ -41,9 +41,9 @@
       "description": "Description for lwgs.searchindex.encryption.message-digest."
     },
     {
-      "name": "lwgs.searchindex.encryption.publik-key",
+      "name": "lwgs.searchindex.encryption.public-key",
       "type": "java.lang.String",
-      "description": "Description for lwgs.searchindex.encryption.publik-key."
+      "description": "Description for lwgs.searchindex.encryption.public-key."
     },
     {
       "name": "lwgs.searchindex.encryption.cypher-specification",
