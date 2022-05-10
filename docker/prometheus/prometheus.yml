@@ -19,7 +19,7 @@ scrape_configs:
     metrics_path: /actuator/prometheus
 
     static_configs:
-      - targets: ['backend:8080']
+      - targets: ['backend:8081']
         labels:
           group: 'production'
 
