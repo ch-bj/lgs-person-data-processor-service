@@ -40,8 +40,8 @@ jobs:
               "password": "${{ secrets.GH_PACKAGE_TOKEN }}"
           }]
     - name: Maven verify
-      run: mvn -B verify
+      run: mvn -B verify -Dmaven.test.skip
     - name: Maven run tests
       run: mvn -B test
-    - name: Maven build package -Dmaven.test.skip
-      run: mvn -B package
+    - name: Maven build package
+      run: mvn -B package -Dmaven.test.skip

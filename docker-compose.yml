@@ -20,25 +20,28 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
       HSQLDB_FILE: "/hsqldb/data/searchindex-client"
       SEDEX_BASE_PATH: "/var/sedex"
-      REST_API_KEY: ${REST_API_KEY}
       SEDEX_SENDER_ID: ${SEDEX_SENDER_ID}
       SEDEX_RECIPIENT_ID: ${SEDEX_RECIPIENT_ID}
       SEDEX_MESSAGE_TYPE: ${SEDEX_MESSAGE_TYPE}
       SEDEX_MESSAGE_CLASS: ${SEDEX_MESSAGE_CLASS}
+      REST_API_KEY: ${REST_API_KEY}
   rabbitmq:
     image: rabbitmq:3-management-alpine
     restart: always
     networks:
       - internal
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 15692:15692
     volumes:
-      - ./docker/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
-      - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/docker-presets.conf
       - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
-      - ./rabbitmq/data:/var/lib/rabbitmq/mnesia/rabbit@lwgs-rabbit
-      - ./rabbitmq/logs:/var/log/rabbitmq/log
+      - rabbitdata:/var/lib/rabbitmq/mnesia/rabbit@lwgs-rabbit
+      - rabbitlogs:/var/log/rabbitmq/log
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
   prometheus:
     image: prom/prometheus
     restart: always
@@ -62,6 +65,8 @@ services:
 volumes:
   logvolume: {}
   dbvolume: {}
+  rabbitdata: {}
+  rabbitlogs: {}
   sedex: {}
 networks:
   internal:
