@@ -99,18 +99,30 @@ def get_transaction(transaction_id):
                             headers=json.loads(config["endpoints"][
                                                    "endpoint.authentication.headers"]))
     logger.info(response.json())
-    assert response.status_code == 200
-    return response.json()
+    # If we're querying too fast, enter retry
+    if response.status_code == 404:
+      return None
+    else:
+      assert response.status_code == 200
+      return response.json()
+
 
 
 def wait_for_completion(transaction_id, completion_states):
-    transaction = get_transaction(transaction_id)
-    logger.debug("TransactionData: " + str(transaction))
     processing = True
     trials = 0
     while processing and trials < int(
         config["test-parameters"]["query-transaction.num-of-retries"]):
         trials = trials + 1
+
+        transaction = get_transaction(transaction_id)
+        logger.debug("TransactionData: " + str(transaction))
+
+        if transaction == None:
+          time.sleep(float(
+                config["test-parameters"]["query-transaction.retry-wait-time"]))
+          continue
+
         transaction_state = TransactionStates[transaction['state']]
         if transaction_state in completion_states:
             return transaction_state
@@ -119,7 +131,6 @@ def wait_for_completion(transaction_id, completion_states):
                 TransactionStates[transaction['state']]))
             time.sleep(float(
                 config["test-parameters"]["query-transaction.retry-wait-time"]))
-            transaction = get_transaction(transaction_id)
     assert False, "Did not get expected completion states " + str(
         completion_states) + " but " + str(transaction_state) + " after " + \
                   config["test-parameters"][
