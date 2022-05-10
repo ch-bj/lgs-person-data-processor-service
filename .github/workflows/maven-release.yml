@@ -43,7 +43,7 @@ jobs:
               "password": "${{ secrets.GH_PACKAGE_TOKEN }}"
           }]
     - name: Maven verify
-      run: mvn -B verify
+      run: mvn -B verify -Dmaven.test.skip
     - name: Maven run tests
       run: mvn -B test
     - name: Maven set version
