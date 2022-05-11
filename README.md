@@ -25,7 +25,8 @@ partial syncs.
 ### Introduction
 
 
-For installation details have a look at the separate installation documentation: [Installation LWGS PDPS](doc/install.md)
+For installation details have a look at the separate installation documentation: [Development LWGS PDPS Env](doc/development-install.md)
+or [Test LWGS PDPS Env](doc/test-install.md) for a full dockerized test environment.
 
 ### Full Sync Flow
 In case of a full sync the services allows the seeding party to explicitly enable, fill and submit a seeding job.
