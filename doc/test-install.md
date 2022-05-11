@@ -12,7 +12,7 @@ You should make sure you've installed the following tools:
 
 ## Preparation
 
-Login into githubs docker repository (replacing `#USER#` with your github handle)
+Login into githubs docker repository (replacing `#USER#` with your github handle). The password you need to provide here is a github personal access token with the permission `read:packages` (see also: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
 
 ```
  # docker login ghcr.io -u #USER#
