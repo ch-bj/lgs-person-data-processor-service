@@ -113,7 +113,9 @@ public class FullSyncStateManager {
   public synchronized void startFullSync() {
     if (Arrays.asList(FullSyncSeedState.COMPLETED, FullSyncSeedState.READY)
         .contains(getFullSyncJobState())) {
-      resetFullSync(false);
+      if (getFullSyncJobState() != FullSyncSeedState.READY) {
+        resetFullSync(false);
+      }
       setFullSyncJobState(FullSyncSeedState.SEEDING);
       setCurrentFullSyncJobId(UUID.randomUUID());
       return;
