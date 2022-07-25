@@ -81,7 +81,7 @@ public class SedexFileWriterService {
         log.info(
             "Processing queue failed {} times, skip sedexFileWriter runs until {} (T-{}sec)",
             errorCount,
-            retryTime.toString(),
+            retryTime,
             Duration.between(Instant.now(), retryTime).getSeconds());
         return;
       }
@@ -104,7 +104,8 @@ public class SedexFileWriterService {
 
           final SedexEnvelope envelope =
               SedexEnvelope.builder()
-                  .messageId(inHeaders.getJobId().toString())
+                  .messageId(
+                      inHeaders.getJobId().toString() + '-' + jobCollectedPersonData.getPage())
                   .messageType(sedexMessageType)
                   .messageClass(sedexMessageClass)
                   .senderId(sedexSenderId)

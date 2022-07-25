@@ -40,62 +40,78 @@ public abstract class AbstractSyncService {
       @NonNull final JobType jobType,
       @NonNull final String inQueueName,
       @NonNull final String outTopicName) {
-    log.info("Start processing queue " + inQueueName + ".");
+    processQueue(jobType, inQueueName, outTopicName, null);
+  }
 
+  public void processQueue(
+      @NonNull final JobType jobType,
+      @NonNull final String inQueueName,
+      @NonNull final String outTopicName,
+      final UUID currentJobId) {
+    log.debug("Start processing queue " + inQueueName + ".");
+    int page = 0;
+    final UUID jobId = currentJobId != null ? currentJobId : UUID.randomUUID();
     try (Connection connection = rabbitTemplate.getConnectionFactory().createConnection()) {
 
       try (Channel channel = connection.createChannel(TRANSACTIONAL)) {
-        channel.txSelect();
+        List<ProcessedPersonData> processedPersonDataList;
+        do {
+          channel.txSelect();
 
-        final List<ProcessedPersonData> processedPersonDataList =
-            getMessagesUntilQueueIsEmpty(channel, inQueueName);
+          processedPersonDataList =
+              getMessagesUntilPageFullOrQueueIsEmpty(channel, inQueueName, 5000);
 
-        if (processedPersonDataList.isEmpty()) {
-          channel.txCommit(); // Commit rejected messages
-          log.info("Nothing to process. Returning.");
-          return;
-        }
+          if (processedPersonDataList.isEmpty()) {
+            channel.txCommit(); // Commit rejected messages
+            log.debug("Nothing to process. Returning.");
+            return;
+          }
 
-        JobCollectedPersonData jobCollectedPersonData =
-            JobCollectedPersonData.builder()
-                .jobId(UUID.randomUUID())
-                .processedPersonDataList(processedPersonDataList)
-                .build();
-
-        log.info(
-            "Sending transactions to sedex outbox. TransactionIds["
-                + getTransactionIds(processedPersonDataList).toString()
-                + "]");
-        try {
-          byte[] byteProcessedSedexPersonData =
-              BinarySerializerUtil.convertObjectToByteArray(jobCollectedPersonData);
-
-          final CommonHeadersDao headersDao =
-              CommonHeadersDao.builder()
-                  .messageCategory(MessageCategory.JOB_EVENT)
-                  .jobState(JobState.NEW)
-                  .jobId(jobCollectedPersonData.getJobId())
-                  .jobType(jobType)
-                  .timestamp(Instant.now())
+          JobCollectedPersonData jobCollectedPersonData =
+              JobCollectedPersonData.builder()
+                  .jobId(jobId)
+                  .page(page)
+                  .processedPersonDataList(processedPersonDataList)
                   .build();
 
-          BasicProperties properties =
-              (new BasicProperties.Builder())
-                  .headers(headersDao.toMap())
-                  .correlationId(jobCollectedPersonData.getJobId().toString())
-                  .build();
+          log.info(
+              "Sending transactions to sedex outbox. [jobId:{}; page:{}; numTransactions:{}]",
+              jobId,
+              page,
+              processedPersonDataList.size());
+          try {
+            byte[] byteProcessedSedexPersonData =
+                BinarySerializerUtil.convertObjectToByteArray(jobCollectedPersonData);
 
-          channel.basicPublish(
-              Exchanges.LWGS, outTopicName, properties, byteProcessedSedexPersonData);
+            final CommonHeadersDao headersDao =
+                CommonHeadersDao.builder()
+                    .messageCategory(MessageCategory.JOB_EVENT)
+                    .jobState(JobState.NEW)
+                    .jobId(jobCollectedPersonData.getJobId())
+                    .jobType(jobType)
+                    .timestamp(Instant.now())
+                    .build();
 
-          channel.txCommit();
-        } catch (SerializationFailedException e) {
-          log.warn(
-              "Serialization of JobCollectedPersonData failed. Rolling back all transactions["
-                  + getTransactionIds(processedPersonDataList).toString()
-                  + "]");
-          channel.txRollback();
-        }
+            BasicProperties properties =
+                (new BasicProperties.Builder())
+                    .headers(headersDao.toMap())
+                    .correlationId(jobCollectedPersonData.getJobId().toString())
+                    .build();
+
+            channel.basicPublish(
+                Exchanges.LWGS, outTopicName, properties, byteProcessedSedexPersonData);
+
+            channel.txCommit();
+
+          } catch (SerializationFailedException e) {
+            log.warn(
+                "Serialization of JobCollectedPersonData failed. Rolling back all transactions["
+                    + getTransactionIds(processedPersonDataList).toString()
+                    + "]");
+            channel.txRollback();
+          }
+          page++;
+        } while (!processedPersonDataList.isEmpty());
       } catch (TimeoutException e) {
         log.warn(
             "TimeoutException when processing channel for queue "
@@ -106,7 +122,6 @@ public abstract class AbstractSyncService {
             "IOException when processing channel for queue " + inQueueName + ". Stop processing.");
       }
     }
-    log.info("DONEDONEDONE");
   }
 
   private List<UUID> getTransactionIds(List<ProcessedPersonData> processedPersonDataList) {
@@ -115,10 +130,11 @@ public abstract class AbstractSyncService {
         .collect(Collectors.toList());
   }
 
-  private List<ProcessedPersonData> getMessagesUntilQueueIsEmpty(
-      Channel channel, String inQueueName) throws IOException {
+  private List<ProcessedPersonData> getMessagesUntilPageFullOrQueueIsEmpty(
+      Channel channel, String inQueueName, int pageSize) throws IOException {
     final List<ProcessedPersonData> processedPersonDataList = new ArrayList<>();
     boolean loop;
+    int count = 0;
     do {
       GetResponse response = channel.basicGet(inQueueName, false);
 
@@ -134,7 +150,8 @@ public abstract class AbstractSyncService {
           processedPersonDataList.add(processedPersonData);
 
           channel.basicAck(response.getEnvelope().getDeliveryTag(), ACK_SINGLE_MESSAGE);
-          log.info(
+          count++;
+          log.debug(
               "Processing PersonData with transactionId: "
                   + processedPersonData.getTransactionId());
         } catch (DeserializationFailedException e) {
@@ -148,8 +165,11 @@ public abstract class AbstractSyncService {
               REJECT_SINGLE_MESSAGE,
               REJECT_DO_NOT_REQUEUE);
         }
+      } else {
+        // continue looping if message count > 0
+        loop = channel.messageCount(inQueueName) > 0;
       }
-    } while (loop);
+    } while (loop && count < pageSize);
     return processedPersonDataList;
   }
 

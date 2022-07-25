@@ -15,6 +15,8 @@ public class JobSeedService {
   private final QueueStatsService queueStatsService;
   private final FullSyncStateManager fullSyncStateManager;
 
+  private static final String EMPTY_PAYLOAD = "";
+
   public JobSeedService(
       QueueStatsService queueStatsService,
       RabbitTemplate rabbitTemplate,
@@ -55,6 +57,12 @@ public class JobSeedService {
         Exchanges.LWGS,
         topicName,
         PersonData.builder().transactionId(transactionId).payload(payload).build(),
+        headers::applyAndSetTransactionIdAsCorrelationId);
+
+    rabbitTemplate.convertAndSend(
+        Exchanges.LWGS_STATE,
+        topicName,
+        EMPTY_PAYLOAD,
         headers::applyAndSetTransactionIdAsCorrelationId);
     return transactionId;
   }

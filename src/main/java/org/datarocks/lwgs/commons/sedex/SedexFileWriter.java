@@ -99,7 +99,8 @@ public class SedexFileWriter {
           } else {
             // This should never happen, but managed to produce this with restarting service during
             // processing of messages.
-            log.error("Duplicate transactionId found: {}. Skipping processedPersonData.",
+            log.error(
+                "Duplicate transactionId found: {}. Skipping processedPersonData.",
                 processedPersonData.getTransactionId());
           }
         }
