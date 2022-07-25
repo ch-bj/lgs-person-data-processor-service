@@ -11,8 +11,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class FullSyncService extends AbstractSyncService {
   private final FullSyncStateManager fullSyncStateManager;
 
-  public FullSyncService(RabbitTemplate template, FullSyncStateManager fullSyncStateManager) {
-    super(template);
+  public FullSyncService(
+      RabbitTemplate template, FullSyncStateManager fullSyncStateManager, int pageSize) {
+    super(template, pageSize);
     this.fullSyncStateManager = fullSyncStateManager;
   }
 

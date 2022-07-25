@@ -29,11 +29,12 @@ public abstract class AbstractSyncService {
   private static final boolean REJECT_DO_NOT_REQUEUE = false;
   private static final boolean REJECT_SINGLE_MESSAGE = false;
   private static final boolean TRANSACTIONAL = true;
-
   private final RabbitTemplate rabbitTemplate;
+  private final int pageSize;
 
-  public AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate) {
+  public AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate, int pageSize) {
     this.rabbitTemplate = rabbitTemplate;
+    this.pageSize = pageSize;
   }
 
   public void processQueue(
@@ -58,8 +59,7 @@ public abstract class AbstractSyncService {
         do {
           channel.txSelect();
 
-          processedPersonDataList =
-              getMessagesUntilPageFullOrQueueIsEmpty(channel, inQueueName, 5000);
+          processedPersonDataList = getMessagesUntilPageFullOrQueueIsEmpty(channel, inQueueName);
 
           if (processedPersonDataList.isEmpty()) {
             channel.txCommit(); // Commit rejected messages
@@ -131,7 +131,7 @@ public abstract class AbstractSyncService {
   }
 
   private List<ProcessedPersonData> getMessagesUntilPageFullOrQueueIsEmpty(
-      Channel channel, String inQueueName, int pageSize) throws IOException {
+      Channel channel, String inQueueName) throws IOException {
     final List<ProcessedPersonData> processedPersonDataList = new ArrayList<>();
     boolean loop;
     int count = 0;

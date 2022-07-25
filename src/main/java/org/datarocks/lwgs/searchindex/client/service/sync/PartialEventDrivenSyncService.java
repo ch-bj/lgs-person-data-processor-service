@@ -10,8 +10,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 @Slf4j
 public class PartialEventDrivenSyncService extends AbstractSyncService {
-  public PartialEventDrivenSyncService(RabbitTemplate template) {
-    super(template);
+  public PartialEventDrivenSyncService(RabbitTemplate template, int pageSize) {
+    super(template, pageSize);
   }
 
   @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_OUTGOING)
