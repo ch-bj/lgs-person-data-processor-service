@@ -29,10 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping(
-    path = "/api/v1/sync",
-    consumes = MediaType.APPLICATION_JSON_VALUE,
-    produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/api/v1/sync", produces = MediaType.APPLICATION_JSON_VALUE)
 public class SyncController {
   private final JobSeedService jobSeedService;
   private final FullSyncStateManager fullSyncStateManager;
