@@ -25,6 +25,21 @@ services:
       SEDEX_MESSAGE_TYPE: ${SEDEX_MESSAGE_TYPE}
       SEDEX_MESSAGE_CLASS: ${SEDEX_MESSAGE_CLASS}
       REST_API_KEY: ${REST_API_KEY}
+  postgres:
+    image: 'postgres:alpine'
+    restart: always
+    networks:
+      - internal
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    profiles:
+      - postgres
   rabbitmq:
     image: rabbitmq:3-management-alpine
     restart: always
@@ -41,6 +56,10 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          memory: 4G
   prometheus:
     image: prom/prometheus
     restart: always
@@ -71,6 +90,7 @@ services:
 volumes:
   log-data: {}
   hsqldb-data: {}
+  postgres-data: {}
   rabbit-data: {}
   rabbit-logs: {}
   grafana-data: {}
