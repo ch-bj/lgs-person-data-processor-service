@@ -18,14 +18,17 @@
   <description>LWGS Person Data Processor Service</description>
 
   <properties>
-    <java.version>11</java.version>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
+    <java.version>17</java.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
 
     <lwgs.person.data.processor.version>1.1.1</lwgs.person.data.processor.version>
     <hsqldb.version>2.6.1</hsqldb.version>
     <jackson-xml.version>2.13.2</jackson-xml.version>
     <springdoc.version>1.6.8</springdoc.version>
+
+    <oracle.jdbc.version>21.6.0.0.1</oracle.jdbc.version>
+    <postgresql.version>42.3.6</postgresql.version>
 
     <maven-fmt.version>2.13</maven-fmt.version>
     <maven-jacoco.version>0.8.8</maven-jacoco.version>
@@ -115,6 +118,20 @@
       <groupId>org.hsqldb</groupId>
       <artifactId>hsqldb</artifactId>
       <version>${hsqldb.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc11</artifactId>
+      <version>${oracle.jdbc.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${postgresql.version}</version>
       <scope>runtime</scope>
     </dependency>
 
