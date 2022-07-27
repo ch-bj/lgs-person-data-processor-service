@@ -33,7 +33,7 @@ public class PersonDataProcessor {
     this.pipeLine = pipeLine;
   }
 
-  @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_INCOMING, concurrency = "1-4")
+  @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_INCOMING, concurrency = "1-8")
   public void listenPartial(PersonData personData) {
     try {
       out(Topics.PERSONDATA_PARTIAL_OUTGOING, process(personData));
