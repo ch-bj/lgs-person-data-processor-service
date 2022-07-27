@@ -9,8 +9,8 @@ services:
       - internal
       - default
     volumes:
-      - log-data:/var/log
-      - hsqldb-data:/hsqldb/data
+      - log_data:/var/log
+      - hsqldb_data:/hsqldb/data
       - sedex:/var/sedex
     links:
       - rabbitmq
@@ -38,10 +38,8 @@ services:
     restart: always
     networks:
       - internal
-    ports:
-      - 5432:5432
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -63,8 +61,8 @@ services:
     volumes:
       - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/docker-presets.conf
       - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
-      - rabbit-data:/var/lib/rabbitmq/mnesia/rabbit@lwgs-rabbit
-      - rabbit-logs:/var/log/rabbitmq/log
+      - rabbit_data:/var/lib/rabbitmq/mnesia/rabbit@lwgs-rabbit
+      - rabbit_logs:/var/log/rabbitmq/log
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
@@ -95,7 +93,7 @@ services:
       - internal
       - default
     volumes:
-      - grafana-data:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
       - ./docker/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/rabbitmq.yaml
       - ./docker/grafana/datasources.yml:/etc/grafana/provisioning/datasources/prometheus.yaml
       - ./docker/grafana/dashboards:/dashboards
@@ -109,12 +107,12 @@ services:
           memory: 1G
 
 volumes:
-  log-data: {}
-  hsqldb-data: {}
-  postgres-data: {}
-  rabbit-data: {}
-  rabbit-logs: {}
-  grafana-data: {}
+  log_data: {}
+  hsqldb_data: {}
+  postgres_data: {}
+  rabbit_data: {}
+  rabbit_logs: {}
+  grafana_data: {}
   sedex: {}
 networks:
   internal:

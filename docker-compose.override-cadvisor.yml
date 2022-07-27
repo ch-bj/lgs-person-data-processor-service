@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  prometheus:
+    volumes:
+      - ./docker/prometheus/prometheus.cadvisor.yml:/etc/prometheus/prometheus.yml
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    restart: always
+    privileged: true
+    networks:
+      - internal
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    deploy:
+      resources:
+        limits:
+          memory: 1G
