@@ -54,12 +54,11 @@ public abstract class AbstractSyncService {
     final UUID jobId = currentJobId != null ? currentJobId : UUID.randomUUID();
     try (Connection connection = rabbitTemplate.getConnectionFactory().createConnection()) {
 
-      try (Channel channel = connection.createChannel(TRANSACTIONAL)) {
-        List<ProcessedPersonData> processedPersonDataList;
-        do {
+      while (true) {
+        try (Channel channel = connection.createChannel(TRANSACTIONAL)) {
           channel.txSelect();
-
-          processedPersonDataList = getMessagesUntilPageFullOrQueueIsEmpty(channel, inQueueName);
+          final List<ProcessedPersonData> processedPersonDataList =
+              getMessagesUntilPageFullOrQueueIsEmpty(channel, inQueueName);
 
           if (processedPersonDataList.isEmpty()) {
             channel.txCommit(); // Commit rejected messages
@@ -67,7 +66,7 @@ public abstract class AbstractSyncService {
             return;
           }
 
-          JobCollectedPersonData jobCollectedPersonData =
+          final JobCollectedPersonData jobCollectedPersonData =
               JobCollectedPersonData.builder()
                   .jobId(jobId)
                   .page(page)
@@ -80,7 +79,7 @@ public abstract class AbstractSyncService {
               page,
               processedPersonDataList.size());
           try {
-            byte[] byteProcessedSedexPersonData =
+            final byte[] byteProcessedSedexPersonData =
                 BinarySerializerUtil.convertObjectToByteArray(jobCollectedPersonData);
 
             final CommonHeadersDao headersDao =
@@ -92,7 +91,7 @@ public abstract class AbstractSyncService {
                     .timestamp(Instant.now())
                     .build();
 
-            BasicProperties properties =
+            final BasicProperties properties =
                 (new BasicProperties.Builder())
                     .headers(headersDao.toMap())
                     .correlationId(jobCollectedPersonData.getJobId().toString())
@@ -111,15 +110,17 @@ public abstract class AbstractSyncService {
             channel.txRollback();
           }
           page++;
-        } while (!processedPersonDataList.isEmpty());
-      } catch (TimeoutException e) {
-        log.warn(
-            "TimeoutException when processing channel for queue "
-                + inQueueName
-                + ". Stop processing.");
-      } catch (IOException e) {
-        log.warn(
-            "IOException when processing channel for queue " + inQueueName + ". Stop processing.");
+        } catch (TimeoutException e) {
+          log.warn(
+              "TimeoutException when processing channel for queue "
+                  + inQueueName
+                  + ". Stop processing.");
+        } catch (IOException e) {
+          log.warn(
+              "IOException when processing channel for queue "
+                  + inQueueName
+                  + ". Stop processing.");
+        }
       }
     }
   }
@@ -136,14 +137,14 @@ public abstract class AbstractSyncService {
     boolean loop;
     int count = 0;
     do {
-      GetResponse response = channel.basicGet(inQueueName, false);
+      final GetResponse response = channel.basicGet(inQueueName, false);
 
       loop = (response != null);
 
       if (loop) {
         try {
 
-          ProcessedPersonData processedPersonData =
+          final ProcessedPersonData processedPersonData =
               BinarySerializerUtil.convertByteArrayToObject(
                   response.getBody(), ProcessedPersonData.class);
 
@@ -165,9 +166,6 @@ public abstract class AbstractSyncService {
               REJECT_SINGLE_MESSAGE,
               REJECT_DO_NOT_REQUEUE);
         }
-      } else {
-        // continue looping if message count > 0
-        loop = channel.messageCount(inQueueName) > 0;
       }
     } while (loop && count < pageSize);
     return processedPersonDataList;

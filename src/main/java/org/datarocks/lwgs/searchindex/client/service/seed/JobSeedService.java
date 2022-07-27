@@ -14,7 +14,6 @@ public class JobSeedService {
   private final RabbitTemplate rabbitTemplate;
   private final QueueStatsService queueStatsService;
   private final FullSyncStateManager fullSyncStateManager;
-
   private static final String EMPTY_PAYLOAD = "";
 
   public JobSeedService(

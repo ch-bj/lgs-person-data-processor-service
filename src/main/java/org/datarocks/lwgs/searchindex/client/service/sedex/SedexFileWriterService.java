@@ -70,9 +70,53 @@ public class SedexFileWriterService {
     throttlingActive = active;
   }
 
+  @Transactional
+  protected boolean processNextSedexOutboxMessage() {
+    final Message message = rabbitTemplate.receive(Queues.SEDEX_OUTBOX);
+
+    if (message == null) {
+      return false;
+    }
+
+    log.info("Start processing queue " + Queues.SEDEX_OUTBOX);
+    UUID fileIdentifier = UUID.randomUUID();
+    try {
+      final JobCollectedPersonData jobCollectedPersonData =
+          BinarySerializerUtil.convertByteArrayToObject(
+              message.getBody(), JobCollectedPersonData.class);
+
+      final CommonHeadersDao inHeaders =
+          new CommonHeadersDao(message.getMessageProperties().getHeaders());
+
+      final SedexEnvelope envelope =
+          SedexEnvelope.builder()
+              .messageId(inHeaders.getJobId().toString() + '-' + jobCollectedPersonData.getPage())
+              .messageType(sedexMessageType)
+              .messageClass(sedexMessageClass)
+              .senderId(sedexSenderId)
+              .recipientId(sedexRecipientId)
+              .eventDate(inHeaders.getTimestamp())
+              .messageDate(inHeaders.getTimestamp())
+              .build();
+
+      sedexFileWriter.writeSedexPayload(fileIdentifier, jobCollectedPersonData);
+      sedexFileWriter.writeSedexEnvelope(fileIdentifier, envelope);
+
+      final CommonHeadersDao outHeaders =
+          CommonHeadersDao.builder(inHeaders).jobState(JobState.SENT).timestamp().build();
+
+      rabbitTemplate.convertAndSend(
+          Exchanges.LWGS, Topics.SEDEX_SENT, envelope, outHeaders::applyAndSetJobIdAsCorrelationId);
+    } catch (Exception e) {
+      updateThrottling(true);
+      log.error("Fatal error: " + e.getMessage());
+      throw new ListenerExecutionFailedException("Writing Sedex file failed", e, message);
+    }
+    return true;
+  }
+
   @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sedex.file-writer.fixed-delay:1000}")
   @Async
-  @Transactional
   public void processSedexOutbox() {
     boolean loop;
 
@@ -89,49 +133,9 @@ public class SedexFileWriterService {
     }
 
     do {
-      Message message = rabbitTemplate.receive(Queues.SEDEX_OUTBOX);
-      loop = (message != null);
-      if (loop) {
-        log.info("Start processing queue " + Queues.SEDEX_OUTBOX);
-        UUID fileIdentifier = UUID.randomUUID();
-        try {
-          final JobCollectedPersonData jobCollectedPersonData =
-              BinarySerializerUtil.convertByteArrayToObject(
-                  message.getBody(), JobCollectedPersonData.class);
-
-          final CommonHeadersDao inHeaders =
-              new CommonHeadersDao(message.getMessageProperties().getHeaders());
-
-          final SedexEnvelope envelope =
-              SedexEnvelope.builder()
-                  .messageId(
-                      inHeaders.getJobId().toString() + '-' + jobCollectedPersonData.getPage())
-                  .messageType(sedexMessageType)
-                  .messageClass(sedexMessageClass)
-                  .senderId(sedexSenderId)
-                  .recipientId(sedexRecipientId)
-                  .eventDate(inHeaders.getTimestamp())
-                  .messageDate(inHeaders.getTimestamp())
-                  .build();
-
-          sedexFileWriter.writeSedexPayload(fileIdentifier, jobCollectedPersonData);
-          sedexFileWriter.writeSedexEnvelope(fileIdentifier, envelope);
-
-          final CommonHeadersDao outHeaders =
-              CommonHeadersDao.builder(inHeaders).jobState(JobState.SENT).timestamp().build();
-
-          rabbitTemplate.convertAndSend(
-              Exchanges.LWGS,
-              Topics.SEDEX_SENT,
-              envelope,
-              outHeaders::applyAndSetJobIdAsCorrelationId);
-        } catch (Exception e) {
-          updateThrottling(true);
-          log.error("Fatal error: " + e.getMessage());
-          throw new ListenerExecutionFailedException("Writing Sedex file failed", e, message);
-        }
-      }
+      loop = processNextSedexOutboxMessage();
     } while (loop);
+
     updateThrottling(false);
   }
 }

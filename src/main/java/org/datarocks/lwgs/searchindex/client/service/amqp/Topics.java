@@ -15,5 +15,6 @@ public class Topics {
   public static final String PERSONDATA_FULL_FAILED = "topics.persondata.full.failed";
   public static final String PERSONDATA_BUSINESS_VALIDATION =
       "topics.persondata.business.validation";
+  public static final String PERSONDATA_CATCH_ALL = "topics.persondata.#";
   public static final String CATCH_ALL = "#";
 }

@@ -49,7 +49,7 @@ public class PersonDataProcessor {
     }
   }
 
-  @RabbitListener(queues = Queues.PERSONDATA_FULL_INCOMING, concurrency = "1-8")
+  @RabbitListener(queues = Queues.PERSONDATA_FULL_INCOMING, concurrency = "1-4")
   public void listenFull(PersonData personData) {
     try {
       out(Topics.PERSONDATA_FULL_OUTGOING, process(personData));

@@ -28,7 +28,7 @@ public class SedexFileWriter {
   private final boolean createDirectories;
   private final XmlMapper xmlMapper;
 
-  public SedexFileWriter(Path sedexOutboxPath, boolean createDirectories) {
+  public SedexFileWriter(final Path sedexOutboxPath, boolean createDirectories) {
     this.sedexOutboxPath = sedexOutboxPath;
     this.createDirectories = createDirectories;
     this.xmlMapper = new XmlMapper();

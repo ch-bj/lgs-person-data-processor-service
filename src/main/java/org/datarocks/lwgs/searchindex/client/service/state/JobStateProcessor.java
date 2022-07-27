@@ -73,7 +73,7 @@ public class JobStateProcessor {
   }
 
   @Transactional
-  protected void handleJobMessage(CommonHeadersDao headers, Message message) {
+  protected void handleJobMessage(final CommonHeadersDao headers, final Message message) {
     if (headers.getJobState() == JobState.NEW) {
       createNewSyncJobFromMessage(headers, message);
       return;
@@ -86,9 +86,10 @@ public class JobStateProcessor {
         });
   }
 
-  @RabbitListener(queues = Queues.JOB_STATE, concurrency = "1-4")
-  protected void listen(Message message) {
-    CommonHeadersDao headers = new CommonHeadersDao(message.getMessageProperties().getHeaders());
+  @RabbitListener(queues = Queues.JOB_STATE)
+  protected void listen(final Message message) {
+    final CommonHeadersDao headers =
+        new CommonHeadersDao(message.getMessageProperties().getHeaders());
     if (headers.getOptionalMessageCategory().orElse(MessageCategory.UNKNOWN)
         == MessageCategory.JOB_EVENT) {
       handleJobMessage(headers, message);

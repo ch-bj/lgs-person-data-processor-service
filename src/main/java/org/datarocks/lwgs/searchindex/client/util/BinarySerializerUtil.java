@@ -8,11 +8,11 @@ import org.datarocks.lwgs.searchindex.client.service.exception.SerializationFail
 public class BinarySerializerUtil {
   private BinarySerializerUtil() {}
 
-  public static <T> T convertByteArrayToObject(byte[] payload, Class<T> clazz)
+  public static <T> T convertByteArrayToObject(final byte[] payload, final Class<T> clazz)
       throws DeserializationFailedException {
-    ByteArrayInputStream bis = new ByteArrayInputStream(payload);
+    final ByteArrayInputStream bis = new ByteArrayInputStream(payload);
     try {
-      ObjectInput in = new ObjectInputStream(bis);
+      final ObjectInput in = new ObjectInputStream(bis);
       return clazz.cast(in.readObject());
     } catch (ClassNotFoundException | IOException e) {
       throw new DeserializationFailedException();
@@ -22,9 +22,9 @@ public class BinarySerializerUtil {
   public static byte[] convertObjectToByteArray(@NonNull final Object o)
       throws SerializationFailedException {
 
-    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    final ByteArrayOutputStream bos = new ByteArrayOutputStream();
     try {
-      ObjectOutput out = new ObjectOutputStream(bos);
+      final ObjectOutput out = new ObjectOutputStream(bos);
       out.writeObject(o);
       return bos.toByteArray();
     } catch (IOException e) {

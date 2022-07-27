@@ -149,7 +149,7 @@ public class ApplicationConfiguration {
 
   @Bean
   public Binding jobStateBinding(TopicExchange topicExchange, Queue jobStateQueue) {
-    return BindingBuilder.bind(jobStateQueue).to(topicExchange).with(Topics.CATCH_ALL);
+    return BindingBuilder.bind(jobStateQueue).to(topicExchange).with(Topics.PERSONDATA_CATCH_ALL);
   }
 
   @Bean

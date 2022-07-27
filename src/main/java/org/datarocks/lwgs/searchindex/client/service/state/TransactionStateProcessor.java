@@ -128,7 +128,7 @@ public class TransactionStateProcessor {
     }
   }
 
-  @RabbitListener(queues = Queues.TRANSACTION_STATE, concurrency = "1-8")
+  @RabbitListener(queues = Queues.TRANSACTION_STATE, concurrency = "1-8", priority = "10")
   protected void listen(Message message) {
     CommonHeadersDao headers = new CommonHeadersDao(message.getMessageProperties().getHeaders());
     if (headers.getOptionalMessageCategory().orElse(MessageCategory.UNKNOWN)
