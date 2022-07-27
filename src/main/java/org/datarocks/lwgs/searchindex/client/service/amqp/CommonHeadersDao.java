@@ -16,7 +16,8 @@ public class CommonHeadersDao {
   private final Map<String, Object> rawHeaders;
 
   public CommonHeadersDao(Map<String, Object> rawHeaders) {
-    this.rawHeaders = rawHeaders;
+    // Clone instead of reference, to avoid dangling ref counts on Message blocking GC
+    this.rawHeaders = new HashMap<>(rawHeaders);
   }
 
   public boolean contains(String key) {

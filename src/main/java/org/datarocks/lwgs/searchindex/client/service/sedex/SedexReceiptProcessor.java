@@ -41,7 +41,7 @@ public class SedexReceiptProcessor {
     Optional<SedexReceipt> optionalReceipt =
         receiptReader.readFromFile(Paths.get(event.getFilename()));
 
-    if (!optionalReceipt.isPresent()) {
+    if (optionalReceipt.isEmpty()) {
       log.warn("Invalid receipt");
       lwgsLogger.error("Received invalid sedex receipt.");
 
@@ -50,6 +50,8 @@ public class SedexReceiptProcessor {
 
     final SedexReceipt receipt = optionalReceipt.get();
     final SedexStatus status = SedexStatus.valueOf(receipt.getStatusCode());
+
+    // TODO: handle multi page requests, right now one delivered message makes jobs a success
 
     if (status.getCategory() == SUCCESS) {
       final CommonHeadersDao headers =

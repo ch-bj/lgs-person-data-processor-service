@@ -5,6 +5,7 @@ import java.util.concurrent.Executors;
 import org.datarocks.lwgs.searchindex.client.service.sync.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,29 +30,33 @@ public class ScheduleSyncServiceJobConfiguration implements SchedulingConfigurer
   @ConditionalOnProperty(
       value = "lwgs.searchindex.client.sync.partial.scheduling-type",
       havingValue = "EVENT_DRIVEN")
-  public PartialEventDrivenSyncService partialEventDrivenSyncService() {
-    return new PartialEventDrivenSyncService(template);
+  public PartialEventDrivenSyncService partialEventDrivenSyncService(
+      @Value("${lwgs.searchindex.cient.sync.partial.page-size:5000}") int pageSize) {
+    return new PartialEventDrivenSyncService(template, pageSize);
   }
 
   @Bean
   @ConditionalOnProperty(
       value = "lwgs.searchindex.client.sync.partial.scheduling-type",
       havingValue = "FIXED_DELAY")
-  public PartialFixedDelaySyncService partialFixedDelaySyncService() {
-    return new PartialFixedDelaySyncService(template);
+  public PartialFixedDelaySyncService partialFixedDelaySyncService(
+      @Value("${lwgs.searchindex.cient.sync.partial.page-size:5000}") int pageSize) {
+    return new PartialFixedDelaySyncService(template, pageSize);
   }
 
   @Bean
   @ConditionalOnProperty(
       value = "lwgs.searchindex.client.sync.partial.scheduling-type",
       havingValue = "CRON_SCHEDULE")
-  public PartialScheduledSyncService partialScheduledSyncService() {
-    return new PartialScheduledSyncService(template);
+  public PartialScheduledSyncService partialScheduledSyncService(
+      @Value("${lwgs.searchindex.cient.sync.partial.page-size:5000}") int pageSize) {
+    return new PartialScheduledSyncService(template, pageSize);
   }
 
   @Bean
-  public FullSyncService fullSyncService() {
-    return new FullSyncService(template, fullSyncStateManager);
+  public FullSyncService fullSyncService(
+      @Value("${lwgs.searchindex.cient.sync.full.page-size:5000}") int pageSize) {
+    return new FullSyncService(template, fullSyncStateManager, pageSize);
   }
 
   @Bean(destroyMethod = "shutdown")

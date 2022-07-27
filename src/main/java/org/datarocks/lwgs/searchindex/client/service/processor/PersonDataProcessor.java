@@ -24,6 +24,7 @@ public class PersonDataProcessor {
 
   private final RabbitTemplate rabbitTemplate;
   private final PipeLine<String, GBPersonEvent, String> pipeLine;
+  private static final String EMPTY_PAYLOAD = "";
 
   @Autowired
   public PersonDataProcessor(
@@ -32,11 +33,12 @@ public class PersonDataProcessor {
     this.pipeLine = pipeLine;
   }
 
-  @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_INCOMING)
+  @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_INCOMING, concurrency = "1-8")
   public void listenPartial(PersonData personData) {
     try {
       out(Topics.PERSONDATA_PARTIAL_OUTGOING, process(personData));
     } catch (ProcessingPersonDataFailedException e) {
+      log.warn("Failed processing transaction: {}", e.getMessage());
       outFailed(
           Topics.PERSONDATA_PARTIAL_FAILED,
           ProcessedPersonDataFailed.builder()
@@ -47,11 +49,12 @@ public class PersonDataProcessor {
     }
   }
 
-  @RabbitListener(queues = Queues.PERSONDATA_FULL_INCOMING)
+  @RabbitListener(queues = Queues.PERSONDATA_FULL_INCOMING, concurrency = "1-4")
   public void listenFull(PersonData personData) {
     try {
       out(Topics.PERSONDATA_FULL_OUTGOING, process(personData));
     } catch (ProcessingPersonDataFailedException e) {
+      log.warn("Failed processing transaction: {}", e.getMessage());
       outFailed(
           Topics.PERSONDATA_FULL_FAILED,
           ProcessedPersonDataFailed.builder()
@@ -67,7 +70,6 @@ public class PersonDataProcessor {
     try {
       String processingResult =
           pipeLine.process(personData.getTransactionId().toString(), personData.getPayload());
-      log.warn(processingResult);
       return ProcessedPersonData.builder()
           .transactionId(personData.getTransactionId())
           .payload(processingResult)
@@ -90,14 +92,14 @@ public class PersonDataProcessor {
           "Business validation of gb person event failed. TransactionId: "
               + personData.getTransactionId()
               + ". Sending gb person event to failed queue."
-              + e.toString());
+              + e);
       throw new ProcessingPersonDataFailedException(e);
     } catch (RuntimeException e) {
       log.error(
           "Fatal error in person data processor library. TransactionId: "
               + personData.getTransactionId()
               + ". Sending gb person event to failed queue."
-              + e.toString());
+              + e);
       throw new ProcessingPersonDataFailedException(e);
     }
   }
@@ -116,6 +118,12 @@ public class PersonDataProcessor {
         topicName,
         processedPeronData,
         headers::applyAndSetTransactionIdAsCorrelationId);
+
+    rabbitTemplate.convertAndSend(
+        Exchanges.LWGS_STATE,
+        topicName,
+        EMPTY_PAYLOAD,
+        headers::applyAndSetTransactionIdAsCorrelationId);
   }
 
   private void outFailed(String topicName, ProcessedPersonDataFailed processedPeronData) {
@@ -131,6 +139,12 @@ public class PersonDataProcessor {
         Exchanges.LWGS,
         topicName,
         processedPeronData,
+        headers::applyAndSetTransactionIdAsCorrelationId);
+
+    rabbitTemplate.convertAndSend(
+        Exchanges.LWGS_STATE,
+        topicName,
+        EMPTY_PAYLOAD,
         headers::applyAndSetTransactionIdAsCorrelationId);
   }
 }

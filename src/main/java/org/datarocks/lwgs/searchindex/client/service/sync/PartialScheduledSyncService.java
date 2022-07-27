@@ -9,8 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 @Slf4j
 public class PartialScheduledSyncService extends AbstractSyncService {
-  public PartialScheduledSyncService(RabbitTemplate template) {
-    super(template);
+  public PartialScheduledSyncService(RabbitTemplate template, int pageSize) {
+    super(template, pageSize);
   }
 
   @Scheduled(cron = "${lwgs.searchindex.client.sync.partial.cron-schedule}")

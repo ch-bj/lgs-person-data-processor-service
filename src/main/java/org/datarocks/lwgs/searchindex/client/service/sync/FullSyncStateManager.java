@@ -38,19 +38,27 @@ public class FullSyncStateManager {
     return getFullSyncJobState() == FullSyncSeedState.SEEDING;
   }
 
-  public boolean isStateSending() {
+  public boolean isInStateSeeded() {
+    return getFullSyncJobState() == FullSyncSeedState.SEEDED;
+  }
+
+  public boolean isInStateSending() {
     return getFullSyncJobState() == FullSyncSeedState.SENDING;
   }
 
-  public boolean isStateFailed() {
+  public boolean isInStateFailed() {
     return getFullSyncJobState() == FullSyncSeedState.FAILED;
   }
 
-  public boolean isIncomingEmpty() {
+  public boolean isIncomingQueueEmpty() {
     return queueStatsService.getQueueCount(Queues.PERSONDATA_FULL_INCOMING) == 0;
   }
 
-  public boolean isFailedEmpty() {
+  public boolean isOutgoingQueueEmpty() {
+    return queueStatsService.getQueueCount(Queues.PERSONDATA_FULL_OUTGOING) == 0;
+  }
+
+  public boolean isFailedQueueEmpty() {
     return queueStatsService.getQueueCount(Queues.PERSONDATA_FULL_FAILED) == 0;
   }
 
@@ -105,6 +113,9 @@ public class FullSyncStateManager {
   public synchronized void startFullSync() {
     if (Arrays.asList(FullSyncSeedState.COMPLETED, FullSyncSeedState.READY)
         .contains(getFullSyncJobState())) {
+      if (getFullSyncJobState() != FullSyncSeedState.READY) {
+        resetFullSync(false);
+      }
       setFullSyncJobState(FullSyncSeedState.SEEDING);
       setCurrentFullSyncJobId(UUID.randomUUID());
       return;
@@ -114,6 +125,14 @@ public class FullSyncStateManager {
 
   public void submitFullSync() {
     if (getFullSyncJobState() == FullSyncSeedState.SEEDING) {
+      setFullSyncJobState(FullSyncSeedState.SEEDED);
+      return;
+    }
+    throw new StateChangeConflictingException(getFullSyncJobState(), FullSyncSeedState.SEEDED);
+  }
+
+  public void startSendingFullSync() {
+    if (getFullSyncJobState() == FullSyncSeedState.SEEDED) {
       setFullSyncJobState(FullSyncSeedState.SENDING);
       return;
     }

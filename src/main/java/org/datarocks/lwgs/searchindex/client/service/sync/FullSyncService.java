@@ -11,28 +11,57 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class FullSyncService extends AbstractSyncService {
   private final FullSyncStateManager fullSyncStateManager;
 
-  public FullSyncService(RabbitTemplate template, FullSyncStateManager fullSyncStateManager1) {
-    super(template);
-    this.fullSyncStateManager = fullSyncStateManager1;
+  public FullSyncService(
+      RabbitTemplate template, FullSyncStateManager fullSyncStateManager, int pageSize) {
+    super(template, pageSize);
+    this.fullSyncStateManager = fullSyncStateManager;
   }
 
-  private boolean preCheckConditions() {
-    return fullSyncStateManager.isStateSending()
-        && fullSyncStateManager.isIncomingEmpty()
-        && fullSyncStateManager.isFailedEmpty();
+  private boolean preCheckConditionsForStateSending() {
+    return fullSyncStateManager.isInStateSeeded()
+        && fullSyncStateManager.isIncomingQueueEmpty()
+        && fullSyncStateManager.isFailedQueueEmpty();
+  }
+
+  private boolean preCheckConditionsForProcessing() {
+    return fullSyncStateManager.isInStateSending()
+        && fullSyncStateManager.isIncomingQueueEmpty()
+        && fullSyncStateManager.isFailedQueueEmpty()
+        && !fullSyncStateManager.isOutgoingQueueEmpty();
+  }
+
+  private boolean preCheckConditionsForStateCompleted() {
+    return fullSyncStateManager.isInStateSending() && fullSyncStateManager.isOutgoingQueueEmpty();
   }
 
   @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sync.full.fixed-delay:1000}")
   public void fixedDelayFull() {
-    if (preCheckConditions()) {
-      processQueue(JobType.FULL, Queues.PERSONDATA_FULL_OUTGOING, Topics.SEDEX_OUTBOX);
+    if (preCheckConditionsForStateSending()) {
+      fullSyncStateManager.startSendingFullSync();
+      // wait for next run, to ensure we're not missing any un-acked messages
+      log.info(
+          "Wait for next run to start processing queue full.outgoing [jobId: {}]",
+          fullSyncStateManager.getCurrentFullSyncJobId());
+    } else if (preCheckConditionsForProcessing()) {
+      processQueue(
+          JobType.FULL,
+          Queues.PERSONDATA_FULL_OUTGOING,
+          Topics.SEDEX_OUTBOX,
+          fullSyncStateManager.getCurrentFullSyncJobId());
+      // wait for next run, to ensure we're not missing any un-acked messages
+      log.info(
+          "Wait for next run to set full sync job state to completed [jobId: {}]",
+          fullSyncStateManager.getCurrentFullSyncJobId());
+    } else if (preCheckConditionsForStateCompleted()) {
       fullSyncStateManager.completedFullSync();
+      log.info(
+          "Completed full sync job [jobId: {}]", fullSyncStateManager.getCurrentFullSyncJobId());
     } else {
-      if (!fullSyncStateManager.isFailedEmpty() && !fullSyncStateManager.isStateFailed()) {
+      if (!fullSyncStateManager.isFailedQueueEmpty() && !fullSyncStateManager.isInStateFailed()) {
         fullSyncStateManager.failFullSync();
         log.warn("Failure queue is not empty, set current job to fail state.");
       }
-      log.warn("Skipping full-sync-service run, pre-conditions failed.");
+      log.debug("Skipping full-sync-service run, pre-conditions failed.");
     }
   }
 }

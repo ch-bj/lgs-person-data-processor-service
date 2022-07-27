@@ -28,6 +28,11 @@ public class ApplicationConfiguration {
   }
 
   @Bean
+  public TopicExchange stateTopicExchange() {
+    return new TopicExchange(Exchanges.LWGS_STATE);
+  }
+
+  @Bean
   public TopicExchange logTopicExchange() {
     return new TopicExchange(Exchanges.LOG);
   }
@@ -133,8 +138,31 @@ public class ApplicationConfiguration {
   }
 
   @Bean
+  public Queue transactionStateQueue() {
+    return new Queue(Queues.TRANSACTION_STATE, true);
+  }
+
+  @Bean
+  public Queue businessLogQueue() {
+    return new Queue(Queues.BUSINESS_LOG, true);
+  }
+
+  @Bean
   public Binding jobStateBinding(TopicExchange topicExchange, Queue jobStateQueue) {
-    return BindingBuilder.bind(jobStateQueue).to(topicExchange).with(Topics.CATCH_ALL);
+    return BindingBuilder.bind(jobStateQueue).to(topicExchange).with(Topics.PERSONDATA_CATCH_ALL);
+  }
+
+  @Bean
+  public Binding transactionStateBinding(
+      TopicExchange stateTopicExchange, Queue transactionStateQueue) {
+    return BindingBuilder.bind(transactionStateQueue).to(stateTopicExchange).with(Topics.CATCH_ALL);
+  }
+
+  @Bean
+  public Binding BusinessLogBinding(TopicExchange topicExchange, Queue businessLogQueue) {
+    return BindingBuilder.bind(businessLogQueue)
+        .to(topicExchange)
+        .with(Topics.PERSONDATA_BUSINESS_VALIDATION);
   }
 
   @Bean

@@ -9,8 +9,8 @@ services:
       - internal
       - default
     volumes:
-      - log-data:/var/log
-      - hsqldb-data:/hsqldb/data
+      - log_data:/var/log
+      - hsqldb_data:/hsqldb/data
       - sedex:/var/sedex
     links:
       - rabbitmq
@@ -18,13 +18,38 @@ services:
       RABBITMQ_HOST: "rabbitmq"
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-      HSQLDB_FILE: "/hsqldb/data/searchindex-client"
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_JDBC_URL: ${DB_JDBC_URL}
+      DB_HIBERNATE_DIALECT: ${DB_HIBERNATE_DIALECT}
+      DB_DRIVER_CLASS_NAME: ${DB_DRIVER_CLASS_NAME}
       SEDEX_BASE_PATH: "/var/sedex"
       SEDEX_SENDER_ID: ${SEDEX_SENDER_ID}
       SEDEX_RECIPIENT_ID: ${SEDEX_RECIPIENT_ID}
       SEDEX_MESSAGE_TYPE: ${SEDEX_MESSAGE_TYPE}
       SEDEX_MESSAGE_CLASS: ${SEDEX_MESSAGE_CLASS}
       REST_API_KEY: ${REST_API_KEY}
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+  postgres:
+    image: 'postgres:alpine'
+    restart: always
+    networks:
+      - internal
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    profiles:
+      - postgres
+    deploy:
+      resources:
+        limits:
+          memory: 1G
   rabbitmq:
     image: rabbitmq:3-management-alpine
     restart: always
@@ -36,11 +61,15 @@ services:
     volumes:
       - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/docker-presets.conf
       - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
-      - rabbit-data:/var/lib/rabbitmq/mnesia/rabbit@lwgs-rabbit
-      - rabbit-logs:/var/log/rabbitmq/log
+      - rabbit_data:/var/lib/rabbitmq/mnesia/rabbit@lwgs-rabbit
+      - rabbit_logs:/var/log/rabbitmq/log
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          memory: 4G
   prometheus:
     image: prom/prometheus
     restart: always
@@ -51,16 +80,20 @@ services:
     links:
       - rabbitmq
       - backend
+    deploy:
+      resources:
+        limits:
+          memory: 1G
   grafana:
     image: grafana/grafana
     restart: always
     ports:
-      - "127.0.0.1:8081:3000"
+      - "127.0.0.1:8083:3000"
     networks:
       - internal
       - default
     volumes:
-      - grafana-data:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
       - ./docker/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/rabbitmq.yaml
       - ./docker/grafana/datasources.yml:/etc/grafana/provisioning/datasources/prometheus.yaml
       - ./docker/grafana/dashboards:/dashboards
@@ -68,12 +101,18 @@ services:
       GF_INSTALL_PLUGINS: "flant-statusmap-panel,grafana-piechart-panel"
     links:
       - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
 volumes:
-  log-data: {}
-  hsqldb-data: {}
-  rabbit-data: {}
-  rabbit-logs: {}
-  grafana-data: {}
+  log_data: {}
+  hsqldb_data: {}
+  postgres_data: {}
+  rabbit_data: {}
+  rabbit_logs: {}
+  grafana_data: {}
   sedex: {}
 networks:
   internal:

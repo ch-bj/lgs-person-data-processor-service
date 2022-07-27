@@ -1,13 +1,13 @@
 package org.datarocks.lwgs.searchindex.client.service.amqp;
 
-import java.util.Properties;
+import java.util.Optional;
+import org.springframework.amqp.core.QueueInformation;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class QueueStatsService {
-  private static final String MESSAGE_COUNT_PROPERTY = "QUEUE_MESSAGE_COUNT";
   private final RabbitAdmin rabbitAdmin;
 
   @Autowired
@@ -16,10 +16,8 @@ public class QueueStatsService {
   }
 
   public int getQueueCount(String queueName) {
-    Properties props = this.rabbitAdmin.getQueueProperties(queueName);
-    if (props == null) { // NOSONAR: sonar mistakenly assumes getQueueProperties never returns null
-      return 0;
-    }
-    return (Integer) props.get(MESSAGE_COUNT_PROPERTY);
+    return Optional.ofNullable(rabbitAdmin.getQueueInfo(queueName))
+        .map(QueueInformation::getMessageCount)
+        .orElse(0);
   }
 }

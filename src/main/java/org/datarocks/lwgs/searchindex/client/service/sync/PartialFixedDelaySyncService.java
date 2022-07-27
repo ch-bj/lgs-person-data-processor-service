@@ -9,8 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 @Slf4j
 public class PartialFixedDelaySyncService extends AbstractSyncService {
-  public PartialFixedDelaySyncService(RabbitTemplate template) {
-    super(template);
+  public PartialFixedDelaySyncService(RabbitTemplate template, int pageSize) {
+    super(template, pageSize);
   }
 
   @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sync.partial.fixed-delay:1000}")

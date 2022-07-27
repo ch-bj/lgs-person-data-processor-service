@@ -1,25 +1,23 @@
 package org.datarocks.lwgs.searchindex.client.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 import javax.persistence.*;
 import lombok.*;
 import org.datarocks.lwgs.searchindex.client.entity.type.JobState;
 import org.datarocks.lwgs.searchindex.client.entity.type.JobType;
 
-@Entity
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table
 public class SyncJob {
 
-  @Id @GeneratedValue private Long id;
-
-  @Column(unique = true)
+  @Id
+  @Column(updatable = false, nullable = false)
   private UUID jobId;
 
   private JobType jobType;
@@ -30,16 +28,8 @@ public class SyncJob {
   private Date completedAt;
   private Date failedAt;
 
-  private int numPersonMutations;
+  @Transient private int numPersonMutations;
   private boolean hasErrors;
-
-  @JsonManagedReference
-  @OneToMany(
-      mappedBy = "syncJob",
-      targetEntity = Transaction.class,
-      fetch = FetchType.EAGER,
-      cascade = CascadeType.ALL)
-  private List<Transaction> transactions;
 
   public void setStateWithTimestamp(JobState state, Date timestamp) {
     this.jobState = state;

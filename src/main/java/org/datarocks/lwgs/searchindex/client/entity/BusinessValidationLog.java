@@ -7,6 +7,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,12 +17,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.datarocks.lwgs.searchindex.client.entity.type.BusinessValidationEventType;
 
-@Entity
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table(indexes = @Index(columnList = "transactionId"))
 public class BusinessValidationLog implements Serializable {
 
   @Id @GeneratedValue private Long id;

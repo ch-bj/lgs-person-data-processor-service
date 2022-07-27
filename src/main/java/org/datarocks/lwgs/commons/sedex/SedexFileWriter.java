@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -26,7 +28,7 @@ public class SedexFileWriter {
   private final boolean createDirectories;
   private final XmlMapper xmlMapper;
 
-  public SedexFileWriter(Path sedexOutboxPath, boolean createDirectories) {
+  public SedexFileWriter(final Path sedexOutboxPath, boolean createDirectories) {
     this.sedexOutboxPath = sedexOutboxPath;
     this.createDirectories = createDirectories;
     this.xmlMapper = new XmlMapper();
@@ -61,7 +63,7 @@ public class SedexFileWriter {
       @NonNull final UUID fileIdentifier, @NonNull final SedexEnvelope sedexEnvelope)
       throws WritingSedexFilesFailedException {
     final File sedexEnvelopeFile =
-        sedexOutboxPath.resolve(fileIdentifier.toString() + ".xml").toFile();
+        sedexOutboxPath.resolve("envl_" + fileIdentifier + ".xml").toFile();
 
     setupOutputFile(sedexEnvelopeFile);
 
@@ -80,7 +82,8 @@ public class SedexFileWriter {
       @NonNull final JobCollectedPersonData jobCollectedPersonData)
       throws WritingSedexFilesFailedException {
     final File sedexPayloadFile =
-        sedexOutboxPath.resolve(fileIdentifier.toString() + ".zip").toFile();
+        sedexOutboxPath.resolve("data_" + fileIdentifier + ".zip").toFile();
+    final Set<UUID> processedTransactions = new HashSet<>();
 
     setupOutputFile(sedexPayloadFile);
 
@@ -88,9 +91,18 @@ public class SedexFileWriter {
       try (ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
         for (ProcessedPersonData processedPersonData :
             jobCollectedPersonData.getProcessedPersonDataList()) {
-          zipOutputStream.putNextEntry(
-              new ZipEntry("GBPersonEvent-" + processedPersonData.getTransactionId() + ".json"));
-          zipOutputStream.write(processedPersonData.getPayload().getBytes());
+          if (!processedTransactions.contains(processedPersonData.getTransactionId())) {
+            zipOutputStream.putNextEntry(
+                new ZipEntry("GBPersonEvent-" + processedPersonData.getTransactionId() + ".json"));
+            zipOutputStream.write(processedPersonData.getPayload().getBytes());
+            processedTransactions.add(processedPersonData.getTransactionId());
+          } else {
+            // This should never happen, but managed to produce this with restarting service during
+            // processing of messages.
+            log.error(
+                "Duplicate transactionId found: {}. Skipping processedPersonData.",
+                processedPersonData.getTransactionId());
+          }
         }
       }
     } catch (Exception e) {
