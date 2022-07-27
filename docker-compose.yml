@@ -29,6 +29,10 @@ services:
       SEDEX_MESSAGE_TYPE: ${SEDEX_MESSAGE_TYPE}
       SEDEX_MESSAGE_CLASS: ${SEDEX_MESSAGE_CLASS}
       REST_API_KEY: ${REST_API_KEY}
+    deploy:
+      resources:
+        limits:
+          memory: 2G
   postgres:
     image: 'postgres:alpine'
     restart: always
@@ -44,6 +48,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     profiles:
       - postgres
+    deploy:
+      resources:
+        limits:
+          memory: 1G
   rabbitmq:
     image: rabbitmq:3-management-alpine
     restart: always
@@ -74,11 +82,15 @@ services:
     links:
       - rabbitmq
       - backend
+    deploy:
+      resources:
+        limits:
+          memory: 1G
   grafana:
     image: grafana/grafana
     restart: always
     ports:
-      - "127.0.0.1:8081:3000"
+      - "127.0.0.1:8083:3000"
     networks:
       - internal
       - default
@@ -91,6 +103,11 @@ services:
       GF_INSTALL_PLUGINS: "flant-statusmap-panel,grafana-piechart-panel"
     links:
       - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
 volumes:
   log-data: {}
   hsqldb-data: {}
