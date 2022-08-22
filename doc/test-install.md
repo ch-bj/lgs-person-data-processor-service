@@ -45,8 +45,8 @@ SEDEX_MESSAGE_CLASS=23
 
 ## Run Service
 
-Simply run `docker-compose up` within the root of the project.
-
+Simply run `docker-compose up` within the root of the project, if you've configured the service to use hsqldb or `docker-compose --profile postgres up -d` 
+when using postgres.
 ```
  # docker-compose up -d
  [+] Running 12/12
