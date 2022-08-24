@@ -22,7 +22,7 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
 
-    <lwgs.person.data.processor.version>1.2.0</lwgs.person.data.processor.version>
+    <lwgs.person.data.processor.version>1.3.1</lwgs.person.data.processor.version>
     <jackson-xml.version>2.13.3</jackson-xml.version>
     <springdoc.version>1.6.9</springdoc.version>
 
@@ -30,7 +30,7 @@
     <oracle.jdbc.version>21.6.0.0.1</oracle.jdbc.version>
     <postgresql.version>42.3.6</postgresql.version>
 
-    <maven-fmt.version>2.13</maven-fmt.version>
+    <maven-fmt.version>2.19</maven-fmt.version>
     <maven-jacoco.version>0.8.8</maven-jacoco.version>
     <maven-jib.version>3.2.1</maven-jib.version>
 
@@ -200,7 +200,7 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>com.coveo</groupId>
+        <groupId>com.spotify.fmt</groupId>
         <artifactId>fmt-maven-plugin</artifactId>
         <version>${maven-fmt.version}</version>
         <executions>
