@@ -34,6 +34,19 @@ public class FullSyncService extends AbstractSyncService {
     return fullSyncStateManager.isInStateSending() && fullSyncStateManager.isOutgoingQueueEmpty();
   }
 
+  @Scheduled(
+      fixedDelayString = "${lwgs.searchindex.client.sync.full.page-processor.fixed-delay:2000}")
+  public void processNextPageOnQueueFullOutgoing() {
+    if (preCheckConditionsForProcessing()) {
+      processQueuePage(
+          JobType.FULL,
+          Queues.PERSONDATA_FULL_OUTGOING,
+          Topics.SEDEX_OUTBOX,
+          fullSyncStateManager.getCurrentFullSyncJobId(),
+          fullSyncStateManager.getNextPage());
+    }
+  }
+
   @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sync.full.fixed-delay:1000}")
   public void fixedDelayFull() {
     if (preCheckConditionsForStateSending()) {
@@ -43,15 +56,11 @@ public class FullSyncService extends AbstractSyncService {
           "Wait for next run to start processing queue full.outgoing [jobId: {}]",
           fullSyncStateManager.getCurrentFullSyncJobId());
     } else if (preCheckConditionsForProcessing()) {
-      processQueue(
-          JobType.FULL,
-          Queues.PERSONDATA_FULL_OUTGOING,
-          Topics.SEDEX_OUTBOX,
-          fullSyncStateManager.getCurrentFullSyncJobId());
-      // wait for next run, to ensure we're not missing any un-acked messages
+      // in page processing..
       log.info(
-          "Wait for next run to set full sync job state to completed [jobId: {}]",
-          fullSyncStateManager.getCurrentFullSyncJobId());
+          "Page wise processing is ongoing.. [jobId: {}; current page: {}]",
+          fullSyncStateManager.getCurrentFullSyncJobId(),
+          fullSyncStateManager.getCurrentPage());
     } else if (preCheckConditionsForStateCompleted()) {
       fullSyncStateManager.completedFullSync();
       log.info(

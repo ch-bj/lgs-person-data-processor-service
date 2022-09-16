@@ -2,6 +2,8 @@ package org.datarocks.lwgs.searchindex.client.service.sync;
 
 import java.util.Arrays;
 import java.util.UUID;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.datarocks.lwgs.searchindex.client.entity.Setting;
 import org.datarocks.lwgs.searchindex.client.repository.SettingRepository;
 import org.datarocks.lwgs.searchindex.client.service.amqp.QueueStatsService;
@@ -11,14 +13,18 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class FullSyncStateManager {
   private static final String FULL_SYNC_STORED_STATE_KEY = "full.sync.state";
   private static final String FULL_SYNC_STORED_JOB_ID_KEY = "full.sync.current.job.id";
+  private static final String FULL_SYNC_STORED_PAGE_KEY = "full.sync.outgoing.page";
   private static final boolean BLOCKING_PURGE = false;
 
   private static FullSyncSeedState fullSyncSeedState;
   private static volatile UUID currentFullSyncJobId;
+
+  private static volatile Integer currentFullSyncPage;
 
   private final SettingRepository settingRepository;
   private final QueueStatsService queueStatsService;
@@ -90,6 +96,11 @@ public class FullSyncStateManager {
     stateSetting.setValue(state.toString());
     settingRepository.save(stateSetting);
 
+    log.info(
+        "Change job state [{} -> {}] of full sync job [jobId {}]",
+        fullSyncSeedState,
+        state,
+        currentFullSyncJobId);
     fullSyncSeedState = state;
   }
 
@@ -110,7 +121,31 @@ public class FullSyncStateManager {
     currentFullSyncJobId = syncJobId;
   }
 
-  public synchronized void startFullSync() {
+  private synchronized void setCurrentFullSyncPage(@NonNull Integer value) {
+    Setting pageSetting =
+        settingRepository
+            .findByKey(FULL_SYNC_STORED_PAGE_KEY)
+            .orElse(Setting.builder().key(FULL_SYNC_STORED_PAGE_KEY).build());
+    pageSetting.setValue(value.toString());
+
+    settingRepository.save(pageSetting);
+
+    currentFullSyncPage = value;
+  }
+
+  public synchronized Integer getCurrentFullSyncPage() {
+    if (currentFullSyncPage == null) {
+      currentFullSyncPage =
+          settingRepository
+              .findByKey(FULL_SYNC_STORED_PAGE_KEY)
+              .map(Setting::getValue)
+              .map(Integer::valueOf)
+              .orElse(-1);
+    }
+    return currentFullSyncPage;
+  }
+
+  public void startFullSync() {
     if (Arrays.asList(FullSyncSeedState.COMPLETED, FullSyncSeedState.READY)
         .contains(getFullSyncJobState())) {
       if (getFullSyncJobState() != FullSyncSeedState.READY) {
@@ -147,6 +182,7 @@ public class FullSyncStateManager {
       rabbitAdmin.purgeQueue(Queues.PERSONDATA_FULL_OUTGOING, BLOCKING_PURGE);
       rabbitAdmin.purgeQueue(Queues.PERSONDATA_FULL_FAILED, BLOCKING_PURGE);
       setFullSyncJobState(FullSyncSeedState.READY);
+      setCurrentFullSyncPage(-1);
       return;
     }
     throw new StateChangeConflictingException(getFullSyncJobState(), FullSyncSeedState.READY);
@@ -164,5 +200,15 @@ public class FullSyncStateManager {
         .contains(getFullSyncJobState())) {
       setFullSyncJobState(FullSyncSeedState.FAILED);
     }
+  }
+
+  public Integer getNextPage() {
+    final Integer nextPage = getCurrentFullSyncPage() + 1;
+    setCurrentFullSyncPage(nextPage);
+    return nextPage;
+  }
+
+  public Integer getCurrentPage() {
+    return getCurrentFullSyncPage();
   }
 }

@@ -44,6 +44,84 @@ public abstract class AbstractSyncService {
     processQueue(jobType, inQueueName, outTopicName, null);
   }
 
+  public void processQueuePage(
+      @NonNull final JobType jobType,
+      @NonNull final String inQueueName,
+      @NonNull final String outTopicName,
+      final UUID currentJobId,
+      final int page) {
+    log.debug("Start processing queue {}, page: {}.", inQueueName, page);
+
+    final UUID jobId = currentJobId != null ? currentJobId : UUID.randomUUID();
+    try (Connection connection = rabbitTemplate.getConnectionFactory().createConnection()) {
+
+      try (Channel channel = connection.createChannel(TRANSACTIONAL)) {
+        channel.txSelect();
+        final List<ProcessedPersonData> processedPersonDataList =
+            getMessagesUntilPageFullOrQueueIsEmpty(channel, inQueueName);
+
+        if (processedPersonDataList.isEmpty()) {
+          channel.txCommit(); // Commit rejected messages
+          log.debug("Nothing to process. Returning.");
+          return;
+        }
+
+        final JobCollectedPersonData jobCollectedPersonData =
+            JobCollectedPersonData.builder()
+                .jobId(jobId)
+                .page(page)
+                .processedPersonDataList(processedPersonDataList)
+                .build();
+
+        log.info(
+            "Sending paged transactions to topic {}. [jobId:{}; page:{}; numTransactions:{}]",
+            outTopicName,
+            jobId,
+            page,
+            processedPersonDataList.size());
+        try {
+          final byte[] byteProcessedSedexPersonData =
+              BinarySerializerUtil.convertObjectToByteArray(jobCollectedPersonData);
+
+          final CommonHeadersDao headersDao =
+              CommonHeadersDao.builder()
+                  .messageCategory(MessageCategory.JOB_EVENT)
+                  .jobState(JobState.NEW)
+                  .jobId(jobCollectedPersonData.getJobId())
+                  .jobType(jobType)
+                  .timestamp(Instant.now())
+                  .build();
+
+          final BasicProperties properties =
+              (new BasicProperties.Builder())
+                  .headers(headersDao.toMap())
+                  .correlationId(jobCollectedPersonData.getJobId().toString())
+                  .build();
+
+          channel.basicPublish(
+              Exchanges.LWGS, outTopicName, properties, byteProcessedSedexPersonData);
+
+          channel.txCommit();
+
+        } catch (SerializationFailedException e) {
+          log.warn(
+              "Serialization of JobCollectedPersonData failed. Rolling back all transactions["
+                  + getTransactionIds(processedPersonDataList).toString()
+                  + "]");
+          channel.txRollback();
+        }
+      } catch (TimeoutException e) {
+        log.warn(
+            "TimeoutException when processing channel for queue "
+                + inQueueName
+                + ". Stop processing.");
+      } catch (IOException e) {
+        log.warn(
+            "IOException when processing channel for queue " + inQueueName + ". Stop processing.");
+      }
+    }
+  }
+
   public void processQueue(
       @NonNull final JobType jobType,
       @NonNull final String inQueueName,
