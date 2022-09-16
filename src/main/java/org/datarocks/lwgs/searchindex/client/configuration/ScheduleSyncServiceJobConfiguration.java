@@ -31,7 +31,7 @@ public class ScheduleSyncServiceJobConfiguration implements SchedulingConfigurer
       value = "lwgs.searchindex.client.sync.partial.scheduling-type",
       havingValue = "EVENT_DRIVEN")
   public PartialEventDrivenSyncService partialEventDrivenSyncService(
-      @Value("${lwgs.searchindex.cient.sync.partial.page-size:5000}") int pageSize) {
+      @Value("${lwgs.searchindex.client.sync.partial.page-size:5000}") int pageSize) {
     return new PartialEventDrivenSyncService(template, pageSize);
   }
 
@@ -40,7 +40,7 @@ public class ScheduleSyncServiceJobConfiguration implements SchedulingConfigurer
       value = "lwgs.searchindex.client.sync.partial.scheduling-type",
       havingValue = "FIXED_DELAY")
   public PartialFixedDelaySyncService partialFixedDelaySyncService(
-      @Value("${lwgs.searchindex.cient.sync.partial.page-size:5000}") int pageSize) {
+      @Value("${lwgs.searchindex.client.sync.partial.page-size:5000}") int pageSize) {
     return new PartialFixedDelaySyncService(template, pageSize);
   }
 
@@ -49,13 +49,13 @@ public class ScheduleSyncServiceJobConfiguration implements SchedulingConfigurer
       value = "lwgs.searchindex.client.sync.partial.scheduling-type",
       havingValue = "CRON_SCHEDULE")
   public PartialScheduledSyncService partialScheduledSyncService(
-      @Value("${lwgs.searchindex.cient.sync.partial.page-size:5000}") int pageSize) {
+      @Value("${lwgs.searchindex.client.sync.partial.page-size:5000}") int pageSize) {
     return new PartialScheduledSyncService(template, pageSize);
   }
 
   @Bean
   public FullSyncService fullSyncService(
-      @Value("${lwgs.searchindex.cient.sync.full.page-size:5000}") int pageSize) {
+      @Value("${lwgs.searchindex.client.sync.full.page-size:5000}") int pageSize) {
     return new FullSyncService(template, fullSyncStateManager, pageSize);
   }
 
