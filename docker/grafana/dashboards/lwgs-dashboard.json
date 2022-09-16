@@ -3,25 +3,34 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
   },
   "editable": true,
-  "gnetId": null,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
-      "datasource": null,
+
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -56,7 +65,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "9.1.5",
       "targets": [
         {
           "expr": "rabbitmq_queue_messages{queue=\"lwgs.persondata.partial.incoming\"}",
@@ -65,16 +74,12 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Partial Incoming",
       "type": "stat"
     },
     {
-      "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -109,7 +114,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "9.1.5",
       "targets": [
         {
           "expr": "rabbitmq_queue_messages{queue=\"lwgs.persondata.partial.outgoing\"}",
@@ -118,16 +123,12 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Partial Outgoing",
       "type": "stat"
     },
     {
-      "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -162,7 +163,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "9.1.5",
       "targets": [
         {
           "expr": "rabbitmq_queue_messages{queue=\"lwgs.sedex.outbox\"}",
@@ -171,16 +172,12 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Sedex Outbox",
       "type": "stat"
     },
     {
-      "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -215,7 +212,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "9.1.5",
       "targets": [
         {
           "expr": "rabbitmq_queue_messages{queue=\"lwgs.sedex.recepits\"}",
@@ -224,8 +221,6 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Sedex Receipts",
       "type": "stat"
     },
@@ -234,13 +229,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -267,7 +255,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "9.1.5",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -277,18 +265,17 @@
       "steppedLine": false,
       "targets": [
         {
+          "editorMode": "code",
           "expr": "rabbitmq_queue_messages",
           "instant": false,
           "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "",
+          "legendFormat": "{{queue}}",
           "refId": "A"
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Queues",
       "tooltip": {
         "shared": true,
@@ -297,40 +284,30 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -365,7 +342,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "9.1.5",
       "targets": [
         {
           "expr": "rabbitmq_queue_messages{queue=\"lwgs.persondata.partial.failed\"}",
@@ -374,8 +351,6 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Partial Failed",
       "type": "stat"
     },
@@ -383,7 +358,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -418,7 +392,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "9.1.5",
       "targets": [
         {
           "expr": "rabbitmq_queue_messages{queue=\"lwgs.persondata.full.incoming\"}",
@@ -427,8 +401,6 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Full Incoming",
       "type": "stat"
     },
@@ -436,7 +408,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -471,7 +442,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "9.1.5",
       "targets": [
         {
           "expr": "rabbitmq_queue_messages{queue=\"lwgs.persondata.full.outgoing\"}",
@@ -480,8 +451,6 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Full Outgoing",
       "type": "stat"
     },
@@ -489,7 +458,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -524,7 +492,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "9.1.5",
       "targets": [
         {
           "expr": "rabbitmq_queue_messages{queue=\"lwgs.persondata.full.failed\"}",
@@ -533,8 +501,6 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Full Failed",
       "type": "stat"
     }
@@ -554,5 +520,6 @@
   "timezone": "",
   "title": "LWGS Dashboard",
   "uid": "HE81hll7k",
-  "version": 1
+  "version": 1,
+  "weekStart": ""
 }
