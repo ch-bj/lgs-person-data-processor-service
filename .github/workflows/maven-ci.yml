@@ -27,7 +27,7 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
-    - uses: s4u/maven-settings-action@v2.6.0
+    - uses: s4u/maven-settings-action@v2.7.0
       with:
         servers: |
           [{
