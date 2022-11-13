@@ -8,6 +8,7 @@ import org.datarocks.lwgs.commons.sedex.SedexFileWriter;
 import org.datarocks.lwgs.commons.sedex.model.SedexEnvelope;
 import org.datarocks.lwgs.searchindex.client.configuration.SedexConfiguration;
 import org.datarocks.lwgs.searchindex.client.entity.type.JobState;
+import org.datarocks.lwgs.searchindex.client.entity.type.JobType;
 import org.datarocks.lwgs.searchindex.client.model.JobCollectedPersonData;
 import org.datarocks.lwgs.searchindex.client.service.amqp.*;
 import org.datarocks.lwgs.searchindex.client.util.BinarySerializerUtil;
@@ -42,8 +43,11 @@ public class SedexFileWriterService {
   @Value("${lwgs.searchindex.client.sedex.recipient-id}")
   private String sedexRecipientId;
 
-  @Value("${lwgs.searchindex.client.sedex.message.type}")
-  private int sedexMessageType;
+  @Value("${lwgs.searchindex.client.sedex.message.type.full-export}")
+  private int sedexMessageTypeFullExport;
+
+  @Value("${lwgs.searchindex.client.sedex.message.type.incremental}")
+  private int sedexMessageTypeIncremental;
 
   @Value("${lwgs.searchindex.client.sedex.message.class}")
   private int sedexMessageClass;
@@ -87,6 +91,11 @@ public class SedexFileWriterService {
 
       final CommonHeadersDao inHeaders =
           new CommonHeadersDao(message.getMessageProperties().getHeaders());
+
+      final int sedexMessageType =
+          (inHeaders.getJobType() == JobType.FULL)
+              ? sedexMessageTypeFullExport
+              : sedexMessageTypeIncremental;
 
       final SedexEnvelope envelope =
           SedexEnvelope.builder()

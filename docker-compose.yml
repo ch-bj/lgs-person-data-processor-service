@@ -25,16 +25,15 @@ services:
       DB_DRIVER_CLASS_NAME: ${DB_DRIVER_CLASS_NAME}
       SEDEX_BASE_PATH: "/var/sedex"
       SEDEX_SENDER_ID: ${SEDEX_SENDER_ID}
-      SEDEX_RECIPIENT_ID: ${SEDEX_RECIPIENT_ID}
-      SEDEX_MESSAGE_TYPE: ${SEDEX_MESSAGE_TYPE}
-      SEDEX_MESSAGE_CLASS: ${SEDEX_MESSAGE_CLASS}
+      SEDEX_MESSAGE_TYPE_FULL_EXPORT: ${SEDEX_MESSAGE_TYPE_FULL_EXPORT}
+      SEDEX_MESSAGE_TYPE_INCREMENTAL: ${SEDEX_MESSAGE_TYPE_INCREMENTAL}
       REST_API_KEY: ${REST_API_KEY}
     deploy:
       resources:
         limits:
           memory: 2G
   postgres:
-    image: 'postgres:alpine'
+    image: 'postgres:15-alpine'
     restart: always
     networks:
       - internal
