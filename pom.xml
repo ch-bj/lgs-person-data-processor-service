@@ -249,12 +249,15 @@
         <configuration>
           <from>
             <!-- Use hash to ensure truly reproducible builds
-https://hub.docker.com/layers/eclipse-temurin/library/eclipse-temurin/17-jre-focal/images/sha256-fce37e5146419a158c2199c6089fa39b92445fb2e66dc0331f8591891239ea3b?context=explore            -->
-            <image>eclipse-temurin:17.0.3_7-jre-focal@sha256:fce37e5146419a158c2199c6089fa39b92445fb2e66dc0331f8591891239ea3b</image>
+https://hub.docker.com/layers/library/eclipse-temurin/17.0.5_8-jre-focal/images/sha256-00a5775f5eb7c24a19cb76ded742cbfcc50c61f062105af9730dadde217e4390?context=explore            -->
+            <image>eclipse-temurin:17.0.5_8-jre-focal@sha256:00a5775f5eb7c24a19cb76ded742cbfcc50c61f062105af9730dadde217e4390</image>
           </from>
           <to>
             <image>ghcr.io/datarocks-ag/lwgs-person-data-processor-service</image>
           </to>
+          <container>
+            <user>1000:1000</user>
+          </container>
         </configuration>
       </plugin>
     </plugins>
