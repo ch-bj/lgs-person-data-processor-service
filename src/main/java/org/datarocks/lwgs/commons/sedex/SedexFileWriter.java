@@ -5,6 +5,8 @@ import static com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator.Feature.WR
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -19,6 +21,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.datarocks.lwgs.commons.sedex.model.SedexEnvelope;
 import org.datarocks.lwgs.searchindex.client.model.JobCollectedPersonData;
+import org.datarocks.lwgs.searchindex.client.model.JobMetaData;
 import org.datarocks.lwgs.searchindex.client.model.ProcessedPersonData;
 import org.datarocks.lwgs.searchindex.client.service.exception.WritingSedexFilesFailedException;
 
@@ -27,6 +30,8 @@ public class SedexFileWriter {
   private final Path sedexOutboxPath;
   private final boolean createDirectories;
   private final XmlMapper xmlMapper;
+
+  private final Gson gson = new GsonBuilder().create();
 
   public SedexFileWriter(final Path sedexOutboxPath, boolean createDirectories) {
     this.sedexOutboxPath = sedexOutboxPath;
@@ -79,7 +84,8 @@ public class SedexFileWriter {
 
   public void writeSedexPayload(
       @NonNull final UUID fileIdentifier,
-      @NonNull final JobCollectedPersonData jobCollectedPersonData)
+      @NonNull final JobCollectedPersonData jobCollectedPersonData,
+      @NonNull final JobMetaData metaData)
       throws WritingSedexFilesFailedException {
     final File sedexPayloadFile =
         sedexOutboxPath.resolve("data_" + fileIdentifier + ".zip").toFile();
@@ -89,6 +95,9 @@ public class SedexFileWriter {
 
     try (FileOutputStream fileOutputStream = new FileOutputStream(sedexPayloadFile)) {
       try (ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
+        zipOutputStream.putNextEntry(new ZipEntry("metadata.json"));
+        zipOutputStream.write(gson.toJson(metaData).getBytes());
+
         for (ProcessedPersonData processedPersonData :
             jobCollectedPersonData.getProcessedPersonDataList()) {
           if (!processedTransactions.contains(processedPersonData.getTransactionId())) {

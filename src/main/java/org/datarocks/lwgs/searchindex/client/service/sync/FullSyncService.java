@@ -38,12 +38,16 @@ public class FullSyncService extends AbstractSyncService {
       fixedDelayString = "${lwgs.searchindex.client.sync.full.page-processor.fixed-delay:2000}")
   public void processNextPageOnQueueFullOutgoing() {
     if (preCheckConditionsForProcessing()) {
-      processQueuePage(
-          JobType.FULL,
-          Queues.PERSONDATA_FULL_OUTGOING,
-          Topics.SEDEX_OUTBOX,
-          fullSyncStateManager.getCurrentFullSyncJobId(),
-          fullSyncStateManager.getNextPage());
+      int numProcessed =
+          processQueuePage(
+              JobType.FULL,
+              Queues.PERSONDATA_FULL_OUTGOING,
+              Topics.SEDEX_OUTBOX,
+              fullSyncStateManager.getCurrentFullSyncJobId(),
+              fullSyncStateManager.getNextPage(),
+              fullSyncStateManager.getFullSyncMessagesProcessed(),
+              fullSyncStateManager.getFullSyncMessagesTotal());
+      fullSyncStateManager.incNumMessagesProcessed(numProcessed);
     }
   }
 
