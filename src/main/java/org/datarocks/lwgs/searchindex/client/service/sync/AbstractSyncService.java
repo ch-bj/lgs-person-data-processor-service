@@ -44,12 +44,14 @@ public abstract class AbstractSyncService {
     processQueue(jobType, inQueueName, outTopicName, null);
   }
 
-  public void processQueuePage(
+  public int processQueuePage(
       @NonNull final JobType jobType,
       @NonNull final String inQueueName,
       @NonNull final String outTopicName,
       final UUID currentJobId,
-      final int page) {
+      final int page,
+      final int numProcessed,
+      final int numTotal) {
     log.debug("Start processing queue {}, page: {}.", inQueueName, page);
 
     final UUID jobId = currentJobId != null ? currentJobId : UUID.randomUUID();
@@ -63,22 +65,27 @@ public abstract class AbstractSyncService {
         if (processedPersonDataList.isEmpty()) {
           channel.txCommit(); // Commit rejected messages
           log.debug("Nothing to process. Returning.");
-          return;
+          return 0;
         }
 
         final JobCollectedPersonData jobCollectedPersonData =
             JobCollectedPersonData.builder()
                 .jobId(jobId)
                 .page(page)
+                .numProcessed(numProcessed + processedPersonDataList.size())
+                .numTotal(numTotal)
                 .processedPersonDataList(processedPersonDataList)
                 .build();
 
         log.info(
-            "Sending paged transactions to topic {}. [jobId:{}; page:{}; numTransactions:{}]",
+            "Sending paged transactions to topic {}. [jobId:{}; page:{}; numTransactions:{}; "
+                + "numProcessed: {}; numTotal: {}]",
             outTopicName,
             jobId,
             page,
-            processedPersonDataList.size());
+            processedPersonDataList.size(),
+            numProcessed + processedPersonDataList.size(),
+            numTotal);
         try {
           final byte[] byteProcessedSedexPersonData =
               BinarySerializerUtil.convertObjectToByteArray(jobCollectedPersonData);
@@ -103,22 +110,22 @@ public abstract class AbstractSyncService {
 
           channel.txCommit();
 
+          return processedPersonDataList.size();
+
         } catch (SerializationFailedException e) {
           log.warn(
-              "Serialization of JobCollectedPersonData failed. Rolling back all transactions["
-                  + getTransactionIds(processedPersonDataList).toString()
-                  + "]");
+              "Serialization of JobCollectedPersonData failed. Rolling back all transactions[{}]",
+              getTransactionIds(processedPersonDataList));
           channel.txRollback();
         }
       } catch (TimeoutException e) {
         log.warn(
-            "TimeoutException when processing channel for queue "
-                + inQueueName
-                + ". Stop processing.");
+            "TimeoutException when processing channel for queue {}. Stop processing.", inQueueName);
       } catch (IOException e) {
         log.warn(
-            "IOException when processing channel for queue " + inQueueName + ". Stop processing.");
+            "IOException when processing channel for queue {}}. Stop processing.", inQueueName);
       }
+      return 0;
     }
   }
 

@@ -12,5 +12,7 @@ import lombok.NonNull;
 public class JobCollectedPersonData implements Serializable {
   private @NonNull UUID jobId;
   private int page;
+  private int numProcessed;
+  private int numTotal;
   private @NonNull List<ProcessedPersonData> processedPersonDataList;
 }

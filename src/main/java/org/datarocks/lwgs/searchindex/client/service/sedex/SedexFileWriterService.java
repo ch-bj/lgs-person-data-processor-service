@@ -10,6 +10,7 @@ import org.datarocks.lwgs.searchindex.client.configuration.SedexConfiguration;
 import org.datarocks.lwgs.searchindex.client.entity.type.JobState;
 import org.datarocks.lwgs.searchindex.client.entity.type.JobType;
 import org.datarocks.lwgs.searchindex.client.model.JobCollectedPersonData;
+import org.datarocks.lwgs.searchindex.client.model.JobMetaData;
 import org.datarocks.lwgs.searchindex.client.service.amqp.*;
 import org.datarocks.lwgs.searchindex.client.util.BinarySerializerUtil;
 import org.springframework.amqp.core.*;
@@ -97,6 +98,11 @@ public class SedexFileWriterService {
               ? sedexMessageTypeFullExport
               : sedexMessageTypeIncremental;
 
+      final boolean isLastPage =
+          inHeaders.getJobType() == JobType.PARTIAL
+              || (jobCollectedPersonData.getNumProcessed() == jobCollectedPersonData.getNumTotal()
+                  && jobCollectedPersonData.getNumTotal() > 0);
+
       final SedexEnvelope envelope =
           SedexEnvelope.builder()
               .messageId(inHeaders.getJobId().toString() + '-' + jobCollectedPersonData.getPage())
@@ -108,7 +114,14 @@ public class SedexFileWriterService {
               .messageDate(inHeaders.getTimestamp())
               .build();
 
-      sedexFileWriter.writeSedexPayload(fileIdentifier, jobCollectedPersonData);
+      final JobMetaData metaData =
+          new JobMetaData(
+              inHeaders.getJobType(),
+              inHeaders.getJobId(),
+              jobCollectedPersonData.getPage(),
+              isLastPage);
+
+      sedexFileWriter.writeSedexPayload(fileIdentifier, jobCollectedPersonData, metaData);
       sedexFileWriter.writeSedexEnvelope(fileIdentifier, envelope);
 
       final CommonHeadersDao outHeaders =

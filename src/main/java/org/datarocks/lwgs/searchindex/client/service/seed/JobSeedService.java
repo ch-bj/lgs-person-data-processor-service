@@ -31,11 +31,15 @@ public class JobSeedService {
 
   public UUID seedToFull(String payload) {
     if (fullSyncStateManager.isInStateSeeding()) {
-      return seedToQueue(
-          payload,
-          Topics.PERSONDATA_FULL_INCOMING,
-          JobType.FULL,
-          fullSyncStateManager.getCurrentFullSyncJobId());
+      final UUID transactionId =
+          seedToQueue(
+              payload,
+              Topics.PERSONDATA_FULL_INCOMING,
+              JobType.FULL,
+              fullSyncStateManager.getCurrentFullSyncJobId());
+
+      fullSyncStateManager.incFullSeedMessageCounter();
+      return transactionId;
     }
     return null;
   }
