@@ -29,6 +29,9 @@ import org.springframework.util.FileCopyUtils;
 @Slf4j
 @Configuration
 public class LwgsPipelineConfiguration {
+  @Value("${lwgs.searchindex.encryption.enabled}")
+  private boolean encryptionEnabled;
+
   @Value("${lwgs.searchindex.encryption.public-key}")
   private String publicKey;
 
@@ -80,14 +83,18 @@ public class LwgsPipelineConfiguration {
   @Bean
   PipeLine<Attribute, Attribute, Attribute> attributePipeline(
       HandlerConfiguration handlerConfiguration) {
-    return PipeLine.builder(handlerConfiguration, Attribute.class, Attribute.class, Attribute.class)
-        .addHeadTransformer(PassTroughTransformer.<Attribute>builder().build())
-        .addStep(AttributePhoneticallyNormalizeAttributeValue.builder().build())
-        .addStep(AttributeGenerateSearchTerms.builder().build())
-        .addStep(AttributeSearchTermsHashing.builder().build())
-        .addStep(AttributeSearchTermsEncryptor.builder().build())
-        .addTailTransformer(PassTroughTransformer.<Attribute>builder().build())
-        .build();
+    final PipeLine.PipeLineBuilder<Attribute, Attribute, Attribute> builder =
+        PipeLine.builder(handlerConfiguration, Attribute.class, Attribute.class, Attribute.class)
+            .addHeadTransformer(PassTroughTransformer.<Attribute>builder().build())
+            .addStep(AttributePhoneticallyNormalizeAttributeValue.builder().build())
+            .addStep(AttributeGenerateSearchTerms.builder().build())
+            .addStep(AttributeSearchTermsHashing.builder().build());
+
+    if (encryptionEnabled) {
+      builder.addStep(AttributeSearchTermsEncryptor.builder().build());
+    }
+
+    return builder.addTailTransformer(PassTroughTransformer.<Attribute>builder().build()).build();
   }
 
   @Bean
