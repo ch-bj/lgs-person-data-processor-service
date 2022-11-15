@@ -255,9 +255,6 @@ https://hub.docker.com/layers/library/eclipse-temurin/17.0.5_8-jre-focal/images/
           <to>
             <image>ghcr.io/datarocks-ag/lwgs-person-data-processor-service</image>
           </to>
-          <container>
-            <user>1000:1000</user>
-          </container>
         </configuration>
       </plugin>
     </plugins>
