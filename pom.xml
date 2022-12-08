@@ -27,7 +27,7 @@
     <springdoc.version>1.6.13</springdoc.version>
 
     <hsqldb.version>2.7.1</hsqldb.version>
-    <oracle.jdbc.version>21.7.0.0</oracle.jdbc.version>
+    <oracle.jdbc.version>21.8.0.0</oracle.jdbc.version>
     <postgresql.version>42.5.1</postgresql.version>
 
     <maven-fmt.version>2.19</maven-fmt.version>
