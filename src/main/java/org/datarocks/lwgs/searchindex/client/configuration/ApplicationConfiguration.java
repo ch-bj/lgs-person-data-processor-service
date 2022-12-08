@@ -133,6 +133,16 @@ public class ApplicationConfiguration {
   }
 
   @Bean
+  public Queue sedexStateQueue() {
+    return new Queue(Queues.SEDEX_STATE, true);
+  }
+
+  @Bean
+  public Binding sedexStateBinding(TopicExchange topicExchange, Queue sedexStateQueue) {
+    return BindingBuilder.bind(sedexStateQueue).to(topicExchange).with(Topics.SEDEX_STATUS_UPDATED);
+  }
+
+  @Bean
   public Queue jobStateQueue() {
     return new Queue(Queues.JOB_STATE, true);
   }

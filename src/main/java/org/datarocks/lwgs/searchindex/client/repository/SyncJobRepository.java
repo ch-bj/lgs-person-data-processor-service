@@ -13,15 +13,13 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(exported = false)
-public interface SyncJobRepository extends PagingAndSortingRepository<SyncJob, Long> {
-  Page<SyncJob> findAll(@NonNull Pageable pageable);
-
+public interface SyncJobRepository extends PagingAndSortingRepository<SyncJob, UUID> {
   Page<SimpleSyncJobProjection> findAllProjectedBy(@NonNull Pageable pageable);
 
   Page<SyncJob> findAllByJobType(@NonNull JobType jobType, @NonNull Pageable pageable);
 
   Page<SyncJob> findAllByJobTypeAndHasErrors(
-      @NonNull JobType jobType, @NonNull boolean hasErrors, @NonNull Pageable pageable);
+      @NonNull JobType jobType, boolean hasErrors, @NonNull Pageable pageable);
 
   Optional<SyncJob> findByJobId(@NonNull UUID jobId);
 

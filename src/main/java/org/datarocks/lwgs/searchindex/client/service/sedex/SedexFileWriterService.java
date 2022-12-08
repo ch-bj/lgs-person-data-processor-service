@@ -1,16 +1,19 @@
 package org.datarocks.lwgs.searchindex.client.service.sedex;
 
+import java.sql.Date;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.datarocks.lwgs.commons.sedex.SedexFileWriter;
 import org.datarocks.lwgs.commons.sedex.model.SedexEnvelope;
 import org.datarocks.lwgs.searchindex.client.configuration.SedexConfiguration;
+import org.datarocks.lwgs.searchindex.client.entity.SedexMessage;
 import org.datarocks.lwgs.searchindex.client.entity.type.JobState;
 import org.datarocks.lwgs.searchindex.client.entity.type.JobType;
+import org.datarocks.lwgs.searchindex.client.entity.type.SedexMessageState;
 import org.datarocks.lwgs.searchindex.client.model.JobCollectedPersonData;
 import org.datarocks.lwgs.searchindex.client.model.JobMetaData;
+import org.datarocks.lwgs.searchindex.client.repository.SedexMessageRepository;
 import org.datarocks.lwgs.searchindex.client.service.amqp.*;
 import org.datarocks.lwgs.searchindex.client.util.BinarySerializerUtil;
 import org.springframework.amqp.core.*;
@@ -28,6 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class SedexFileWriterService {
   private final SedexFileWriter sedexFileWriter;
   private final RabbitTemplate rabbitTemplate;
+
+  private final SedexMessageRepository sedexMessageRepository;
+
   private boolean throttlingActive = false;
   private int errorCount = 0;
   private Instant retryTime = Instant.MIN;
@@ -55,11 +61,14 @@ public class SedexFileWriterService {
 
   @Autowired
   public SedexFileWriterService(
-      SedexConfiguration sedexConfiguration, RabbitTemplate rabbitTemplate) {
+      SedexConfiguration sedexConfiguration,
+      RabbitTemplate rabbitTemplate,
+      SedexMessageRepository sedexMessageRepository) {
     this.rabbitTemplate = rabbitTemplate;
     this.sedexFileWriter =
         new SedexFileWriter(
             sedexConfiguration.getSedexOutboxPath(), sedexConfiguration.shouldCreateDirectories());
+    this.sedexMessageRepository = sedexMessageRepository;
   }
 
   private void updateThrottling(boolean active) {
@@ -84,7 +93,6 @@ public class SedexFileWriterService {
     }
 
     log.info("Start processing queue " + Queues.SEDEX_OUTBOX);
-    UUID fileIdentifier = UUID.randomUUID();
     try {
       final JobCollectedPersonData jobCollectedPersonData =
           BinarySerializerUtil.convertByteArrayToObject(
@@ -103,9 +111,19 @@ public class SedexFileWriterService {
               || (jobCollectedPersonData.getNumProcessed() == jobCollectedPersonData.getNumTotal()
                   && jobCollectedPersonData.getNumTotal() > 0);
 
+      sedexMessageRepository.save(
+          new SedexMessage(
+              jobCollectedPersonData.getMessageId(),
+              Date.from(Instant.now()),
+              Date.from(Instant.now()),
+              SedexMessageState.CREATED,
+              jobCollectedPersonData.getPage(),
+              inHeaders.getJobType(),
+              inHeaders.getJobId()));
+
       final SedexEnvelope envelope =
           SedexEnvelope.builder()
-              .messageId(inHeaders.getJobId().toString() + '-' + jobCollectedPersonData.getPage())
+              .messageId(jobCollectedPersonData.getMessageId().toString())
               .messageType(sedexMessageType)
               .messageClass(sedexMessageClass)
               .senderId(sedexSenderId)
@@ -121,8 +139,9 @@ public class SedexFileWriterService {
               jobCollectedPersonData.getPage(),
               isLastPage);
 
-      sedexFileWriter.writeSedexPayload(fileIdentifier, jobCollectedPersonData, metaData);
-      sedexFileWriter.writeSedexEnvelope(fileIdentifier, envelope);
+      sedexFileWriter.writeSedexPayload(
+          jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
+      sedexFileWriter.writeSedexEnvelope(jobCollectedPersonData.getMessageId(), envelope);
 
       final CommonHeadersDao outHeaders =
           CommonHeadersDao.builder(inHeaders).jobState(JobState.SENT).timestamp().build();

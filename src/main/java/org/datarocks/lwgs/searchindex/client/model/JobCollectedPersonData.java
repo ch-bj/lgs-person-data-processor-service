@@ -11,6 +11,7 @@ import lombok.NonNull;
 @Builder
 public class JobCollectedPersonData implements Serializable {
   private @NonNull UUID jobId;
+  private @NonNull UUID messageId;
   private int page;
   private int numProcessed;
   private int numTotal;

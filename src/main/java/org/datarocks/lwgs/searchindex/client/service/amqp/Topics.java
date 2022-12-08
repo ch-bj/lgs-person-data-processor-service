@@ -7,6 +7,8 @@ public class Topics {
   public static final String SEDEX_OUTBOX = "topics.sedex.outbox";
   public static final String SEDEX_SENT = "topics.sedex.sent";
   public static final String SEDEX_RECEIVED = "topics.sedex.received";
+
+  public static final String SEDEX_STATUS_UPDATED = "topics.sedex.state";
   public static final String PERSONDATA_PARTIAL_INCOMING = "topics.persondata.partial.incoming";
   public static final String PERSONDATA_PARTIAL_OUTGOING = "topics.persondata.partial.outgoing";
   public static final String PERSONDATA_PARTIAL_FAILED = "topics.persondata.partial.failed";
