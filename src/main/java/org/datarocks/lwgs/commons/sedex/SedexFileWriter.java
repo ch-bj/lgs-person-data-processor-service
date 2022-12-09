@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -39,6 +40,7 @@ public class SedexFileWriter {
     this.xmlMapper = new XmlMapper();
     this.xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
     this.xmlMapper.configure(WRITE_XML_DECLARATION, true);
+    this.xmlMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"));
     this.xmlMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
   }
 

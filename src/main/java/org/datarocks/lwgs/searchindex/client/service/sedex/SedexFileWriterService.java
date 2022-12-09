@@ -118,6 +118,7 @@ public class SedexFileWriterService {
               Date.from(Instant.now()),
               SedexMessageState.CREATED,
               jobCollectedPersonData.getPage(),
+              isLastPage,
               inHeaders.getJobType(),
               inHeaders.getJobId()));
 

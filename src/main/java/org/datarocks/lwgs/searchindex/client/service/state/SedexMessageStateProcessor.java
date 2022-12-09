@@ -11,7 +11,6 @@ import org.datarocks.lwgs.searchindex.client.repository.SedexMessageRepository;
 import org.datarocks.lwgs.searchindex.client.repository.SyncJobRepository;
 import org.datarocks.lwgs.searchindex.client.service.amqp.CommonHeadersDao;
 import org.datarocks.lwgs.searchindex.client.service.amqp.Queues;
-import org.datarocks.lwgs.searchindex.client.service.exception.SyncJobNotFoundException;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,11 +36,21 @@ public class SedexMessageStateProcessor {
     final CommonHeadersDao headers =
         new CommonHeadersDao(message.getMessageProperties().getHeaders());
     final UUID jobId = headers.getJobId();
-    final SyncJob syncJob =
-        syncJobRepository.findByJobId(jobId).orElseThrow(SyncJobNotFoundException::new);
-    final Set<SedexMessage> messages = new HashSet<>(sedexMessageRepository.findAllByJobId(jobId));
+    final Optional<SyncJob> optionalSyncJob = syncJobRepository.findByJobId(jobId);
 
-    if (messages.size() > 0
+    if (optionalSyncJob.isEmpty()) {
+      log.warn(
+          "Unable to find job with jobId {}. Skipping processing of state update message.", jobId);
+      return;
+    }
+
+    final SyncJob syncJob = optionalSyncJob.get();
+    final Set<SedexMessage> messages = new HashSet<>(sedexMessageRepository.findAllByJobId(jobId));
+    final Optional<SedexMessage> lastMessage =
+        messages.stream().filter(SedexMessage::isLastPage).findFirst();
+
+    if (lastMessage.isPresent()
+        && messages.size() == lastMessage.get().getPage() + 1
         && messages.stream()
             .map(SedexMessage::getState)
             .allMatch(SedexMessageState.SUCCESSFUL::equals)) {

@@ -24,6 +24,7 @@ public class SedexMessage {
   private Date updatedAt;
   private SedexMessageState state;
   private Integer page;
+  private boolean isLastPage;
   private JobType jobType;
   private UUID jobId;
 }

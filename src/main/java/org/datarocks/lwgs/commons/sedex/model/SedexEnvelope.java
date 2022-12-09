@@ -27,18 +27,18 @@ import lombok.NonNull;
 
 @Data
 @Builder
-@JacksonXmlRootElement(namespace = "http://www.ech.ch/xmlns/eCH-0090/1", localName = "envelope")
+@JacksonXmlRootElement(namespace = "http://www.ech.ch/xmlns/eCH-0090/2", localName = "envelope")
 public class SedexEnvelope implements Serializable {
-  private static final String NS = "http://www.ech.ch/xmlns/eCH-0090/1";
+  private static final String NS = "http://www.ech.ch/xmlns/eCH-0090/2";
 
   @Builder.Default
   @JacksonXmlProperty(isAttribute = true)
-  String version = "1.0";
+  String version = "2.0";
 
   @Builder.Default
   @JacksonXmlProperty(isAttribute = true, localName = "xsi:schemaLocation")
   String schemaLocation =
-      "http://www.ech.ch/xmlns/eCH-0090/1 http://www.ech.ch/xmlns/eCH-0090/1/eCH-0090-1-0.xsd";
+      "http://www.ech.ch/xmlns/eCH-0090/2 http://www.ech.ch/xmlns/eCH-0090/2/eCH-0090-2-0.xsd";
 
   @Builder.Default
   @JacksonXmlProperty(isAttribute = true, localName = "xmlns:xsi")

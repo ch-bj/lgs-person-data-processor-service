@@ -19,13 +19,13 @@ import org.datarocks.lwgs.searchindex.client.entity.type.SedexMessageState;
 import org.datarocks.lwgs.searchindex.client.entity.type.SourceType;
 import org.datarocks.lwgs.searchindex.client.repository.SedexMessageRepository;
 import org.datarocks.lwgs.searchindex.client.service.amqp.*;
-import org.datarocks.lwgs.searchindex.client.service.exception.UnknownSedexMessageIdException;
 import org.datarocks.lwgs.searchindex.client.service.log.Logger;
 import org.datarocks.lwgs.searchindex.client.service.log.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Slf4j
@@ -47,9 +47,10 @@ public class SedexReceiptProcessor {
   }
 
   @RabbitListener(queues = Queues.SEDEX_RECEIPTS)
+  @Transactional
   public void listen(FileEvent event) {
 
-    Optional<SedexReceipt> optionalReceipt =
+    final Optional<SedexReceipt> optionalReceipt =
         receiptReader.readFromFile(Paths.get(event.getFilename()));
 
     if (optionalReceipt.isEmpty()) {
@@ -61,10 +62,17 @@ public class SedexReceiptProcessor {
 
     final SedexReceipt receipt = optionalReceipt.get();
     final SedexStatus status = SedexStatus.valueOf(receipt.getStatusCode());
-    final SedexMessage message =
-        sedexMessageRepository
-            .findBySedexMessageId(UUID.fromString(receipt.getMessageId()))
-            .orElseThrow(() -> new UnknownSedexMessageIdException(receipt.getMessageId()));
+    final Optional<SedexMessage> optionalSedexMessage =
+        sedexMessageRepository.findBySedexMessageId(UUID.fromString(receipt.getMessageId()));
+
+    if (optionalSedexMessage.isEmpty()) {
+      log.warn("No matching sedexMessage found for receipt with id: {}.", receipt.getMessageId());
+      lwgsLogger.error("Received sedex receipt for unknown sedex message id.");
+
+      return;
+    }
+
+    final SedexMessage message = optionalSedexMessage.get();
 
     if (status.getCategory() == SUCCESS) {
       message.setState(SedexMessageState.SUCCESSFUL);
