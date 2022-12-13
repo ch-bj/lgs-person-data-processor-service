@@ -10,10 +10,8 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(exported = false)
-public interface TransactionRepository extends PagingAndSortingRepository<Transaction, Long> {
+public interface TransactionRepository extends PagingAndSortingRepository<Transaction, UUID> {
   Optional<Transaction> findByTransactionId(@NonNull UUID transactionId);
-
-  Page<Transaction> findAll(@NonNull Pageable pageable);
 
   Page<Transaction> findAllByJobId(@NonNull UUID jobId, @NonNull Pageable pageable);
 

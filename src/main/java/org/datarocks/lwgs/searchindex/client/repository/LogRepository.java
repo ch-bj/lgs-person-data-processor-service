@@ -12,8 +12,6 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(exported = false)
 public interface LogRepository extends PagingAndSortingRepository<Log, Long> {
-  Page<Log> findAll(@NonNull Pageable pageable);
-
   Page<Log> findAllBySourceIsInAndSeverityIsIn(
       @NonNull Collection<SourceType> filterSourceTypes,
       @NonNull Collection<SeverityType> filterSeverityTypes,

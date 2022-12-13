@@ -71,6 +71,7 @@ public abstract class AbstractSyncService {
         final JobCollectedPersonData jobCollectedPersonData =
             JobCollectedPersonData.builder()
                 .jobId(jobId)
+                .messageId(UUID.randomUUID())
                 .page(page)
                 .numProcessed(numProcessed + processedPersonDataList.size())
                 .numTotal(numTotal)
@@ -154,6 +155,7 @@ public abstract class AbstractSyncService {
           final JobCollectedPersonData jobCollectedPersonData =
               JobCollectedPersonData.builder()
                   .jobId(jobId)
+                  .messageId(UUID.randomUUID())
                   .page(page)
                   .processedPersonDataList(processedPersonDataList)
                   .build();
@@ -265,6 +267,7 @@ public abstract class AbstractSyncService {
         outTopicName,
         JobCollectedPersonData.builder()
             .jobId(UUID.randomUUID())
+            .messageId(UUID.randomUUID())
             .processedPersonDataList(Collections.singletonList(processedPersonData))
             .build());
   }

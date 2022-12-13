@@ -5,6 +5,8 @@ public class Queues {
 
   public static final String SEDEX_RECEIPTS = "lwgs.sedex.recepits";
   public static final String SEDEX_OUTBOX = "lwgs.sedex.outbox";
+
+  public static final String SEDEX_STATE = "lwgs.sedex.status";
   public static final String PERSONDATA_PARTIAL_INCOMING = "lwgs.persondata.partial.incoming";
   public static final String PERSONDATA_PARTIAL_OUTGOING = "lwgs.persondata.partial.outgoing";
   public static final String PERSONDATA_PARTIAL_FAILED = "lwgs.persondata.partial.failed";

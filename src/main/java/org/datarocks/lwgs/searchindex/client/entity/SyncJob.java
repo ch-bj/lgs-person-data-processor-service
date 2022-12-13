@@ -22,7 +22,6 @@ public class SyncJob {
 
   private JobType jobType;
   private JobState jobState;
-
   private Date createdAt;
   private Date sendAt;
   private Date completedAt;
@@ -34,19 +33,10 @@ public class SyncJob {
   public void setStateWithTimestamp(JobState state, Date timestamp) {
     this.jobState = state;
     switch (state) {
-      case NEW:
-        this.createdAt = timestamp;
-        break;
-      case SENT:
-        this.sendAt = timestamp;
-        break;
-      case COMPLETED:
-        this.completedAt = timestamp;
-        break;
-      case FAILED_PROCESSING:
-      case FAILED:
-        this.failedAt = timestamp;
-        break;
+      case NEW -> this.createdAt = timestamp;
+      case SENT -> this.sendAt = timestamp;
+      case COMPLETED -> this.completedAt = timestamp;
+      case FAILED_PROCESSING, FAILED -> this.failedAt = timestamp;
     }
   }
 }
