@@ -37,8 +37,6 @@
     <sonar.language>java</sonar.language>
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-    <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-    <sonar.jacoco.reportsPaths>${project.build.directory}/jacoco-ut.exec</sonar.jacoco.reportsPaths>
     <sonar.sources>src/main/java</sonar.sources>
     <sonar.tests>src/test/java</sonar.tests>
     <sonar.projectKey>${project.artifactId}</sonar.projectKey>
@@ -236,6 +234,13 @@
           <execution>
             <id>jacoco-site</id>
             <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
             <goals>
               <goal>report</goal>
             </goals>

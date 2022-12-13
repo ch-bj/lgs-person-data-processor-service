@@ -19,7 +19,7 @@ public class DatabaseLogWriterService {
 
   @Transactional
   @RabbitListener(queues = Queues.LOGS)
-  void listen(Log logMessage) {
+  public void listen(Log logMessage) {
     logRepository.save(logMessage);
   }
 }
