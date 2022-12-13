@@ -2,6 +2,8 @@ package org.datarocks.lwgs.commons.sedex;
 
 import static com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator.Feature.WRITE_XML_DECLARATION;
 
+import com.ctc.wstx.stax.WstxInputFactory;
+import com.ctc.wstx.stax.WstxOutputFactory;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -18,6 +20,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.datarocks.lwgs.commons.sedex.model.SedexEnvelope;
@@ -37,7 +41,11 @@ public class SedexFileWriter {
   public SedexFileWriter(final Path sedexOutboxPath, boolean createDirectories) {
     this.sedexOutboxPath = sedexOutboxPath;
     this.createDirectories = createDirectories;
-    this.xmlMapper = new XmlMapper();
+    XMLInputFactory xmlInputFactory = new WstxInputFactory();
+    xmlInputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, false);
+    XMLOutputFactory xmlOutputFactory = new WstxOutputFactory();
+    xmlInputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, false);
+    this.xmlMapper = new XmlMapper(xmlInputFactory, xmlOutputFactory);
     this.xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
     this.xmlMapper.configure(WRITE_XML_DECLARATION, true);
     this.xmlMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"));
