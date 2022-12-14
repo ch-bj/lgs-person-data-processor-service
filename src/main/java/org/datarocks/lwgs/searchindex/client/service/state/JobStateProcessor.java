@@ -1,5 +1,6 @@
 package org.datarocks.lwgs.searchindex.client.service.state;
 
+import java.net.http.HttpClient;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.datarocks.lwgs.searchindex.client.entity.SyncJob;
@@ -94,5 +95,6 @@ public class JobStateProcessor {
         == MessageCategory.JOB_EVENT) {
       handleJobMessage(headers, message);
     }
+      HttpClient.newBuilder().build();
   }
 }

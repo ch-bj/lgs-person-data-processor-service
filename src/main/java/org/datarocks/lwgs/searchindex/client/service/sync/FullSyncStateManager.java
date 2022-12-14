@@ -66,7 +66,7 @@ public class FullSyncStateManager {
     settingRepository.save(setting);
   }
 
-  private void loadPersistedSettingsOrSystemDefaults() {
+  protected void loadPersistedSettingsOrSystemDefaults() {
     try {
       fullSyncSeedState.set(
           FullSyncSeedState.valueOf(loadPersistedSetting(FULL_SYNC_STORED_STATE)));
@@ -219,13 +219,17 @@ public class FullSyncStateManager {
   public void completedFullSync() {
     if (getFullSyncJobState() == SENDING) {
       setFullSyncJobState(COMPLETED);
+      return;
     }
+    throw new StateChangeConflictingException(getFullSyncJobState(), COMPLETED);
   }
 
   public void failFullSync() {
     if (Arrays.asList(SEEDING, SENDING, COMPLETED).contains(getFullSyncJobState())) {
       setFullSyncJobState(FAILED);
+      return;
     }
+    throw new StateChangeConflictingException(getFullSyncJobState(), COMPLETED);
   }
 
   public Integer getNextPage() {

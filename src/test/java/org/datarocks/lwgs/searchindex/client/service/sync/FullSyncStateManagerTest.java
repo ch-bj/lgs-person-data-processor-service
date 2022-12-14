@@ -1,7 +1,7 @@
 package org.datarocks.lwgs.searchindex.client.service.sync;
 
-import static org.datarocks.lwgs.searchindex.client.service.sync.FullSyncStateManager.FULL_SYNC_STORED_JOB_ID_KEY;
-import static org.datarocks.lwgs.searchindex.client.service.sync.FullSyncStateManager.FULL_SYNC_STORED_STATE_KEY;
+import static org.datarocks.lwgs.searchindex.client.service.sync.FullSyncSettings.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -48,24 +48,26 @@ class FullSyncStateManagerTest {
     doReturn(
             Optional.of(
                 Setting.builder()
-                    .key(FULL_SYNC_STORED_STATE_KEY)
+                    .key(FULL_SYNC_STORED_STATE.getKey())
                     .value(FullSyncSeedState.SENDING.toString())
                     .build()))
         .when(settingRepository)
-        .findByKey(FULL_SYNC_STORED_STATE_KEY);
+        .findByKey(FULL_SYNC_STORED_STATE.getKey());
 
     doReturn(
             Optional.of(
-                Setting.builder().key(FULL_SYNC_STORED_JOB_ID_KEY).value(jobId.toString()).build()))
+                Setting.builder().key(FULL_SYNC_STORED_JOB_ID.getKey()).value(jobId.toString()).build()))
         .when(settingRepository)
-        .findByKey(FULL_SYNC_STORED_JOB_ID_KEY);
+        .findByKey(FULL_SYNC_STORED_JOB_ID.getKey());
+
+    fullSyncStateManager.loadPersistedSettingsOrSystemDefaults();
 
     assertAll(
         () -> assertEquals(FullSyncSeedState.SENDING, fullSyncStateManager.getFullSyncJobState()),
         () -> assertEquals(jobId, fullSyncStateManager.getCurrentFullSyncJobId()));
 
-    verify(settingRepository).findByKey(FULL_SYNC_STORED_STATE_KEY);
-    verify(settingRepository).findByKey(FULL_SYNC_STORED_JOB_ID_KEY);
+    verify(settingRepository, times(2)).findByKey(FULL_SYNC_STORED_STATE.getKey());
+    verify(settingRepository, times(2)).findByKey(FULL_SYNC_STORED_JOB_ID.getKey());
   }
 
   @Test
@@ -84,7 +86,7 @@ class FullSyncStateManagerTest {
     verify(settingRepository, times(2)).save(any());
 
     assertEquals(FullSyncSeedState.SEEDING, fullSyncStateManager.getFullSyncJobState());
-    assertTrue(fullSyncStateManager.isStateSeeding());
+    assertTrue(fullSyncStateManager.isInStateSeeding());
   }
 
   @Test
@@ -97,23 +99,41 @@ class FullSyncStateManagerTest {
 
     fullSyncStateManager.submitFullSync();
 
+    verify(settingRepository, times(2)).save(any());
+
+    assertEquals(FullSyncSeedState.SEEDED, fullSyncStateManager.getFullSyncJobState());
+    assertTrue(fullSyncStateManager.isInStateSeeded());
+  }
+
+  @Test
+  void startSendingFullSync() {
+    fullSyncStateManager.startFullSync();
+    fullSyncStateManager.submitFullSync();
+    assertThrows(StateChangeConflictingException.class, fullSyncStateManager::completedFullSync);
+    assertThrows(StateChangeConflictingException.class, fullSyncStateManager::startFullSync);
+
+    reset(settingRepository);
+
+    fullSyncStateManager.startSendingFullSync();
+
     verify(settingRepository, times(1)).save(any());
 
     assertEquals(FullSyncSeedState.SENDING, fullSyncStateManager.getFullSyncJobState());
-    assertTrue(fullSyncStateManager.isStateSending());
+    assertTrue(fullSyncStateManager.isInStateSending());
   }
 
   @Test
   void resetFullSync() {
     fullSyncStateManager.startFullSync();
     fullSyncStateManager.submitFullSync();
+    fullSyncStateManager.startSendingFullSync();
     fullSyncStateManager.failFullSync();
 
     reset(settingRepository);
 
     fullSyncStateManager.resetFullSync(false);
 
-    verify(settingRepository, times(1)).save(any());
+    verify(settingRepository, times(5)).save(any());
     verify(rabbitAdmin, times(0)).purgeQueue(any());
 
     assertEquals(FullSyncSeedState.READY, fullSyncStateManager.getFullSyncJobState());
@@ -123,6 +143,7 @@ class FullSyncStateManagerTest {
   void forceResetFullSync() {
     fullSyncStateManager.startFullSync();
     fullSyncStateManager.submitFullSync();
+    fullSyncStateManager.startSendingFullSync();
     fullSyncStateManager.failFullSync();
 
     reset(settingRepository);
@@ -132,18 +153,19 @@ class FullSyncStateManagerTest {
 
     fullSyncStateManager.resetFullSync(true);
 
-    verify(settingRepository, times(1)).save(any());
+    verify(settingRepository, times(5)).save(any());
     verify(rabbitAdmin, times(3)).purgeQueue(anyString(), anyBoolean());
 
     assertEquals(FullSyncSeedState.READY, fullSyncStateManager.getFullSyncJobState());
-    assertTrue(fullSyncStateManager.isIncomingEmpty());
-    assertTrue(fullSyncStateManager.isFailedEmpty());
+    assertTrue(fullSyncStateManager.isIncomingQueueEmpty());
+    assertTrue(fullSyncStateManager.isFailedQueueEmpty());
   }
 
   @Test
   void completedFullSync() {
     fullSyncStateManager.startFullSync();
     fullSyncStateManager.submitFullSync();
+    fullSyncStateManager.startSendingFullSync();
 
     reset(settingRepository);
 
@@ -158,6 +180,7 @@ class FullSyncStateManagerTest {
   void failFullSync() {
     fullSyncStateManager.startFullSync();
     fullSyncStateManager.submitFullSync();
+    fullSyncStateManager.startSendingFullSync();
     reset(settingRepository);
 
     fullSyncStateManager.failFullSync();
@@ -165,6 +188,6 @@ class FullSyncStateManagerTest {
     verify(settingRepository, times(1)).save(any());
 
     assertEquals(FullSyncSeedState.FAILED, fullSyncStateManager.getFullSyncJobState());
-    assertTrue(fullSyncStateManager.isStateFailed());
+    assertTrue(fullSyncStateManager.isInStateFailed());
   }
 }

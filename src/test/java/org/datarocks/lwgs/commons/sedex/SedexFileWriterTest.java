@@ -17,10 +17,13 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.datarocks.lwgs.commons.sedex.model.SedexEnvelope;
+import org.datarocks.lwgs.searchindex.client.entity.type.JobType;
 import org.datarocks.lwgs.searchindex.client.model.JobCollectedPersonData;
+import org.datarocks.lwgs.searchindex.client.model.JobMetaData;
 import org.datarocks.lwgs.searchindex.client.model.ProcessedPersonData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.batch.core.Job;
 
 class SedexFileWriterTest {
   private static final String PERSON_DATA_PREFIX = "GBPersonEvent-";
@@ -64,20 +67,21 @@ class SedexFileWriterTest {
                     .recipientId("recipient-123")
                     .build()));
 
-    assertTrue(envelope.toFile().exists());
+    assertTrue(sedexFileWriter.sedexEnvelopeFile(messageId).exists());
   }
 
   @Test
   void writeSedexPayload() {
     final UUID transactionOne = UUID.randomUUID();
     final UUID transactionTwo = UUID.randomUUID();
+    final UUID jobId = UUID.randomUUID();
 
     assertDoesNotThrow(
         () ->
             sedexFileWriter.writeSedexPayload(
                 messageId,
                 JobCollectedPersonData.builder()
-                    .jobId(messageId)
+                    .jobId(jobId)
                     .processedPersonDataList(
                         Arrays.asList(
                             ProcessedPersonData.builder()
@@ -88,16 +92,21 @@ class SedexFileWriterTest {
                                 .transactionId(transactionTwo)
                                 .payload("{}")
                                 .build()))
-                    .build()));
+                        .messageId(messageId)
+                        .page(0)
+                    .build(),
+                    new JobMetaData(JobType.FULL, jobId, 0, true)
+            )
+            );
 
-    assertTrue(payload.toFile().exists());
+    assertTrue(sedexFileWriter.sedexDataFile(messageId).exists());
 
-    List<String> files = getZipContentFileList(payload.toFile());
+    List<String> files = getZipContentFileList(sedexFileWriter.sedexDataFile(messageId));
 
     assertNotNull(files);
 
-    assertTrue(files.contains(PERSON_DATA_PREFIX + transactionOne.toString() + PERSON_DATA_SUFFIX));
-    assertTrue(files.contains(PERSON_DATA_PREFIX + transactionTwo.toString() + PERSON_DATA_SUFFIX));
+    assertTrue(files.contains(PERSON_DATA_PREFIX + transactionOne + PERSON_DATA_SUFFIX));
+    assertTrue(files.contains(PERSON_DATA_PREFIX + transactionTwo + PERSON_DATA_SUFFIX));
   }
 
   private List<String> getZipContentFileList(File zipFile) {
