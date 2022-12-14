@@ -170,7 +170,7 @@ class CommonHeadersDaoTest {
     final CommonHeadersDao dao0 =
         CommonHeadersDao.builder()
             .messageCategory(MessageCategory.JOB_EVENT)
-            .timestamp()
+            .timestamp(Instant.now().minusSeconds(3600))
             .jobId(jobId)
             .jobType(JobType.FULL)
             .jobState(JobState.NEW)
