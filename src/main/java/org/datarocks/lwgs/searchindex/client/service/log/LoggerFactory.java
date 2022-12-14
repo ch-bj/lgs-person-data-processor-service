@@ -44,6 +44,7 @@ public class LoggerFactory implements RawLogger {
       switch (source) {
         case PERSON_DATA_PROCESSOR:
           log.setTransactionId(correlationId);
+          break;
         case PARTIAL_SYNC_PROCESSOR:
         case FULL_SYNC_PROCESSOR:
         case SEDEX_HANDLER:
