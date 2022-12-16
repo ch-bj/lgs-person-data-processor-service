@@ -63,7 +63,7 @@ services:
     volumes:
       - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/docker-presets.conf
       - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
-      - rabbit_data:/var/lib/rabbitmq
+      - rabbit_data:/var/lib/rabbitmq/mnesia
       - rabbit_logs:/var/log/rabbitmq/log
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
