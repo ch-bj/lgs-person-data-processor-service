@@ -32,7 +32,7 @@ public abstract class AbstractSyncService {
   private final RabbitTemplate rabbitTemplate;
   private final int pageSize;
 
-  public AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate, int pageSize) {
+  protected AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate, int pageSize) {
     this.rabbitTemplate = rabbitTemplate;
     this.pageSize = pageSize;
   }

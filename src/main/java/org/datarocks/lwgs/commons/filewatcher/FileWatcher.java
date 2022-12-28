@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.datarocks.lwgs.commons.filewatcher.exception.WatchDirNotAccessibleException;
 
@@ -28,8 +27,8 @@ public class FileWatcher {
       }
       this.path = path;
       // ENTRY_DELETE, ENTRY_MODIFY
-      WatchKey key = path.register(watcher, ENTRY_CREATE);
-      log.debug("File watcher initialised.");
+      final WatchKey key = path.register(watcher, ENTRY_CREATE);
+      log.debug("File watcher initialised [key: {}].", key);
     } catch (IOException ioException) {
       log.error("Couldn't start fileWatcher, msg:", ioException);
       throw new WatchDirNotAccessibleException(path.toString(), ioException);
@@ -60,7 +59,7 @@ public class FileWatcher {
       return Collections.emptyList();
     }
 
-    WatchKey key = this.watcher.poll();
+    final WatchKey key = this.watcher.poll();
 
     if (key == null) {
       return Collections.emptyList();
@@ -70,7 +69,7 @@ public class FileWatcher {
         Optional.ofNullable(key.pollEvents()).orElse(Collections.emptyList()).stream()
             .map(this::processEvent)
             .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+            .toList();
 
     key.reset();
     return events;

@@ -68,7 +68,7 @@ class StateProcessorsTest {
   }
 
   @Test
-  @Disabled
+  @Disabled("Needs rewrite")
   void testProcessNewFullTransactionWhenJobEmpty() {
     final UUID transactionId = UUID.randomUUID();
     final UUID jobId = UUID.randomUUID();
@@ -99,7 +99,7 @@ class StateProcessorsTest {
   }
 
   @Test
-  @Disabled
+  @Disabled("Needs rewrite")
   void testProcessNewFullTransactionWhenJobExisting() {
     final UUID transactionId = UUID.randomUUID();
     final UUID jobId = UUID.randomUUID();

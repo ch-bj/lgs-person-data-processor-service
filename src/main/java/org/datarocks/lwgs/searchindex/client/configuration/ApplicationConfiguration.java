@@ -169,7 +169,7 @@ public class ApplicationConfiguration {
   }
 
   @Bean
-  public Binding BusinessLogBinding(TopicExchange topicExchange, Queue businessLogQueue) {
+  public Binding businessLogBinding(TopicExchange topicExchange, Queue businessLogQueue) {
     return BindingBuilder.bind(businessLogQueue)
         .to(topicExchange)
         .with(Topics.PERSONDATA_BUSINESS_VALIDATION);

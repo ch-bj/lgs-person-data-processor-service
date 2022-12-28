@@ -3,7 +3,6 @@ package org.datarocks.lwgs.searchindex.client.adapter.rest;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.datarocks.lwgs.searchindex.client.entity.Log;
 import org.datarocks.lwgs.searchindex.client.entity.type.SeverityType;
 import org.datarocks.lwgs.searchindex.client.entity.type.SourceType;
@@ -37,11 +36,11 @@ public class LogController {
       @PageableDefault @Parameter(hidden = true) Pageable pageable) {
 
     if (filterSourceTypes == null) {
-      filterSourceTypes = Arrays.stream(SourceType.values()).collect(Collectors.toList());
+      filterSourceTypes = Arrays.stream(SourceType.values()).toList();
     }
 
     if (filterSeverityTypes == null) {
-      filterSeverityTypes = Arrays.stream(SeverityType.values()).collect(Collectors.toList());
+      filterSeverityTypes = Arrays.stream(SeverityType.values()).toList();
     }
 
     return logRepository.findAllBySourceIsInAndSeverityIsIn(

@@ -41,15 +41,10 @@ public class LoggerFactory implements RawLogger {
             .build();
 
     if (correlationId != null) {
-      switch (source) {
-        case PERSON_DATA_PROCESSOR:
-          log.setTransactionId(correlationId);
-          break;
-        case PARTIAL_SYNC_PROCESSOR:
-        case FULL_SYNC_PROCESSOR:
-        case SEDEX_HANDLER:
-          log.setJobId(correlationId);
-          break;
+      if (source == SourceType.PERSON_DATA_PROCESSOR) {
+        log.setTransactionId(correlationId);
+      } else {
+        log.setJobId(correlationId);
       }
     }
 

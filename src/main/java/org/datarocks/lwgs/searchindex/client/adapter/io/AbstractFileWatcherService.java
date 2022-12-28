@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 public abstract class AbstractFileWatcherService {
   private final FileWatcher fileWatcher;
 
-  public AbstractFileWatcherService(final Path path, final boolean createDirectories)
+  protected AbstractFileWatcherService(final Path path, final boolean createDirectories)
       throws WatchDirNotAccessibleException {
     this.fileWatcher = new FileWatcher(path, createDirectories);
   }

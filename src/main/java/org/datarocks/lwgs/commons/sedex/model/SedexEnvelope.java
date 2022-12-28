@@ -8,21 +8,25 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
-/* Example from documentation
-   <?xml version="1.0" encoding="UTF-8"?>
-   <envelope xmlns="http://www.ech.ch/xmlns/eCH-0090/1"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://www.ech.ch/xmlns/eCH-0090/1 http://www.ech.ch/xmlns/eCH-
-   0090/1/eCH-0090-1-0.xsd"
-   version="1.0">
-   <messageId>62fdee70d9ea77646f6e8686a3f9332e</messageId>
-   <messageType>99</messageType>
-   <messageClass>0</messageClass>
-   <senderId>1-351-1</senderId>
-   <recipientId>3-CH-1</recipientId>
-   <eventDate>2007-01-01T00:00:00</eventDate>
-   <messageDate>2007-09-06T14:13:51</messageDate>
-   </envelope>
+/* Example from documentation:
+
+  sedex Client 6.0.9
+  Installation and User Manual
+  [do-e-00.09-sedex_client_handbuch_v6.pdf, p48]
+
+  <?xml version="1.0" encoding="UTF-8"?>
+  <eCH-0090:envelope version="1.0"
+  xmlns:eCH-0090="http://www.ech.ch/xmlns/eCH-0090/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.ech.ch/xmlns/eCH-0090/1/eCH-0090-1-0.xsd">
+  <eCH-0090:messageId>TestMessageId</eCH-0090:messageId>
+  <eCH-0090:messageType>Use case MessageType</eCH-0090:messageType>
+  <eCH-0090:messageClass>0</eCH-0090:messageClass>
+  <eCH-0090:senderId>Your sedex ID here</eCH-0090:senderId>
+  <eCH-0090:recipientId>Your sedex ID here</eCH-0090:recipientId>
+  <eCH-0090:eventDate>2019-12-02T11:30:00</eCH-0090:eventDate>
+  <eCH-0090:messageDate>YYYY-MM-DDTHH:MM:SS</eCH-0090:messageDate>
+  </eCH-0090:envelope>
 */
 
 @Data
@@ -37,7 +41,7 @@ public class SedexEnvelope implements Serializable {
 
   @Builder.Default
   @JacksonXmlProperty(isAttribute = true, localName = "xmlns:eCH-0090")
-  String eCH0090 = "http://www.ech.ch/xmlns/eCH-0090/1";
+  String eCH0090 = NS;
 
   @Builder.Default
   @JacksonXmlProperty(isAttribute = true, localName = "xmlns:xsi")

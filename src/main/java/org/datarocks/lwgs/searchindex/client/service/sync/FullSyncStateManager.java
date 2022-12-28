@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.datarocks.lwgs.searchindex.client.configuration.SedexConfiguration;
-import org.datarocks.lwgs.searchindex.client.entity.Setting;
 import org.datarocks.lwgs.searchindex.client.repository.SettingRepository;
 import org.datarocks.lwgs.searchindex.client.service.amqp.QueueStatsService;
 import org.datarocks.lwgs.searchindex.client.service.amqp.Queues;
@@ -22,7 +21,6 @@ import org.datarocks.lwgs.searchindex.client.service.exception.StateChangeSender
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -37,7 +35,7 @@ public class FullSyncStateManager {
   private final AtomicInteger fullSyncMessagesProcessed = new AtomicInteger(0);
   private final AtomicInteger currentFullSyncMessageCounter = new AtomicInteger(0);
 
-  private final SettingRepository settingRepository;
+  private final FullSyncSettingsStore settingsStore;
   private final QueueStatsService queueStatsService;
   private final RabbitAdmin rabbitAdmin;
   private final boolean isInMultiSenderMode;
@@ -50,7 +48,7 @@ public class FullSyncStateManager {
       QueueStatsService queueStatsService,
       RabbitAdmin rabbitAdmin,
       SedexConfiguration configuration) {
-    this.settingRepository = settingRepository;
+    this.settingsStore = new FullSyncSettingsStore(settingRepository);
     this.queueStatsService = queueStatsService;
     this.rabbitAdmin = rabbitAdmin;
     this.singleSenderId = configuration.getSedexSenderId();
@@ -60,38 +58,21 @@ public class FullSyncStateManager {
     loadPersistedSettingsOrSystemDefaults();
   }
 
-  @Transactional
-  public String loadPersistedSetting(@NonNull FullSyncSettings key) {
-    return settingRepository
-        .findByKey(key.toString())
-        .map(Setting::getValue)
-        .orElse(key.getDefaultValue());
-  }
-
-  @Transactional
-  public void persistSetting(@NonNull FullSyncSettings key, String value) {
-    final Setting setting =
-        settingRepository
-            .findByKey(key.toString())
-            .orElse(Setting.builder().key(key.toString()).build());
-    setting.setValue(value);
-    settingRepository.save(setting);
-  }
-
   protected void loadPersistedSettingsOrSystemDefaults() {
     try {
       fullSyncSeedState.set(
-          FullSyncSeedState.valueOf(loadPersistedSetting(FULL_SYNC_STORED_STATE)));
-      final String jobId = loadPersistedSetting(FULL_SYNC_STORED_JOB_ID);
+          FullSyncSeedState.valueOf(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_STATE)));
+      final String jobId = settingsStore.loadPersistedSetting(FULL_SYNC_STORED_JOB_ID);
       if (jobId != null) {
         currentFullSyncJobId.set(UUID.fromString(jobId));
       }
-      currentFullSyncSenderId.set(loadPersistedSetting(FULL_SYNC_STORED_SENDER_ID));
-      currentFullSyncPage.set(Integer.parseInt(loadPersistedSetting(FULL_SYNC_STORED_PAGE)));
+      currentFullSyncSenderId.set(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_SENDER_ID));
+      currentFullSyncPage.set(
+          Integer.parseInt(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_PAGE)));
       fullSyncMessagesTotal.set(
-          Integer.parseInt(loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_TOTAL)));
+          Integer.parseInt(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_TOTAL)));
       fullSyncMessagesProcessed.set(
-          Integer.parseInt(loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_PROCESSED)));
+          Integer.parseInt(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_PROCESSED)));
     } catch (Exception e) {
       log.error("Failed to load defaults from db; reason: {}.", e.getMessage());
     }
@@ -132,7 +113,7 @@ public class FullSyncStateManager {
         state,
         currentFullSyncJobId);
     fullSyncSeedState.set(state);
-    persistSetting(FULL_SYNC_STORED_STATE, state.toString());
+    settingsStore.persistSetting(FULL_SYNC_STORED_STATE, state.toString());
   }
 
   public UUID getCurrentFullSyncJobId() {
@@ -141,7 +122,7 @@ public class FullSyncStateManager {
 
   private void setCurrentFullSyncJobId(UUID syncJobId) {
     currentFullSyncJobId.set(syncJobId);
-    persistSetting(
+    settingsStore.persistSetting(
         FULL_SYNC_STORED_JOB_ID, Optional.ofNullable(syncJobId).map(UUID::toString).orElse(null));
   }
 
@@ -151,7 +132,7 @@ public class FullSyncStateManager {
 
   private void setCurrentFullSyncSenderId(String senderId) {
     currentFullSyncSenderId.set(senderId);
-    persistSetting(FULL_SYNC_STORED_SENDER_ID, senderId);
+    settingsStore.persistSetting(FULL_SYNC_STORED_SENDER_ID, senderId);
   }
 
   public FullSyncSeedState getFullSyncJobState() {
@@ -160,7 +141,7 @@ public class FullSyncStateManager {
 
   private void resetCurrentFullSyncPage() {
     currentFullSyncPage.set(-1);
-    persistSetting(FULL_SYNC_STORED_PAGE, "-1");
+    settingsStore.persistSetting(FULL_SYNC_STORED_PAGE, "-1");
   }
 
   public Integer getCurrentFullSyncPage() {
@@ -169,7 +150,7 @@ public class FullSyncStateManager {
 
   private void setFullSyncMessagesTotal(@NonNull Integer value) {
     fullSyncMessagesTotal.set(value);
-    persistSetting(FULL_SYNC_STORED_MESSAGE_TOTAL, value.toString());
+    settingsStore.persistSetting(FULL_SYNC_STORED_MESSAGE_TOTAL, value.toString());
   }
 
   public Integer getFullSyncMessagesTotal() {
@@ -178,7 +159,7 @@ public class FullSyncStateManager {
 
   private void resetFullSyncMessagesProcessed() {
     fullSyncMessagesProcessed.set(0);
-    persistSetting(FULL_SYNC_STORED_MESSAGE_PROCESSED, "0");
+    settingsStore.persistSetting(FULL_SYNC_STORED_MESSAGE_PROCESSED, "0");
   }
 
   public Integer getFullSyncMessagesProcessed() {
@@ -187,7 +168,7 @@ public class FullSyncStateManager {
 
   public void incNumMessagesProcessed(int numProcessed) {
     fullSyncMessagesProcessed.getAndAdd(numProcessed);
-    persistSetting(
+    settingsStore.persistSetting(
         FULL_SYNC_STORED_MESSAGE_PROCESSED, String.valueOf(fullSyncMessagesProcessed.get()));
   }
 

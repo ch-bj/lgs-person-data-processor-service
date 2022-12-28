@@ -37,6 +37,9 @@ public class SyncJob {
       case SENT -> this.sendAt = timestamp;
       case COMPLETED -> this.completedAt = timestamp;
       case FAILED_PROCESSING, FAILED -> this.failedAt = timestamp;
+      default -> {
+        // nothing to do
+      }
     }
   }
 }
