@@ -74,7 +74,7 @@ public class JobStateProcessor {
   }
 
   @Transactional
-  protected void handleJobMessage(final CommonHeadersDao headers, final Message message) {
+  public void handleJobMessage(final CommonHeadersDao headers, final Message message) {
     if (headers.getJobState() == JobState.NEW) {
       createNewSyncJobFromMessage(headers, message);
       return;
@@ -95,6 +95,6 @@ public class JobStateProcessor {
         == MessageCategory.JOB_EVENT) {
       handleJobMessage(headers, message);
     }
-      HttpClient.newBuilder().build();
+    HttpClient.newBuilder().build();
   }
 }

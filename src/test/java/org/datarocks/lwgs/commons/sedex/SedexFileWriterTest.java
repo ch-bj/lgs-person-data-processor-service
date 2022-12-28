@@ -23,7 +23,6 @@ import org.datarocks.lwgs.searchindex.client.model.JobMetaData;
 import org.datarocks.lwgs.searchindex.client.model.ProcessedPersonData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.batch.core.Job;
 
 class SedexFileWriterTest {
   private static final String PERSON_DATA_PREFIX = "GBPersonEvent-";
@@ -92,12 +91,10 @@ class SedexFileWriterTest {
                                 .transactionId(transactionTwo)
                                 .payload("{}")
                                 .build()))
-                        .messageId(messageId)
-                        .page(0)
+                    .messageId(messageId)
+                    .page(0)
                     .build(),
-                    new JobMetaData(JobType.FULL, jobId, 0, true)
-            )
-            );
+                new JobMetaData(JobType.FULL, jobId, 0, true)));
 
     assertTrue(sedexFileWriter.sedexDataFile(messageId).exists());
 

@@ -9,14 +9,12 @@ import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-
 @ActiveProfiles(profiles = "test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 class SearchIndexClientApplicationTests {
 
-  @Container
-  static RabbitMQContainer rabbit = new RabbitMQContainer("rabbitmq:3-alpine");
+  @Container static RabbitMQContainer rabbit = new RabbitMQContainer("rabbitmq:3-alpine");
 
   @DynamicPropertySource
   static void rabbitmqProperties(DynamicPropertyRegistry registry) {

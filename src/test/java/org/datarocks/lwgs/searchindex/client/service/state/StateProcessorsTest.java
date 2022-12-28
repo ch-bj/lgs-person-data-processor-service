@@ -18,7 +18,6 @@ import org.datarocks.lwgs.searchindex.client.entity.type.JobType;
 import org.datarocks.lwgs.searchindex.client.entity.type.TransactionState;
 import org.datarocks.lwgs.searchindex.client.model.JobCollectedPersonData;
 import org.datarocks.lwgs.searchindex.client.model.ProcessedPersonData;
-import org.datarocks.lwgs.searchindex.client.repository.BusinessLogRepository;
 import org.datarocks.lwgs.searchindex.client.repository.SyncJobRepository;
 import org.datarocks.lwgs.searchindex.client.repository.TransactionRepository;
 import org.datarocks.lwgs.searchindex.client.service.amqp.CommonHeadersDao;
@@ -30,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 class StateProcessorsTest {
   private static final byte[] EMPTY_PAYLOAD = "{}".getBytes();
@@ -49,7 +47,7 @@ class StateProcessorsTest {
   final ArgumentCaptor<SyncJob> jobArgumentCaptor = ArgumentCaptor.forClass(SyncJob.class);
 
   @Test
-  public void testProcessNewPartialTransaction() {
+  void testProcessNewPartialTransaction() {
     final UUID transactionId = UUID.randomUUID();
     final Message message = new Message(EMPTY_PAYLOAD, new MessageProperties());
     final CommonHeadersDao commonHeadersDao =
@@ -71,7 +69,7 @@ class StateProcessorsTest {
 
   @Test
   @Disabled
-  public void testProcessNewFullTransactionWhenJobEmpty() {
+  void testProcessNewFullTransactionWhenJobEmpty() {
     final UUID transactionId = UUID.randomUUID();
     final UUID jobId = UUID.randomUUID();
     final Message message = new Message(EMPTY_PAYLOAD, new MessageProperties());
@@ -102,7 +100,7 @@ class StateProcessorsTest {
 
   @Test
   @Disabled
-  public void testProcessNewFullTransactionWhenJobExisting() {
+  void testProcessNewFullTransactionWhenJobExisting() {
     final UUID transactionId = UUID.randomUUID();
     final UUID jobId = UUID.randomUUID();
     final Message message = new Message(EMPTY_PAYLOAD, new MessageProperties());
@@ -140,7 +138,7 @@ class StateProcessorsTest {
   }
 
   @Test
-  public void testProcessFailedTransaction() {
+  void testProcessFailedTransaction() {
     final UUID jobId = UUID.randomUUID();
     final UUID transactionId = UUID.randomUUID();
     final Message message = new Message(EMPTY_PAYLOAD, new MessageProperties());
@@ -188,7 +186,7 @@ class StateProcessorsTest {
   }
 
   @Test
-  public void testProcessNewJob() throws SerializationFailedException {
+  void testProcessNewJob() throws SerializationFailedException {
     final UUID jobId = UUID.randomUUID();
     final UUID transactionId = UUID.randomUUID();
     final UUID messageId = UUID.randomUUID();
@@ -242,7 +240,7 @@ class StateProcessorsTest {
   }
 
   @Test
-  public void testProcessJobUpdate() throws SerializationFailedException {
+  void testProcessJobUpdate() throws SerializationFailedException {
     final UUID jobId = UUID.randomUUID();
     final UUID messageId = UUID.randomUUID();
     final JobCollectedPersonData collectedPersonData =

@@ -27,7 +27,7 @@ public class BusinessLogProcessor {
   }
 
   @Transactional
-  protected void handleBusinessLogMessage(Message message) {
+  public void handleBusinessLogMessage(Message message) {
     try {
       final BusinessValidationLog log =
           (BusinessValidationLog) rabbitTemplate.getMessageConverter().fromMessage(message);

@@ -109,7 +109,7 @@ public class TransactionStateProcessor {
 
   @SuppressWarnings({"squid:S128"})
   @Transactional
-  protected void handleTransactionMessage(CommonHeadersDao headers) {
+  public void handleTransactionMessage(CommonHeadersDao headers) {
     switch (headers.getTransactionState()) {
       case NEW:
         processNewTransactionMessage(headers);

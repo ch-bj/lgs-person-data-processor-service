@@ -20,7 +20,6 @@ import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.support.ListenerExecutionFailedException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -29,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 public class SedexFileWriterService {
+  private final SedexConfiguration configuration;
   private final SedexFileWriter sedexFileWriter;
   private final RabbitTemplate rabbitTemplate;
 
@@ -38,32 +38,12 @@ public class SedexFileWriterService {
   private int errorCount = 0;
   private Instant retryTime = Instant.MIN;
 
-  @Value("${lwgs.searchindex.client.sedex.file-writer.failure.throttling.base:1000}")
-  private Long errorThrottlingBase;
-
-  @Value("${lwgs.searchindex.client.sedex.file-writer.failure.throttling.max:600000}")
-  private Long errorThrottlingMax;
-
-  @Value("${lwgs.searchindex.client.sedex.sender-id}")
-  private String sedexSenderId;
-
-  @Value("${lwgs.searchindex.client.sedex.recipient-id}")
-  private String sedexRecipientId;
-
-  @Value("${lwgs.searchindex.client.sedex.message.type.full-export}")
-  private int sedexMessageTypeFullExport;
-
-  @Value("${lwgs.searchindex.client.sedex.message.type.incremental}")
-  private int sedexMessageTypeIncremental;
-
-  @Value("${lwgs.searchindex.client.sedex.message.class}")
-  private int sedexMessageClass;
-
   @Autowired
   public SedexFileWriterService(
       SedexConfiguration sedexConfiguration,
       RabbitTemplate rabbitTemplate,
       SedexMessageRepository sedexMessageRepository) {
+    this.configuration = sedexConfiguration;
     this.rabbitTemplate = rabbitTemplate;
     this.sedexFileWriter =
         new SedexFileWriter(
@@ -74,7 +54,9 @@ public class SedexFileWriterService {
   private void updateThrottling(boolean active) {
     if (active) {
       long waitingTime =
-          Long.min((long) Math.pow(2, errorCount) * errorThrottlingBase, errorThrottlingMax);
+          Long.min(
+              (long) Math.pow(2, errorCount) * configuration.getErrorThrottlingBase(),
+              configuration.getErrorThrottlingMax());
       retryTime = Instant.now().plusMillis(waitingTime);
       errorCount++;
     } else {
@@ -85,7 +67,7 @@ public class SedexFileWriterService {
   }
 
   @Transactional
-  protected boolean processNextSedexOutboxMessage() {
+  public boolean processNextSedexOutboxMessage() {
     final Message message = rabbitTemplate.receive(Queues.SEDEX_OUTBOX);
 
     if (message == null) {
@@ -103,8 +85,8 @@ public class SedexFileWriterService {
 
       final int sedexMessageType =
           (inHeaders.getJobType() == JobType.FULL)
-              ? sedexMessageTypeFullExport
-              : sedexMessageTypeIncremental;
+              ? configuration.getSedexMessageTypeFullExport()
+              : configuration.getSedexMessageTypeIncremental();
 
       final boolean isLastPage =
           inHeaders.getJobType() == JobType.PARTIAL
@@ -126,9 +108,9 @@ public class SedexFileWriterService {
           SedexEnvelope.builder()
               .messageId(jobCollectedPersonData.getMessageId().toString())
               .messageType(sedexMessageType)
-              .messageClass(sedexMessageClass)
-              .senderId(sedexSenderId)
-              .recipientId(sedexRecipientId)
+              .messageClass(configuration.getSedexMessageClass())
+              .senderId(configuration.getSedexSenderId())
+              .recipientId(configuration.getSedexRecipientId())
               .eventDate(inHeaders.getTimestamp())
               .messageDate(inHeaders.getTimestamp())
               .build();

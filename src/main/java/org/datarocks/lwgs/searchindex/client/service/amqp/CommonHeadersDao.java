@@ -56,6 +56,14 @@ public class CommonHeadersDao {
     return getOptionalJobType().orElseThrow(MessageHeaderMissingException::new);
   }
 
+  public Optional<String> getOptionalSenderId() {
+    return getAsString(SENDER_ID);
+  }
+
+  public String getSenderId() {
+    return getOptionalSenderId().orElseThrow(MessageHeaderMissingException::new);
+  }
+
   public Optional<UUID> getOptionalTransactionId() {
     return getAsString(TRANSACTION_ID).map(UUID::fromString);
   }
@@ -125,6 +133,7 @@ public class CommonHeadersDao {
         .jobId(header.getOptionalJobId().orElse(null))
         .jobState(header.getOptionalJobState().orElse(null))
         .jobType(header.getOptionalJobType().orElse(null))
+        .senderId(header.getOptionalSenderId().orElse(null))
         .transactionId(header.getOptionalTransactionId().orElse(null))
         .transactionState(header.getOptionalTransactionState().orElse(null))
         .timestamp(header.getOptionalTimestamp().orElse(null));
@@ -134,6 +143,7 @@ public class CommonHeadersDao {
   @Accessors(fluent = true, chain = true)
   public static class CommonHeaderBuilder {
     private MessageCategory messageCategory;
+    private String senderId;
     private UUID jobId;
     private JobState jobState;
     private JobType jobType;
@@ -165,6 +175,7 @@ public class CommonHeadersDao {
       Optional.ofNullable(jobId).ifPresent(v -> newHeaders.put(JOB_ID, v.toString()));
       Optional.ofNullable(jobState).ifPresent(v -> newHeaders.put(JOB_STATE, v.toString()));
       Optional.ofNullable(jobType).ifPresent(v -> newHeaders.put(JOB_TYPE, v.toString()));
+      Optional.ofNullable(senderId).ifPresent(v -> newHeaders.put(SENDER_ID, v));
       Optional.ofNullable(transactionId)
           .ifPresent(v -> newHeaders.put(TRANSACTION_ID, v.toString()));
       Optional.ofNullable(transactionState)

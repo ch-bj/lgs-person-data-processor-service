@@ -52,9 +52,11 @@ public class SyncController {
   }
 
   @PostMapping(path = "partial/person-data", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public TransactionIdResponse addSeedToPartialSyncPool(@RequestBody @NonNull String request) {
+  public TransactionIdResponse addSeedToPartialSyncPool(
+      @RequestBody @NonNull String request,
+      @RequestHeader(Headers.X_LGS_SENDER_ID) String senderId) {
     return TransactionIdResponse.builder()
-        .transactionId(jobSeedService.seedToPartial(request))
+        .transactionId(jobSeedService.seedToPartial(request, senderId))
         .build();
   }
 
@@ -68,10 +70,12 @@ public class SyncController {
   }
 
   @PostMapping(path = "full/person-data", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public TransactionIdResponse addSeedToFullSyncPool(@RequestBody @NonNull String request) {
+  public TransactionIdResponse addSeedToFullSyncPool(
+      @RequestBody @NonNull String request,
+      @RequestHeader(Headers.X_LGS_SENDER_ID) String senderId) {
     return TransactionIdResponse.builder()
         .transactionId(
-            Optional.ofNullable(jobSeedService.seedToFull(request))
+            Optional.ofNullable(jobSeedService.seedToFull(request, senderId))
                 .orElseThrow(
                     () ->
                         new ResponseStatusException(
@@ -89,7 +93,8 @@ public class SyncController {
   }
 
   @GetMapping(path = "full/state")
-  public FullSyncSeedStateResponse fullSyncState() {
+  public FullSyncSeedStateResponse fullSyncState(
+      @RequestHeader(Headers.X_LGS_SENDER_ID) String senderId) {
     return FullSyncSeedStateResponse.builder()
         .jobId(fullSyncStateManager.getCurrentFullSyncJobId())
         .seedStatus(fullSyncStateManager.getFullSyncJobState())
@@ -97,26 +102,30 @@ public class SyncController {
   }
 
   @PutMapping(path = "full/trigger/start")
-  public FullSyncSeedStateResponse triggerStartFullSync() {
+  public FullSyncSeedStateResponse triggerStartFullSync(
+      @RequestHeader(Headers.X_LGS_SENDER_ID) String senderId) {
     try {
-      fullSyncStateManager.startFullSync();
+      fullSyncStateManager.startFullSync(senderId);
     } catch (StateChangeConflictingException e) {
       throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, e.getMessage());
     }
     return FullSyncSeedStateResponse.builder()
+        .senderId(fullSyncStateManager.getCurrentFullSyncSenderId())
         .jobId(fullSyncStateManager.getCurrentFullSyncJobId())
         .seedStatus(fullSyncStateManager.getFullSyncJobState())
         .build();
   }
 
   @PutMapping(path = "full/trigger/submit")
-  public FullSyncSeedStateResponse triggerSubmitFullSync() {
+  public FullSyncSeedStateResponse triggerSubmitFullSync(
+      @RequestHeader(Headers.X_LGS_SENDER_ID) String senderId) {
     try {
-      fullSyncStateManager.submitFullSync();
+      fullSyncStateManager.submitFullSync(senderId);
     } catch (StateChangeConflictingException e) {
       throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, e.getMessage());
     }
     return FullSyncSeedStateResponse.builder()
+        .senderId(fullSyncStateManager.getCurrentFullSyncSenderId())
         .jobId(fullSyncStateManager.getCurrentFullSyncJobId())
         .seedStatus(fullSyncStateManager.getFullSyncJobState())
         .build();
@@ -124,13 +133,15 @@ public class SyncController {
 
   @PutMapping(path = "full/trigger/reset")
   public FullSyncSeedStateResponse triggerResetFullSync(
-      @RequestParam(required = false) boolean force) {
+      @RequestParam(required = false) boolean force,
+      @RequestHeader(Headers.X_LGS_SENDER_ID) String senderId) {
     try {
-      fullSyncStateManager.resetFullSync(force);
+      fullSyncStateManager.resetFullSync(force, senderId);
     } catch (StateChangeConflictingException e) {
       throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, e.getMessage());
     }
     return FullSyncSeedStateResponse.builder()
+        .senderId(fullSyncStateManager.getCurrentFullSyncSenderId())
         .seedStatus(fullSyncStateManager.getFullSyncJobState())
         .build();
   }
@@ -138,7 +149,8 @@ public class SyncController {
   @GetMapping(path = "jobs")
   @PageableAsQueryParam
   public Page<SimpleSyncJobProjection> getJobs(
-      @PageableDefault @Parameter(hidden = true) Pageable pageable) {
+      @PageableDefault @Parameter(hidden = true) Pageable pageable,
+      @RequestHeader(Headers.X_LGS_SENDER_ID) String senderId) {
     return syncJobRepository.findAllProjectedBy(pageable);
   }
 
@@ -161,7 +173,8 @@ public class SyncController {
   @GetMapping(path = "transactions")
   @PageableAsQueryParam
   public Page<Transaction> getTransactions(
-      @PageableDefault @Parameter(hidden = true) Pageable pageable) {
+      @PageableDefault @Parameter(hidden = true) Pageable pageable,
+      @RequestHeader(Headers.X_LGS_SENDER_ID) String senderId) {
     return transactionRepository.findAll(pageable);
   }
 
