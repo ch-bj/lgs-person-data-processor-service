@@ -70,7 +70,10 @@ public class FullSyncStateManager {
     try {
       fullSyncSeedState.set(
           FullSyncSeedState.valueOf(loadPersistedSetting(FULL_SYNC_STORED_STATE)));
-      currentFullSyncJobId.set(UUID.fromString(loadPersistedSetting(FULL_SYNC_STORED_JOB_ID)));
+      final String jobId = loadPersistedSetting(FULL_SYNC_STORED_JOB_ID);
+      if (jobId != null) {
+        currentFullSyncJobId.set(UUID.fromString(jobId));
+      }
       currentFullSyncPage.set(Integer.parseInt(loadPersistedSetting(FULL_SYNC_STORED_PAGE)));
       fullSyncMessagesTotal.set(
           Integer.parseInt(loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_TOTAL)));
