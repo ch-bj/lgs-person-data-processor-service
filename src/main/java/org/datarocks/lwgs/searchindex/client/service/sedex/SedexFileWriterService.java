@@ -3,7 +3,6 @@ package org.datarocks.lwgs.searchindex.client.service.sedex;
 import java.time.Duration;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
-import org.datarocks.lwgs.commons.sedex.SedexFileWriter;
 import org.datarocks.lwgs.searchindex.client.configuration.SedexConfiguration;
 import org.datarocks.lwgs.searchindex.client.repository.SedexMessageRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -27,14 +26,10 @@ public class SedexFileWriterService implements ThrottleHandler {
       RabbitTemplate rabbitTemplate,
       SedexMessageRepository sedexMessageRepository) {
 
-    final SedexFileWriter sedexFileWriter =
-        new SedexFileWriter(
-            sedexConfiguration.getSedexOutboxPath(), sedexConfiguration.shouldCreateDirectories());
-
     this.configuration = sedexConfiguration;
     this.outboxMessageProcessor =
         new SedexOutboxMessageProcessor(
-            rabbitTemplate, sedexConfiguration, sedexMessageRepository, sedexFileWriter, this);
+            rabbitTemplate, sedexConfiguration, sedexMessageRepository, this);
   }
 
   public void updateThrottling(boolean active) {

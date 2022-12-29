@@ -6,19 +6,17 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.datarocks.lwgs.commons.filewatcher.exception.WatchDirNotAccessibleException;
 
 @Slf4j
 public class FileWatcher {
-  private WatchService watcher = null;
+  private final WatchService watcher;
   private final Path path;
 
-  public FileWatcher(Path path) throws WatchDirNotAccessibleException {
-    this(path, false);
-  }
-
-  public FileWatcher(Path path, boolean createDirectories) throws WatchDirNotAccessibleException {
+  public FileWatcher(@NonNull final Path path, boolean createDirectories)
+      throws WatchDirNotAccessibleException {
     try {
       this.watcher = FileSystems.getDefault().newWatchService();
       File dir = path.toFile();
@@ -47,7 +45,7 @@ public class FileWatcher {
     String filename = ev.context().toString();
 
     return FileEvent.builder()
-        .filename(Paths.get(this.path.toString(), filename).toString())
+        .filename(Paths.get(path.toString(), filename).toString())
         .eventType(kind.name())
         .build();
   }
@@ -55,11 +53,11 @@ public class FileWatcher {
   public List<FileEvent> poll() {
     log.debug("polling.");
 
-    if (this.watcher == null) {
+    if (watcher == null) {
       return Collections.emptyList();
     }
 
-    final WatchKey key = this.watcher.poll();
+    final WatchKey key = watcher.poll();
 
     if (key == null) {
       return Collections.emptyList();

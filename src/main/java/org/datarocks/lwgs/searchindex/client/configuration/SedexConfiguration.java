@@ -3,6 +3,7 @@ package org.datarocks.lwgs.searchindex.client.configuration;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
@@ -78,6 +79,14 @@ public class SedexConfiguration {
 
   public Path getSedexReceiptPath(final String activeSedexSenderId) {
     return Paths.get(sedexBasePath, activeSedexSenderId, sedexReceiptPath).toAbsolutePath();
+  }
+
+  public List<Path> getSedexReceiptPaths() {
+    return isInMultiSenderMode()
+        ? getSedexSenderIds().stream()
+            .map(senderId -> Paths.get(sedexBasePath, senderId, sedexReceiptPath).toAbsolutePath())
+            .toList()
+        : List.of(getSedexReceiptPath());
   }
 
   public Path getSedexOutboxPath(final String activeSedexSenderId) {

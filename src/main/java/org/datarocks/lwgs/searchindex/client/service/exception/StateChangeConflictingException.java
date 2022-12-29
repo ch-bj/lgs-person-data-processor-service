@@ -2,7 +2,7 @@ package org.datarocks.lwgs.searchindex.client.service.exception;
 
 import org.datarocks.lwgs.searchindex.client.service.sync.FullSyncSeedState;
 
-public class StateChangeConflictingException extends RuntimeException {
+public class StateChangeConflictingException extends StateManagerPreconditionException {
   private final FullSyncSeedState sourceState;
   private final FullSyncSeedState targetState;
 

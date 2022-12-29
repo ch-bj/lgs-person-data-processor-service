@@ -29,19 +29,16 @@ public class SedexOutboxMessageProcessor {
   private final RabbitTemplate rabbitTemplate;
   private final SedexConfiguration configuration;
   private final SedexMessageRepository sedexMessageRepository;
-  private final SedexFileWriter sedexFileWriter;
   private final ThrottleHandler throttleHandler;
 
   public SedexOutboxMessageProcessor(
       @NonNull final RabbitTemplate rabbitTemplate,
       @NonNull final SedexConfiguration configuration,
       @NonNull final SedexMessageRepository sedexMessageRepository,
-      @NonNull final SedexFileWriter sedexFileWriter,
       @NonNull final ThrottleHandler throttleHandler) {
     this.rabbitTemplate = rabbitTemplate;
     this.configuration = configuration;
     this.sedexMessageRepository = sedexMessageRepository;
-    this.sedexFileWriter = sedexFileWriter;
     this.throttleHandler = throttleHandler;
   }
 
@@ -62,6 +59,14 @@ public class SedexOutboxMessageProcessor {
       final CommonHeadersDao inHeaders =
           new CommonHeadersDao(message.getMessageProperties().getHeaders());
 
+      final SedexFileWriter sedexFileWriter =
+          configuration.isInMultiSenderMode()
+              ? new SedexFileWriter(
+                  configuration.getSedexOutboxPath(inHeaders.getSenderId()),
+                  configuration.shouldCreateDirectories())
+              : new SedexFileWriter(
+                  configuration.getSedexOutboxPath(), configuration.shouldCreateDirectories());
+
       final int sedexMessageType =
           (inHeaders.getJobType() == JobType.FULL)
               ? configuration.getSedexMessageTypeFullExport()
@@ -75,6 +80,7 @@ public class SedexOutboxMessageProcessor {
       sedexMessageRepository.save(
           new SedexMessage(
               jobCollectedPersonData.getMessageId(),
+              inHeaders.getSenderId(),
               Date.from(Instant.now()),
               Date.from(Instant.now()),
               SedexMessageState.CREATED,

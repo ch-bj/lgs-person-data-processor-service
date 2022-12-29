@@ -82,6 +82,7 @@ public class SedexReceiptProcessor {
       final CommonHeadersDao headers =
           CommonHeadersDao.builder()
               .messageCategory(MessageCategory.JOB_EVENT)
+              .senderId(message.getSenderId())
               .jobId(message.getJobId())
               .jobState(JobState.COMPLETED)
               .timestamp(receipt.getEventDate())
@@ -101,6 +102,7 @@ public class SedexReceiptProcessor {
       final CommonHeadersDao headers =
           CommonHeadersDao.builder()
               .messageCategory(MessageCategory.JOB_EVENT)
+              .senderId(message.getSenderId())
               .jobId(message.getJobId())
               .jobState(JobState.FAILED)
               .timestamp(receipt.getEventDate())
