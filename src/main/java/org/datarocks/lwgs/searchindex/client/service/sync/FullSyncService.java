@@ -1,7 +1,6 @@
 package org.datarocks.lwgs.searchindex.client.service.sync;
 
 import lombok.extern.slf4j.Slf4j;
-import org.datarocks.lwgs.searchindex.client.entity.type.JobType;
 import org.datarocks.lwgs.searchindex.client.service.amqp.Queues;
 import org.datarocks.lwgs.searchindex.client.service.amqp.Topics;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -39,10 +38,10 @@ public class FullSyncService extends AbstractSyncService {
   public void processNextPageOnQueueFullOutgoing() {
     if (preCheckConditionsForProcessing()) {
       int numProcessed =
-          processQueuePage(
-              JobType.FULL,
+          processFullQueuePaging(
               Queues.PERSONDATA_FULL_OUTGOING,
               Topics.SEDEX_OUTBOX,
+              fullSyncStateManager.getCurrentFullSyncSenderId(),
               fullSyncStateManager.getCurrentFullSyncJobId(),
               fullSyncStateManager.getNextPage(),
               fullSyncStateManager.getFullSyncMessagesProcessed(),

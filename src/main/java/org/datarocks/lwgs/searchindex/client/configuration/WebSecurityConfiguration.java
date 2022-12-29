@@ -1,6 +1,5 @@
 package org.datarocks.lwgs.searchindex.client.configuration;
 
-import java.util.Arrays;
 import java.util.Collections;
 import org.datarocks.lwgs.commons.security.APIKeyAuthFilter;
 import org.datarocks.lwgs.commons.security.APIKeyAuthenticationManager;
@@ -11,8 +10,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -20,7 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @Order(1)
-public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfiguration {
   @Value("${security.enable-csrf:true}")
   private boolean csrfEnabled;
 
@@ -33,12 +32,12 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
   @Value("${lwgs.searchindex.client.security.auth.api-key}")
   private String apiKey;
 
-  @Override
+  @Bean
   @SuppressWarnings({"squid:S4502"})
-  protected void configure(HttpSecurity http) throws Exception {
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     final APIKeyAuthFilter filter = new APIKeyAuthFilter(apiKeyAuthHeader, apiKeyPrefix);
     filter.setAuthenticationManager(
-        new APIKeyAuthenticationManager(apiKeyAuthHeader, Arrays.asList(apiKey)));
+        new APIKeyAuthenticationManager(apiKeyAuthHeader, Collections.singletonList(apiKey)));
 
     http.cors()
         .and()
@@ -61,10 +60,12 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     if (!csrfEnabled) {
       http.csrf().disable();
     }
+
+    return http.build();
   }
 
   @Bean
-  CorsConfigurationSource corsConfigurationSource() {
+  public CorsConfigurationSource corsConfigurationSource() {
     final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
     CorsConfiguration config = new CorsConfiguration();

@@ -10,6 +10,7 @@ import lombok.NonNull;
 @Data
 @Builder
 public class JobCollectedPersonData implements Serializable {
+  private @NonNull String senderId;
   private @NonNull UUID jobId;
   private @NonNull UUID messageId;
   private int page;

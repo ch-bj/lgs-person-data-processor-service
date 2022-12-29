@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 class SedexFileWriterTest {
   private static final String PERSON_DATA_PREFIX = "GBPersonEvent-";
   private static final String PERSON_DATA_SUFFIX = ".json";
+  private static final String SENDER_ID_A = "LGS-123-AAA";
 
   private static final String TEST_DIR = "/tmp/lwgs-sedex-test";
 
@@ -80,14 +81,17 @@ class SedexFileWriterTest {
             sedexFileWriter.writeSedexPayload(
                 messageId,
                 JobCollectedPersonData.builder()
+                    .senderId(SENDER_ID_A)
                     .jobId(jobId)
                     .processedPersonDataList(
                         Arrays.asList(
                             ProcessedPersonData.builder()
+                                .senderId(SENDER_ID_A)
                                 .transactionId(transactionOne)
                                 .payload("{}")
                                 .build(),
                             ProcessedPersonData.builder()
+                                .senderId(SENDER_ID_A)
                                 .transactionId(transactionTwo)
                                 .payload("{}")
                                 .build()))

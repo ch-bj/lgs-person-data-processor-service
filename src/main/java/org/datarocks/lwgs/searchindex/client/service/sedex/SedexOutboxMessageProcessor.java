@@ -2,6 +2,7 @@ package org.datarocks.lwgs.searchindex.client.service.sedex;
 
 import java.time.Instant;
 import java.util.Date;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.datarocks.lwgs.commons.sedex.SedexFileWriter;
 import org.datarocks.lwgs.commons.sedex.model.SedexEnvelope;
@@ -32,11 +33,11 @@ public class SedexOutboxMessageProcessor {
   private final ThrottleHandler throttleHandler;
 
   public SedexOutboxMessageProcessor(
-      RabbitTemplate rabbitTemplate,
-      SedexConfiguration configuration,
-      SedexMessageRepository sedexMessageRepository,
-      SedexFileWriter sedexFileWriter,
-      ThrottleHandler throttleHandler) {
+      @NonNull final RabbitTemplate rabbitTemplate,
+      @NonNull final SedexConfiguration configuration,
+      @NonNull final SedexMessageRepository sedexMessageRepository,
+      @NonNull final SedexFileWriter sedexFileWriter,
+      @NonNull final ThrottleHandler throttleHandler) {
     this.rabbitTemplate = rabbitTemplate;
     this.configuration = configuration;
     this.sedexMessageRepository = sedexMessageRepository;
@@ -87,7 +88,7 @@ public class SedexOutboxMessageProcessor {
               .messageId(jobCollectedPersonData.getMessageId().toString())
               .messageType(sedexMessageType)
               .messageClass(configuration.getSedexMessageClass())
-              .senderId(configuration.getSedexSenderId())
+              .senderId(jobCollectedPersonData.getSenderId())
               .recipientId(configuration.getSedexRecipientId())
               .eventDate(inHeaders.getTimestamp())
               .messageDate(inHeaders.getTimestamp())

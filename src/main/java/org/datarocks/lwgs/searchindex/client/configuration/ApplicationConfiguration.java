@@ -185,7 +185,6 @@ public class ApplicationConfiguration {
     return BindingBuilder.bind(logQueue).to(logTopicExchange).with(Topics.CATCH_ALL);
   }
 
-  // TODO: find proper auto-configured connection factory instead of re-setting values
   @Bean
   public ConnectionFactory connectionFactory(
       @Value("${spring.rabbitmq.username:guest}") String username,

@@ -32,6 +32,7 @@ import org.springframework.amqp.core.MessageProperties;
 
 class StateProcessorsTest {
   private static final byte[] EMPTY_PAYLOAD = "{}".getBytes();
+  private static final String SENDER_ID_A = "LGS-123-AAA";
 
   private final SyncJobRepository syncJobRepository = mock(SyncJobRepository.class);
   private final TransactionRepository transactionRepository = mock(TransactionRepository.class);
@@ -192,11 +193,13 @@ class StateProcessorsTest {
     final UUID messageId = UUID.randomUUID();
     final JobCollectedPersonData collectedPersonData =
         JobCollectedPersonData.builder()
+            .senderId(SENDER_ID_A)
             .jobId(jobId)
             .messageId(messageId)
             .processedPersonDataList(
                 Collections.singletonList(
                     ProcessedPersonData.builder()
+                        .senderId(SENDER_ID_A)
                         .transactionId(transactionId)
                         .payload("{}")
                         .build()))
@@ -245,11 +248,13 @@ class StateProcessorsTest {
     final UUID messageId = UUID.randomUUID();
     final JobCollectedPersonData collectedPersonData =
         JobCollectedPersonData.builder()
+            .senderId(SENDER_ID_A)
             .jobId(jobId)
             .messageId(messageId)
             .processedPersonDataList(
                 Collections.singletonList(
                     ProcessedPersonData.builder()
+                        .senderId(SENDER_ID_A)
                         .transactionId(UUID.randomUUID())
                         .payload("{}")
                         .build()))
