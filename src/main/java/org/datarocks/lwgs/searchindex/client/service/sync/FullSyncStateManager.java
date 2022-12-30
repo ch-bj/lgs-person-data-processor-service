@@ -108,10 +108,11 @@ public class FullSyncStateManager {
 
   private void setFullSyncJobState(FullSyncSeedState state) {
     log.info(
-        "Changed job state [{} -> {}] of full sync job [jobId {}]",
+        "Changed job state [{} -> {}] of full sync job [jobId: {}, senderId: {}]",
         fullSyncSeedState,
         state,
-        currentFullSyncJobId);
+        currentFullSyncJobId,
+        currentFullSyncSenderId);
     fullSyncSeedState.set(state);
     settingsStore.persistSetting(FULL_SYNC_STORED_STATE, state.toString());
   }

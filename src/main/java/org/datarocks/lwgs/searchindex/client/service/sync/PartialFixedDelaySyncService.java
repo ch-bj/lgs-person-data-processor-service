@@ -12,7 +12,7 @@ public class PartialFixedDelaySyncService extends AbstractSyncService {
     super(template, pageSize);
   }
 
-  @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sync.partial.fixed-delay:1000}")
+  @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sync.partial.fixed-delay:300000}")
   public void fixedDelayPartial() {
     processPartialQueue(Queues.PERSONDATA_PARTIAL_OUTGOING, Topics.SEDEX_OUTBOX);
   }

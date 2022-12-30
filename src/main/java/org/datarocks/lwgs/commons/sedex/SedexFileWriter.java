@@ -79,7 +79,7 @@ public class SedexFileWriter {
   }
 
   protected File sedexDataFile(@NonNull final UUID fileIdentifier) {
-    return sedexOutboxPath.resolve("data_" + fileIdentifier + ".xml").toFile();
+    return sedexOutboxPath.resolve("data_" + fileIdentifier + ".zip").toFile();
   }
 
   public void writeSedexEnvelope(

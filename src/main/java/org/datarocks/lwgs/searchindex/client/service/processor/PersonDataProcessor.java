@@ -36,7 +36,7 @@ public class PersonDataProcessor {
     this.pipeLine = pipeLine;
   }
 
-  @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_INCOMING, concurrency = "1-8")
+  @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_INCOMING, concurrency = "1-4")
   public void listenPartial(PersonData personData, @Headers Map<String, Object> rawHeaders) {
     final CommonHeadersDao headers = new CommonHeadersDao(rawHeaders);
     try {
@@ -121,7 +121,10 @@ public class PersonDataProcessor {
     }
   }
 
-  private void out(String topicName, ProcessedPersonData processedPersonData, String senderId) {
+  private void out(
+      @NonNull final String topicName,
+      @NonNull final ProcessedPersonData processedPersonData,
+      @NonNull final String senderId) {
     final CommonHeadersDao headers =
         CommonHeadersDao.builder()
             .senderId(senderId)
@@ -145,7 +148,9 @@ public class PersonDataProcessor {
   }
 
   private void outFailed(
-      String topicName, ProcessedPersonDataFailed processedPeronData, String senderId) {
+      @NonNull final String topicName,
+      @NonNull final ProcessedPersonDataFailed processedPeronData,
+      @NonNull final String senderId) {
     final CommonHeadersDao headers =
         CommonHeadersDao.builder()
             .senderId(senderId)

@@ -156,6 +156,7 @@ public abstract class AbstractSyncService {
     final CommonHeadersDao headersDao =
         CommonHeadersDao.builder()
             .messageCategory(MessageCategory.JOB_EVENT)
+            .senderId(senderId)
             .jobState(JobState.NEW)
             .jobId(jobCollectedPersonData.getJobId())
             .jobType(JobType.PARTIAL)

@@ -72,7 +72,7 @@ public class SyncController {
   @PostMapping(path = "full/person-data", consumes = MediaType.APPLICATION_JSON_VALUE)
   public TransactionIdResponse addSeedToFullSyncPool(
       @RequestBody @NonNull String request,
-      @RequestHeader(Headers.X_LGS_SENDER_ID) String senderId) {
+      @RequestHeader(value = Headers.X_LGS_SENDER_ID, required = false) String senderId) {
     return TransactionIdResponse.builder()
         .transactionId(
             Optional.ofNullable(jobSeedService.seedToFull(request, senderId))
@@ -93,8 +93,7 @@ public class SyncController {
   }
 
   @GetMapping(path = "full/state")
-  public FullSyncSeedStateResponse fullSyncState(
-      @RequestHeader(value = Headers.X_LGS_SENDER_ID, required = false) String senderId) {
+  public FullSyncSeedStateResponse fullSyncState() {
     return FullSyncSeedStateResponse.builder()
         .jobId(fullSyncStateManager.getCurrentFullSyncJobId())
         .seedStatus(fullSyncStateManager.getFullSyncJobState())
@@ -149,8 +148,7 @@ public class SyncController {
   @GetMapping(path = "jobs")
   @PageableAsQueryParam
   public Page<SimpleSyncJobProjection> getJobs(
-      @PageableDefault @Parameter(hidden = true) Pageable pageable,
-      @RequestHeader(value = Headers.X_LGS_SENDER_ID, required = false) String senderId) {
+      @PageableDefault @Parameter(hidden = true) Pageable pageable) {
     return syncJobRepository.findAllProjectedBy(pageable);
   }
 

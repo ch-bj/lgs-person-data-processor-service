@@ -56,22 +56,29 @@ public class FullSyncService extends AbstractSyncService {
       fullSyncStateManager.startSendingFullSync();
       // wait for next run, to ensure we're not missing any un-acked messages
       log.info(
-          "Wait for next run to start processing queue full.outgoing [jobId: {}]",
-          fullSyncStateManager.getCurrentFullSyncJobId());
+          "Wait for next run to start processing queue full.outgoing [jobId: {}, senderId: {}]",
+          fullSyncStateManager.getCurrentFullSyncJobId(),
+          fullSyncStateManager.getCurrentFullSyncSenderId());
     } else if (preCheckConditionsForProcessing()) {
       // in page processing..
       log.info(
-          "Page wise processing is ongoing.. [jobId: {}; current page: {}]",
+          "Page wise processing is ongoing.. [jobId: {}, senderId: {}, current page: {}]",
           fullSyncStateManager.getCurrentFullSyncJobId(),
+          fullSyncStateManager.getCurrentFullSyncSenderId(),
           fullSyncStateManager.getCurrentPage());
     } else if (preCheckConditionsForStateCompleted()) {
       fullSyncStateManager.completedFullSync();
       log.info(
-          "Completed full sync job [jobId: {}]", fullSyncStateManager.getCurrentFullSyncJobId());
+          "Completed full sync job [jobId: {}, senderId: {}]",
+          fullSyncStateManager.getCurrentFullSyncJobId(),
+          fullSyncStateManager.getCurrentFullSyncSenderId());
     } else {
       if (!fullSyncStateManager.isFailedQueueEmpty() && !fullSyncStateManager.isInStateFailed()) {
         fullSyncStateManager.failFullSync();
-        log.warn("Failure queue is not empty, set current job to fail state.");
+        log.warn(
+            "Failure queue is not empty, set current job to fail state [jobId: {}, senderId: {}]",
+            fullSyncStateManager.getFullSyncJobState(),
+            fullSyncStateManager.getCurrentFullSyncSenderId());
       }
       log.debug("Skipping full-sync-service run, pre-conditions failed.");
     }

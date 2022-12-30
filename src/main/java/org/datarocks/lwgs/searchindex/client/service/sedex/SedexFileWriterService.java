@@ -47,7 +47,7 @@ public class SedexFileWriterService implements ThrottleHandler {
     throttlingActive = active;
   }
 
-  @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sedex.file-writer.fixed-delay:1000}")
+  @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sedex.file-writer.fixed-delay:60000}")
   @Async
   public void processSedexOutbox() {
     boolean loop;

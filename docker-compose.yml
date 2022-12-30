@@ -9,7 +9,7 @@ services:
       - internal
       - default
     volumes:
-      - log_data:/var/log
+      - log_data:/logs
       - hsqldb_data:/hsqldb/data
       - sedex:/var/sedex
     links:

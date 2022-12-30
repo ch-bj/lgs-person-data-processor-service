@@ -50,7 +50,6 @@ public class SedexOutboxMessageProcessor {
       return false;
     }
 
-    log.info("Start processing queue " + Queues.SEDEX_OUTBOX);
     try {
       final JobCollectedPersonData jobCollectedPersonData =
           BinarySerializerUtil.convertByteArrayToObject(
@@ -58,6 +57,12 @@ public class SedexOutboxMessageProcessor {
 
       final CommonHeadersDao inHeaders =
           new CommonHeadersDao(message.getMessageProperties().getHeaders());
+
+      log.info(
+          "Start processing queue next message in {} [messageId: {}, senderId: {}]",
+          Queues.SEDEX_OUTBOX,
+          jobCollectedPersonData.getMessageId(),
+          inHeaders.getSenderId());
 
       final SedexFileWriter sedexFileWriter =
           configuration.isInMultiSenderMode()
