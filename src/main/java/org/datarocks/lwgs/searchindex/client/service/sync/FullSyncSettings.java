@@ -8,6 +8,7 @@ import lombok.NonNull;
 @Getter
 public enum FullSyncSettings {
   FULL_SYNC_STORED_STATE("full.sync.state", READY.toString()),
+  FULL_SYNC_STORED_SENDER_ID("full.sync.current.sender.id", null),
   FULL_SYNC_STORED_JOB_ID("full.sync.current.job.id", null),
   FULL_SYNC_STORED_PAGE("full.sync.outgoing.page", String.valueOf(-1)),
   FULL_SYNC_STORED_MESSAGE_TOTAL("full.sync.outgoing.messages.total", String.valueOf(0)),

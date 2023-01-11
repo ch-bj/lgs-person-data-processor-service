@@ -1,5 +1,7 @@
 package org.datarocks.lwgs.searchindex.client.service.processor;
 
+import java.util.Map;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.datarocks.banzai.exception.RequiredParameterMissing;
 import org.datarocks.banzai.pipeline.PipeLine;
@@ -16,6 +18,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.support.ListenerExecutionFailedException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -33,44 +36,58 @@ public class PersonDataProcessor {
     this.pipeLine = pipeLine;
   }
 
-  @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_INCOMING, concurrency = "1-8")
-  public void listenPartial(PersonData personData) {
+  @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_INCOMING, concurrency = "1-4")
+  public void listenPartial(PersonData personData, @Headers Map<String, Object> rawHeaders) {
+    final CommonHeadersDao headers = new CommonHeadersDao(rawHeaders);
     try {
-      out(Topics.PERSONDATA_PARTIAL_OUTGOING, process(personData));
+      out(
+          Topics.PERSONDATA_PARTIAL_OUTGOING,
+          process(personData, headers.getSenderId()),
+          headers.getSenderId());
     } catch (ProcessingPersonDataFailedException e) {
       log.warn("Failed processing transaction: {}", e.getMessage());
       outFailed(
           Topics.PERSONDATA_PARTIAL_FAILED,
           ProcessedPersonDataFailed.builder()
+              .senderId(headers.getSenderId())
               .transactionId(personData.getTransactionId())
               .failureReason(e.getMessage())
               .payload(personData.getPayload())
-              .build());
+              .build(),
+          headers.getSenderId());
     }
   }
 
   @RabbitListener(queues = Queues.PERSONDATA_FULL_INCOMING, concurrency = "1-4")
-  public void listenFull(PersonData personData) {
+  public void listenFull(PersonData personData, @Headers Map<String, Object> rawHeaders) {
+    final CommonHeadersDao headers = new CommonHeadersDao(rawHeaders);
     try {
-      out(Topics.PERSONDATA_FULL_OUTGOING, process(personData));
+      out(
+          Topics.PERSONDATA_FULL_OUTGOING,
+          process(personData, headers.getSenderId()),
+          headers.getSenderId());
     } catch (ProcessingPersonDataFailedException e) {
       log.warn("Failed processing transaction: {}", e.getMessage());
       outFailed(
           Topics.PERSONDATA_FULL_FAILED,
           ProcessedPersonDataFailed.builder()
+              .senderId(headers.getSenderId())
               .transactionId(personData.getTransactionId())
               .failureReason(e.getMessage())
               .payload(personData.getPayload())
-              .build());
+              .build(),
+          headers.getSenderId());
     }
   }
 
-  private ProcessedPersonData process(PersonData personData)
+  private ProcessedPersonData process(
+      @NonNull final PersonData personData, @NonNull final String senderId)
       throws ProcessingPersonDataFailedException {
     try {
       String processingResult =
           pipeLine.process(personData.getTransactionId().toString(), personData.getPayload());
       return ProcessedPersonData.builder()
+          .senderId(senderId)
           .transactionId(personData.getTransactionId())
           .payload(processingResult)
           .build();
@@ -104,11 +121,15 @@ public class PersonDataProcessor {
     }
   }
 
-  private void out(String topicName, ProcessedPersonData processedPeronData) {
+  private void out(
+      @NonNull final String topicName,
+      @NonNull final ProcessedPersonData processedPersonData,
+      @NonNull final String senderId) {
     final CommonHeadersDao headers =
         CommonHeadersDao.builder()
+            .senderId(senderId)
             .messageCategory(MessageCategory.TRANSACTION_EVENT)
-            .transactionId(processedPeronData.getTransactionId())
+            .transactionId(processedPersonData.getTransactionId())
             .transactionState(TransactionState.PROCESSED)
             .timestamp()
             .build();
@@ -116,7 +137,7 @@ public class PersonDataProcessor {
     rabbitTemplate.convertAndSend(
         Exchanges.LWGS,
         topicName,
-        processedPeronData,
+        processedPersonData,
         headers::applyAndSetTransactionIdAsCorrelationId);
 
     rabbitTemplate.convertAndSend(
@@ -126,9 +147,13 @@ public class PersonDataProcessor {
         headers::applyAndSetTransactionIdAsCorrelationId);
   }
 
-  private void outFailed(String topicName, ProcessedPersonDataFailed processedPeronData) {
+  private void outFailed(
+      @NonNull final String topicName,
+      @NonNull final ProcessedPersonDataFailed processedPeronData,
+      @NonNull final String senderId) {
     final CommonHeadersDao headers =
         CommonHeadersDao.builder()
+            .senderId(senderId)
             .messageCategory(MessageCategory.TRANSACTION_EVENT)
             .transactionId(processedPeronData.getTransactionId())
             .transactionState(TransactionState.FAILED)

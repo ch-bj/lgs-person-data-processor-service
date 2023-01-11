@@ -1,8 +1,10 @@
 package org.datarocks.lwgs.searchindex.client.service.amqp;
 
-public class Topics {
-  protected Topics() {}
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class Topics {
   public static final String SEDEX_RECEIPTS = "topics.sedex.recepits";
   public static final String SEDEX_OUTBOX = "topics.sedex.outbox";
   public static final String SEDEX_SENT = "topics.sedex.sent";

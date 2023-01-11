@@ -9,6 +9,7 @@ import lombok.NonNull;
 @Data
 @Builder
 public class ProcessedPersonDataFailed implements Serializable {
+  private @NonNull String senderId;
   private @NonNull UUID transactionId;
   private @NonNull String payload;
   private @NonNull String failureReason;

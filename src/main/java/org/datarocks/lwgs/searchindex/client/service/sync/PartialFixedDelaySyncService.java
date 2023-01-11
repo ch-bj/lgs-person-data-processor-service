@@ -1,7 +1,6 @@
 package org.datarocks.lwgs.searchindex.client.service.sync;
 
 import lombok.extern.slf4j.Slf4j;
-import org.datarocks.lwgs.searchindex.client.entity.type.JobType;
 import org.datarocks.lwgs.searchindex.client.service.amqp.Queues;
 import org.datarocks.lwgs.searchindex.client.service.amqp.Topics;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -13,8 +12,8 @@ public class PartialFixedDelaySyncService extends AbstractSyncService {
     super(template, pageSize);
   }
 
-  @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sync.partial.fixed-delay:1000}")
+  @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sync.partial.fixed-delay:300000}")
   public void fixedDelayPartial() {
-    processQueue(JobType.PARTIAL, Queues.PERSONDATA_PARTIAL_OUTGOING, Topics.SEDEX_OUTBOX);
+    processPartialQueue(Queues.PERSONDATA_PARTIAL_OUTGOING, Topics.SEDEX_OUTBOX);
   }
 }

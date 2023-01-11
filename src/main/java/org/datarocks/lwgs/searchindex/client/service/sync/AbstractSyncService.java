@@ -1,5 +1,7 @@
 package org.datarocks.lwgs.searchindex.client.service.sync;
 
+import static java.util.stream.Collectors.groupingBy;
+
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.GetResponse;
@@ -32,22 +34,15 @@ public abstract class AbstractSyncService {
   private final RabbitTemplate rabbitTemplate;
   private final int pageSize;
 
-  public AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate, int pageSize) {
+  protected AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate, int pageSize) {
     this.rabbitTemplate = rabbitTemplate;
     this.pageSize = pageSize;
   }
 
-  public void processQueue(
-      @NonNull final JobType jobType,
-      @NonNull final String inQueueName,
-      @NonNull final String outTopicName) {
-    processQueue(jobType, inQueueName, outTopicName, null);
-  }
-
-  public int processQueuePage(
-      @NonNull final JobType jobType,
+  public int processFullQueuePaging(
       @NonNull final String inQueueName,
       @NonNull final String outTopicName,
+      @NonNull final String senderId,
       final UUID currentJobId,
       final int page,
       final int numProcessed,
@@ -70,6 +65,7 @@ public abstract class AbstractSyncService {
 
         final JobCollectedPersonData jobCollectedPersonData =
             JobCollectedPersonData.builder()
+                .senderId(senderId)
                 .jobId(jobId)
                 .messageId(UUID.randomUUID())
                 .page(page)
@@ -93,10 +89,11 @@ public abstract class AbstractSyncService {
 
           final CommonHeadersDao headersDao =
               CommonHeadersDao.builder()
+                  .senderId(senderId)
                   .messageCategory(MessageCategory.JOB_EVENT)
                   .jobState(JobState.NEW)
                   .jobId(jobCollectedPersonData.getJobId())
-                  .jobType(jobType)
+                  .jobType(JobType.FULL)
                   .timestamp(Instant.now())
                   .build();
 
@@ -130,14 +127,54 @@ public abstract class AbstractSyncService {
     }
   }
 
-  public void processQueue(
-      @NonNull final JobType jobType,
-      @NonNull final String inQueueName,
-      @NonNull final String outTopicName,
-      final UUID currentJobId) {
+  private void sendPartialMessage(
+      @NonNull Channel channel,
+      @NonNull String outTopicName,
+      @NonNull String senderId,
+      @NonNull List<ProcessedPersonData> processedPersonDataList)
+      throws SerializationFailedException, IOException {
+    final UUID messageId = UUID.randomUUID();
+    final JobCollectedPersonData jobCollectedPersonData =
+        JobCollectedPersonData.builder()
+            .senderId(senderId)
+            .jobId(messageId)
+            .messageId(messageId)
+            .page(0)
+            .processedPersonDataList(processedPersonDataList)
+            .build();
+
+    log.info(
+        "Sending transactions to sedex outbox. [jobId:{}; senderId:{}, page:{}; numTransactions:{}]",
+        messageId,
+        senderId,
+        0,
+        processedPersonDataList.size());
+
+    final byte[] byteProcessedSedexPersonData =
+        BinarySerializerUtil.convertObjectToByteArray(jobCollectedPersonData);
+
+    final CommonHeadersDao headersDao =
+        CommonHeadersDao.builder()
+            .messageCategory(MessageCategory.JOB_EVENT)
+            .senderId(senderId)
+            .jobState(JobState.NEW)
+            .jobId(jobCollectedPersonData.getJobId())
+            .jobType(JobType.PARTIAL)
+            .timestamp(Instant.now())
+            .build();
+
+    final BasicProperties properties =
+        (new BasicProperties.Builder())
+            .headers(headersDao.toMap())
+            .correlationId(jobCollectedPersonData.getJobId().toString())
+            .build();
+
+    channel.basicPublish(Exchanges.LWGS, outTopicName, properties, byteProcessedSedexPersonData);
+  }
+
+  public void processPartialQueue(
+      @NonNull final String inQueueName, @NonNull final String outTopicName) {
     log.debug("Start processing queue " + inQueueName + ".");
-    int page = 0;
-    final UUID jobId = currentJobId != null ? currentJobId : UUID.randomUUID();
     try (Connection connection = rabbitTemplate.getConnectionFactory().createConnection()) {
 
       while (true) {
@@ -152,42 +189,15 @@ public abstract class AbstractSyncService {
             return;
           }
 
-          final JobCollectedPersonData jobCollectedPersonData =
-              JobCollectedPersonData.builder()
-                  .jobId(jobId)
-                  .messageId(UUID.randomUUID())
-                  .page(page)
-                  .processedPersonDataList(processedPersonDataList)
-                  .build();
-
-          log.info(
-              "Sending transactions to sedex outbox. [jobId:{}; page:{}; numTransactions:{}]",
-              jobId,
-              page,
-              processedPersonDataList.size());
           try {
-            final byte[] byteProcessedSedexPersonData =
-                BinarySerializerUtil.convertObjectToByteArray(jobCollectedPersonData);
+            final Map<String, List<ProcessedPersonData>> senderIdMappedProcessedPersonData =
+                processedPersonDataList.stream()
+                    .collect(groupingBy(ProcessedPersonData::getSenderId));
 
-            final CommonHeadersDao headersDao =
-                CommonHeadersDao.builder()
-                    .messageCategory(MessageCategory.JOB_EVENT)
-                    .jobState(JobState.NEW)
-                    .jobId(jobCollectedPersonData.getJobId())
-                    .jobType(jobType)
-                    .timestamp(Instant.now())
-                    .build();
-
-            final BasicProperties properties =
-                (new BasicProperties.Builder())
-                    .headers(headersDao.toMap())
-                    .correlationId(jobCollectedPersonData.getJobId().toString())
-                    .build();
-
-            channel.basicPublish(
-                Exchanges.LWGS, outTopicName, properties, byteProcessedSedexPersonData);
-
-            channel.txCommit();
+            for (Map.Entry<String, List<ProcessedPersonData>> entry :
+                senderIdMappedProcessedPersonData.entrySet()) {
+              sendPartialMessage(channel, outTopicName, entry.getKey(), entry.getValue());
+            }
 
           } catch (SerializationFailedException e) {
             log.warn(
@@ -195,8 +205,9 @@ public abstract class AbstractSyncService {
                     + getTransactionIds(processedPersonDataList).toString()
                     + "]");
             channel.txRollback();
+          } finally {
+            channel.txCommit();
           }
-          page++;
         } catch (TimeoutException e) {
           log.warn(
               "TimeoutException when processing channel for queue "
@@ -212,14 +223,15 @@ public abstract class AbstractSyncService {
     }
   }
 
-  private List<UUID> getTransactionIds(List<ProcessedPersonData> processedPersonDataList) {
+  private List<UUID> getTransactionIds(
+      @NonNull final List<ProcessedPersonData> processedPersonDataList) {
     return processedPersonDataList.stream()
         .map(ProcessedPersonData::getTransactionId)
         .collect(Collectors.toList());
   }
 
   private List<ProcessedPersonData> getMessagesUntilPageFullOrQueueIsEmpty(
-      Channel channel, String inQueueName) throws IOException {
+      @NonNull final Channel channel, @NonNull final String inQueueName) throws IOException {
     final List<ProcessedPersonData> processedPersonDataList = new ArrayList<>();
     boolean loop;
     int count = 0;
@@ -261,22 +273,29 @@ public abstract class AbstractSyncService {
   public void processEvent(
       @NonNull final JobType jobType,
       @NonNull final String outTopicName,
-      @NonNull final ProcessedPersonData processedPersonData) {
+      @NonNull final ProcessedPersonData processedPersonData,
+      @NonNull final String senderId) {
     out(
         jobType,
         outTopicName,
         JobCollectedPersonData.builder()
+            .senderId(senderId)
             .jobId(UUID.randomUUID())
             .messageId(UUID.randomUUID())
             .processedPersonDataList(Collections.singletonList(processedPersonData))
-            .build());
+            .build(),
+        senderId);
   }
 
   private void out(
-      JobType jobType, String topicName, JobCollectedPersonData jobCollectedPersonData) {
+      @NonNull final JobType jobType,
+      @NonNull final String topicName,
+      @NonNull final JobCollectedPersonData jobCollectedPersonData,
+      @NonNull final String senderId) {
 
     final CommonHeadersDao headers =
         CommonHeadersDao.builder()
+            .senderId(senderId)
             .messageCategory(MessageCategory.JOB_EVENT)
             .jobId(jobCollectedPersonData.getJobId())
             .jobType(jobType)

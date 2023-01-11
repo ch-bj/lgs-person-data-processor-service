@@ -1,80 +1,43 @@
 package org.datarocks.lwgs.searchindex.client.service.sedex;
 
-import java.sql.Date;
 import java.time.Duration;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
-import org.datarocks.lwgs.commons.sedex.SedexFileWriter;
-import org.datarocks.lwgs.commons.sedex.model.SedexEnvelope;
 import org.datarocks.lwgs.searchindex.client.configuration.SedexConfiguration;
-import org.datarocks.lwgs.searchindex.client.entity.SedexMessage;
-import org.datarocks.lwgs.searchindex.client.entity.type.JobState;
-import org.datarocks.lwgs.searchindex.client.entity.type.JobType;
-import org.datarocks.lwgs.searchindex.client.entity.type.SedexMessageState;
-import org.datarocks.lwgs.searchindex.client.model.JobCollectedPersonData;
-import org.datarocks.lwgs.searchindex.client.model.JobMetaData;
 import org.datarocks.lwgs.searchindex.client.repository.SedexMessageRepository;
-import org.datarocks.lwgs.searchindex.client.service.amqp.*;
-import org.datarocks.lwgs.searchindex.client.util.BinarySerializerUtil;
-import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.support.ListenerExecutionFailedException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-public class SedexFileWriterService {
-  private final SedexFileWriter sedexFileWriter;
-  private final RabbitTemplate rabbitTemplate;
-
-  private final SedexMessageRepository sedexMessageRepository;
-
+public class SedexFileWriterService implements ThrottleHandler {
+  private final SedexConfiguration configuration;
+  private final SedexOutboxMessageProcessor outboxMessageProcessor;
   private boolean throttlingActive = false;
   private int errorCount = 0;
   private Instant retryTime = Instant.MIN;
-
-  @Value("${lwgs.searchindex.client.sedex.file-writer.failure.throttling.base:1000}")
-  private Long errorThrottlingBase;
-
-  @Value("${lwgs.searchindex.client.sedex.file-writer.failure.throttling.max:600000}")
-  private Long errorThrottlingMax;
-
-  @Value("${lwgs.searchindex.client.sedex.sender-id}")
-  private String sedexSenderId;
-
-  @Value("${lwgs.searchindex.client.sedex.recipient-id}")
-  private String sedexRecipientId;
-
-  @Value("${lwgs.searchindex.client.sedex.message.type.full-export}")
-  private int sedexMessageTypeFullExport;
-
-  @Value("${lwgs.searchindex.client.sedex.message.type.incremental}")
-  private int sedexMessageTypeIncremental;
-
-  @Value("${lwgs.searchindex.client.sedex.message.class}")
-  private int sedexMessageClass;
 
   @Autowired
   public SedexFileWriterService(
       SedexConfiguration sedexConfiguration,
       RabbitTemplate rabbitTemplate,
       SedexMessageRepository sedexMessageRepository) {
-    this.rabbitTemplate = rabbitTemplate;
-    this.sedexFileWriter =
-        new SedexFileWriter(
-            sedexConfiguration.getSedexOutboxPath(), sedexConfiguration.shouldCreateDirectories());
-    this.sedexMessageRepository = sedexMessageRepository;
+
+    this.configuration = sedexConfiguration;
+    this.outboxMessageProcessor =
+        new SedexOutboxMessageProcessor(
+            rabbitTemplate, sedexConfiguration, sedexMessageRepository, this);
   }
 
-  private void updateThrottling(boolean active) {
+  public void updateThrottling(boolean active) {
     if (active) {
       long waitingTime =
-          Long.min((long) Math.pow(2, errorCount) * errorThrottlingBase, errorThrottlingMax);
+          Long.min(
+              (long) Math.pow(2, errorCount) * configuration.getErrorThrottlingBase(),
+              configuration.getErrorThrottlingMax());
       retryTime = Instant.now().plusMillis(waitingTime);
       errorCount++;
     } else {
@@ -84,80 +47,7 @@ public class SedexFileWriterService {
     throttlingActive = active;
   }
 
-  @Transactional
-  protected boolean processNextSedexOutboxMessage() {
-    final Message message = rabbitTemplate.receive(Queues.SEDEX_OUTBOX);
-
-    if (message == null) {
-      return false;
-    }
-
-    log.info("Start processing queue " + Queues.SEDEX_OUTBOX);
-    try {
-      final JobCollectedPersonData jobCollectedPersonData =
-          BinarySerializerUtil.convertByteArrayToObject(
-              message.getBody(), JobCollectedPersonData.class);
-
-      final CommonHeadersDao inHeaders =
-          new CommonHeadersDao(message.getMessageProperties().getHeaders());
-
-      final int sedexMessageType =
-          (inHeaders.getJobType() == JobType.FULL)
-              ? sedexMessageTypeFullExport
-              : sedexMessageTypeIncremental;
-
-      final boolean isLastPage =
-          inHeaders.getJobType() == JobType.PARTIAL
-              || (jobCollectedPersonData.getNumProcessed() == jobCollectedPersonData.getNumTotal()
-                  && jobCollectedPersonData.getNumTotal() > 0);
-
-      sedexMessageRepository.save(
-          new SedexMessage(
-              jobCollectedPersonData.getMessageId(),
-              Date.from(Instant.now()),
-              Date.from(Instant.now()),
-              SedexMessageState.CREATED,
-              jobCollectedPersonData.getPage(),
-              isLastPage,
-              inHeaders.getJobType(),
-              inHeaders.getJobId()));
-
-      final SedexEnvelope envelope =
-          SedexEnvelope.builder()
-              .messageId(jobCollectedPersonData.getMessageId().toString())
-              .messageType(sedexMessageType)
-              .messageClass(sedexMessageClass)
-              .senderId(sedexSenderId)
-              .recipientId(sedexRecipientId)
-              .eventDate(inHeaders.getTimestamp())
-              .messageDate(inHeaders.getTimestamp())
-              .build();
-
-      final JobMetaData metaData =
-          new JobMetaData(
-              inHeaders.getJobType(),
-              inHeaders.getJobId(),
-              jobCollectedPersonData.getPage(),
-              isLastPage);
-
-      sedexFileWriter.writeSedexPayload(
-          jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
-      sedexFileWriter.writeSedexEnvelope(jobCollectedPersonData.getMessageId(), envelope);
-
-      final CommonHeadersDao outHeaders =
-          CommonHeadersDao.builder(inHeaders).jobState(JobState.SENT).timestamp().build();
-
-      rabbitTemplate.convertAndSend(
-          Exchanges.LWGS, Topics.SEDEX_SENT, envelope, outHeaders::applyAndSetJobIdAsCorrelationId);
-    } catch (Exception e) {
-      updateThrottling(true);
-      log.error("Fatal error: " + e.getMessage());
-      throw new ListenerExecutionFailedException("Writing Sedex file failed", e, message);
-    }
-    return true;
-  }
-
-  @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sedex.file-writer.fixed-delay:1000}")
+  @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sedex.file-writer.fixed-delay:60000}")
   @Async
   public void processSedexOutbox() {
     boolean loop;
@@ -175,7 +65,7 @@ public class SedexFileWriterService {
     }
 
     do {
-      loop = processNextSedexOutboxMessage();
+      loop = outboxMessageProcessor.processNextSedexOutboxMessage();
     } while (loop);
 
     updateThrottling(false);

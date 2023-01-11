@@ -45,5 +45,6 @@ build/
 
 ### Runtime Data ###
 db/
+logs/
 .env
 docker-compose.override.yml

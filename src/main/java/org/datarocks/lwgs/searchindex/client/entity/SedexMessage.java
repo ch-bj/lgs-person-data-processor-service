@@ -20,6 +20,7 @@ public class SedexMessage {
   @Column(updatable = false, nullable = false)
   private UUID sedexMessageId;
 
+  private String senderId;
   private Date createdAt;
   private Date updatedAt;
   private SedexMessageState state;

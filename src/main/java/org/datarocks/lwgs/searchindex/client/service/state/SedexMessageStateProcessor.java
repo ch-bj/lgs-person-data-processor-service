@@ -32,7 +32,7 @@ public class SedexMessageStateProcessor {
 
   @RabbitListener(queues = Queues.SEDEX_STATE)
   @Transactional
-  protected void listen(final Message message) {
+  public void listen(final Message message) {
     final CommonHeadersDao headers =
         new CommonHeadersDao(message.getMessageProperties().getHeaders());
     final UUID jobId = headers.getJobId();

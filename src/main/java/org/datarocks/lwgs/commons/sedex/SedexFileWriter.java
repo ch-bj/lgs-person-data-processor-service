@@ -74,11 +74,18 @@ public class SedexFileWriter {
     }
   }
 
+  protected File sedexEnvelopeFile(@NonNull final UUID fileIdentifier) {
+    return sedexOutboxPath.resolve("envl_" + fileIdentifier + ".xml").toFile();
+  }
+
+  protected File sedexDataFile(@NonNull final UUID fileIdentifier) {
+    return sedexOutboxPath.resolve("data_" + fileIdentifier + ".zip").toFile();
+  }
+
   public void writeSedexEnvelope(
       @NonNull final UUID fileIdentifier, @NonNull final SedexEnvelope sedexEnvelope)
       throws WritingSedexFilesFailedException {
-    final File sedexEnvelopeFile =
-        sedexOutboxPath.resolve("envl_" + fileIdentifier + ".xml").toFile();
+    final File sedexEnvelopeFile = sedexEnvelopeFile(fileIdentifier);
 
     setupOutputFile(sedexEnvelopeFile);
 
@@ -97,8 +104,7 @@ public class SedexFileWriter {
       @NonNull final JobCollectedPersonData jobCollectedPersonData,
       @NonNull final JobMetaData metaData)
       throws WritingSedexFilesFailedException {
-    final File sedexPayloadFile =
-        sedexOutboxPath.resolve("data_" + fileIdentifier + ".zip").toFile();
+    final File sedexPayloadFile = sedexDataFile(fileIdentifier);
     final Set<UUID> processedTransactions = new HashSet<>();
 
     setupOutputFile(sedexPayloadFile);

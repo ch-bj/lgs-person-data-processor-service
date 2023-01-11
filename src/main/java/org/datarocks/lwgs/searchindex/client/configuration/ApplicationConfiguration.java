@@ -33,11 +33,6 @@ public class ApplicationConfiguration {
   }
 
   @Bean
-  public TopicExchange logTopicExchange() {
-    return new TopicExchange(Exchanges.LOG);
-  }
-
-  @Bean
   public Queue seedPartialIncomingQueue() {
     return new Queue(Queues.PERSONDATA_PARTIAL_INCOMING, true);
   }
@@ -169,23 +164,12 @@ public class ApplicationConfiguration {
   }
 
   @Bean
-  public Binding BusinessLogBinding(TopicExchange topicExchange, Queue businessLogQueue) {
+  public Binding businessLogBinding(TopicExchange topicExchange, Queue businessLogQueue) {
     return BindingBuilder.bind(businessLogQueue)
         .to(topicExchange)
         .with(Topics.PERSONDATA_BUSINESS_VALIDATION);
   }
 
-  @Bean
-  public Queue logQueue() {
-    return new Queue(Queues.LOGS, true);
-  }
-
-  @Bean
-  public Binding logBinding(TopicExchange logTopicExchange, Queue logQueue) {
-    return BindingBuilder.bind(logQueue).to(logTopicExchange).with(Topics.CATCH_ALL);
-  }
-
-  // TODO: find proper auto-configured connection factory instead of re-setting values
   @Bean
   public ConnectionFactory connectionFactory(
       @Value("${spring.rabbitmq.username:guest}") String username,

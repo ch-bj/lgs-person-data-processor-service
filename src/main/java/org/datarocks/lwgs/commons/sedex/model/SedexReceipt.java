@@ -1,5 +1,6 @@
 package org.datarocks.lwgs.commons.sedex.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
@@ -19,4 +20,9 @@ public class SedexReceipt implements Serializable {
   @NonNull String messageClass;
   @NonNull String senderId;
   @NonNull String recipientId;
+
+  @JsonIgnore
+  public SedexStatus getSedexStatus() {
+    return SedexStatus.valueOf(statusCode);
+  }
 }

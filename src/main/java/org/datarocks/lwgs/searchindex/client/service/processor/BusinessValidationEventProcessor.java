@@ -56,6 +56,7 @@ public class BusinessValidationEventProcessor implements ProcessorEventListener 
             .timestamp()
             .build();
 
+    // TODO: send message to update transaction state
     rabbitTemplate.convertAndSend(
         Exchanges.LWGS, Topics.PERSONDATA_BUSINESS_VALIDATION, log, headers::apply);
 

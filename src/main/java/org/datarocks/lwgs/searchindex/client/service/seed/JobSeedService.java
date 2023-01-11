@@ -1,10 +1,14 @@
 package org.datarocks.lwgs.searchindex.client.service.seed;
 
+import java.util.Set;
 import java.util.UUID;
+import lombok.NonNull;
+import org.datarocks.lwgs.searchindex.client.configuration.SedexConfiguration;
 import org.datarocks.lwgs.searchindex.client.entity.type.JobType;
 import org.datarocks.lwgs.searchindex.client.entity.type.TransactionState;
 import org.datarocks.lwgs.searchindex.client.model.PersonData;
 import org.datarocks.lwgs.searchindex.client.service.amqp.*;
+import org.datarocks.lwgs.searchindex.client.service.exception.SenderIdValidationException;
 import org.datarocks.lwgs.searchindex.client.service.sync.FullSyncStateManager;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
@@ -16,27 +20,42 @@ public class JobSeedService {
   private final FullSyncStateManager fullSyncStateManager;
   private static final String EMPTY_PAYLOAD = "";
 
+  private final boolean isInMultiSenderMode;
+  private final Set<String> validSenderIds;
+  private final String singleSenderId;
+
   public JobSeedService(
       QueueStatsService queueStatsService,
       RabbitTemplate rabbitTemplate,
-      FullSyncStateManager fullSyncStateManager) {
+      FullSyncStateManager fullSyncStateManager,
+      SedexConfiguration configuration) {
     this.queueStatsService = queueStatsService;
     this.rabbitTemplate = rabbitTemplate;
     this.fullSyncStateManager = fullSyncStateManager;
+    this.singleSenderId = configuration.getSedexSenderId();
+    this.isInMultiSenderMode = configuration.isInMultiSenderMode();
+    this.validSenderIds =
+        this.isInMultiSenderMode ? configuration.getSedexSenderIds() : Set.of(this.singleSenderId);
   }
 
-  public UUID seedToPartial(String payload) {
-    return seedToQueue(payload, Topics.PERSONDATA_PARTIAL_INCOMING, JobType.PARTIAL, null);
+  public UUID seedToPartial(@NonNull final String payload, final String senderId) {
+    return seedToQueue(
+        payload,
+        Topics.PERSONDATA_PARTIAL_INCOMING,
+        JobType.PARTIAL,
+        null,
+        validateOrDefaultSenderId(senderId));
   }
 
-  public UUID seedToFull(String payload) {
+  public UUID seedToFull(String payload, final String senderId) {
     if (fullSyncStateManager.isInStateSeeding()) {
       final UUID transactionId =
           seedToQueue(
               payload,
               Topics.PERSONDATA_FULL_INCOMING,
               JobType.FULL,
-              fullSyncStateManager.getCurrentFullSyncJobId());
+              fullSyncStateManager.getCurrentFullSyncJobId(),
+              validateOrDefaultSenderId(senderId));
 
       fullSyncStateManager.incFullSeedMessageCounter();
       return transactionId;
@@ -44,10 +63,29 @@ public class JobSeedService {
     return null;
   }
 
-  private UUID seedToQueue(String payload, String topicName, JobType jobType, UUID jobId) {
+  private String validateOrDefaultSenderId(final String senderId) {
+    if (!isInMultiSenderMode && senderId == null) {
+      return singleSenderId;
+    }
+    if (validSenderIds.contains(senderId)) {
+      return senderId;
+    }
+    throw new SenderIdValidationException(
+        String.format(
+            "Validation of senderId failed, given senderId %s, valid senderId(s): %s.",
+            senderId, validSenderIds));
+  }
+
+  private UUID seedToQueue(
+      final String payload,
+      final String topicName,
+      final JobType jobType,
+      final UUID jobId,
+      final String senderId) {
     final UUID transactionId = UUID.randomUUID();
     final CommonHeadersDao headers =
         CommonHeadersDao.builder()
+            .senderId(senderId)
             .jobType(jobType)
             .jobId(jobId)
             .messageCategory(MessageCategory.TRANSACTION_EVENT)

@@ -16,11 +16,8 @@ import org.datarocks.lwgs.commons.sedex.model.SedexStatus;
 import org.datarocks.lwgs.searchindex.client.entity.SedexMessage;
 import org.datarocks.lwgs.searchindex.client.entity.type.JobState;
 import org.datarocks.lwgs.searchindex.client.entity.type.SedexMessageState;
-import org.datarocks.lwgs.searchindex.client.entity.type.SourceType;
 import org.datarocks.lwgs.searchindex.client.repository.SedexMessageRepository;
 import org.datarocks.lwgs.searchindex.client.service.amqp.*;
-import org.datarocks.lwgs.searchindex.client.service.log.Logger;
-import org.datarocks.lwgs.searchindex.client.service.log.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,17 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Slf4j
 public class SedexReceiptProcessor {
-  private final Logger lwgsLogger;
   private final SedexReceiptReader receiptReader;
   private final RabbitTemplate rabbitTemplate;
   private final SedexMessageRepository sedexMessageRepository;
 
   @Autowired
   public SedexReceiptProcessor(
-      LoggerFactory loggerFactory,
-      RabbitTemplate rabbitTemplate,
-      SedexMessageRepository sedexMessageRepository) {
-    this.lwgsLogger = loggerFactory.getLogger(SourceType.SEDEX_HANDLER);
+      RabbitTemplate rabbitTemplate, SedexMessageRepository sedexMessageRepository) {
     this.rabbitTemplate = rabbitTemplate;
     this.sedexMessageRepository = sedexMessageRepository;
     this.receiptReader = new SedexReceiptReader();
@@ -55,7 +48,6 @@ public class SedexReceiptProcessor {
 
     if (optionalReceipt.isEmpty()) {
       log.warn("Invalid receipt");
-      lwgsLogger.error("Received invalid sedex receipt.");
 
       return;
     }
@@ -67,7 +59,6 @@ public class SedexReceiptProcessor {
 
     if (optionalSedexMessage.isEmpty()) {
       log.warn("No matching sedexMessage found for receipt with id: {}.", receipt.getMessageId());
-      lwgsLogger.error("Received sedex receipt for unknown sedex message id.");
 
       return;
     }
@@ -82,6 +73,7 @@ public class SedexReceiptProcessor {
       final CommonHeadersDao headers =
           CommonHeadersDao.builder()
               .messageCategory(MessageCategory.JOB_EVENT)
+              .senderId(message.getSenderId())
               .jobId(message.getJobId())
               .jobState(JobState.COMPLETED)
               .timestamp(receipt.getEventDate())
@@ -101,6 +93,7 @@ public class SedexReceiptProcessor {
       final CommonHeadersDao headers =
           CommonHeadersDao.builder()
               .messageCategory(MessageCategory.JOB_EVENT)
+              .senderId(message.getSenderId())
               .jobId(message.getJobId())
               .jobState(JobState.FAILED)
               .timestamp(receipt.getEventDate())

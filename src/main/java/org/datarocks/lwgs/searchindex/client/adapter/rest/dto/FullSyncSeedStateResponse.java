@@ -8,6 +8,7 @@ import org.datarocks.lwgs.searchindex.client.service.sync.FullSyncSeedState;
 @Builder
 @Data
 public class FullSyncSeedStateResponse {
+  String senderId;
   UUID jobId;
   FullSyncSeedState seedStatus;
 }

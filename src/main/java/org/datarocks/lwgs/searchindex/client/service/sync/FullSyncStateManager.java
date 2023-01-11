@@ -5,20 +5,22 @@ import static org.datarocks.lwgs.searchindex.client.service.sync.FullSyncSetting
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.datarocks.lwgs.searchindex.client.entity.Setting;
+import org.datarocks.lwgs.searchindex.client.configuration.SedexConfiguration;
 import org.datarocks.lwgs.searchindex.client.repository.SettingRepository;
 import org.datarocks.lwgs.searchindex.client.service.amqp.QueueStatsService;
 import org.datarocks.lwgs.searchindex.client.service.amqp.Queues;
+import org.datarocks.lwgs.searchindex.client.service.exception.SenderIdValidationException;
 import org.datarocks.lwgs.searchindex.client.service.exception.StateChangeConflictingException;
+import org.datarocks.lwgs.searchindex.client.service.exception.StateChangeSenderIdConflictingException;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -26,56 +28,51 @@ public class FullSyncStateManager {
   private static final boolean BLOCKING_PURGE = false;
 
   private final AtomicReference<FullSyncSeedState> fullSyncSeedState = new AtomicReference<>(READY);
+  private final AtomicReference<String> currentFullSyncSenderId = new AtomicReference<>(null);
   private final AtomicReference<UUID> currentFullSyncJobId = new AtomicReference<>(null);
   private final AtomicInteger currentFullSyncPage = new AtomicInteger(0);
   private final AtomicInteger fullSyncMessagesTotal = new AtomicInteger(0);
   private final AtomicInteger fullSyncMessagesProcessed = new AtomicInteger(0);
   private final AtomicInteger currentFullSyncMessageCounter = new AtomicInteger(0);
 
-  private final SettingRepository settingRepository;
+  private final FullSyncSettingsStore settingsStore;
   private final QueueStatsService queueStatsService;
   private final RabbitAdmin rabbitAdmin;
+  private final boolean isInMultiSenderMode;
+  private final Set<String> validSenderIds;
+  private final String singleSenderId;
 
   @Autowired
   public FullSyncStateManager(
       SettingRepository settingRepository,
       QueueStatsService queueStatsService,
-      RabbitAdmin rabbitAdmin) {
-    this.settingRepository = settingRepository;
+      RabbitAdmin rabbitAdmin,
+      SedexConfiguration configuration) {
+    this.settingsStore = new FullSyncSettingsStore(settingRepository);
     this.queueStatsService = queueStatsService;
     this.rabbitAdmin = rabbitAdmin;
-
+    this.singleSenderId = configuration.getSedexSenderId();
+    this.isInMultiSenderMode = configuration.isInMultiSenderMode();
+    this.validSenderIds =
+        this.isInMultiSenderMode ? configuration.getSedexSenderIds() : Set.of(this.singleSenderId);
     loadPersistedSettingsOrSystemDefaults();
   }
 
-  @Transactional
-  protected String loadPersistedSetting(@NonNull FullSyncSettings key) {
-    return settingRepository
-        .findByKey(key.toString())
-        .map(Setting::getValue)
-        .orElse(key.getDefaultValue());
-  }
-
-  @Transactional
-  protected void persistSetting(@NonNull FullSyncSettings key, String value) {
-    final Setting setting =
-        settingRepository
-            .findByKey(key.toString())
-            .orElse(Setting.builder().key(key.toString()).build());
-    setting.setValue(value);
-    settingRepository.save(setting);
-  }
-
-  private void loadPersistedSettingsOrSystemDefaults() {
+  protected void loadPersistedSettingsOrSystemDefaults() {
     try {
       fullSyncSeedState.set(
-          FullSyncSeedState.valueOf(loadPersistedSetting(FULL_SYNC_STORED_STATE)));
-      currentFullSyncJobId.set(UUID.fromString(loadPersistedSetting(FULL_SYNC_STORED_JOB_ID)));
-      currentFullSyncPage.set(Integer.parseInt(loadPersistedSetting(FULL_SYNC_STORED_PAGE)));
+          FullSyncSeedState.valueOf(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_STATE)));
+      final String jobId = settingsStore.loadPersistedSetting(FULL_SYNC_STORED_JOB_ID);
+      if (jobId != null) {
+        currentFullSyncJobId.set(UUID.fromString(jobId));
+      }
+      currentFullSyncSenderId.set(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_SENDER_ID));
+      currentFullSyncPage.set(
+          Integer.parseInt(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_PAGE)));
       fullSyncMessagesTotal.set(
-          Integer.parseInt(loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_TOTAL)));
+          Integer.parseInt(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_TOTAL)));
       fullSyncMessagesProcessed.set(
-          Integer.parseInt(loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_PROCESSED)));
+          Integer.parseInt(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_PROCESSED)));
     } catch (Exception e) {
       log.error("Failed to load defaults from db; reason: {}.", e.getMessage());
     }
@@ -111,12 +108,13 @@ public class FullSyncStateManager {
 
   private void setFullSyncJobState(FullSyncSeedState state) {
     log.info(
-        "Changed job state [{} -> {}] of full sync job [jobId {}]",
+        "Changed job state [{} -> {}] of full sync job [jobId: {}, senderId: {}]",
         fullSyncSeedState,
         state,
-        currentFullSyncJobId);
+        currentFullSyncJobId,
+        currentFullSyncSenderId);
     fullSyncSeedState.set(state);
-    persistSetting(FULL_SYNC_STORED_STATE, state.toString());
+    settingsStore.persistSetting(FULL_SYNC_STORED_STATE, state.toString());
   }
 
   public UUID getCurrentFullSyncJobId() {
@@ -125,8 +123,17 @@ public class FullSyncStateManager {
 
   private void setCurrentFullSyncJobId(UUID syncJobId) {
     currentFullSyncJobId.set(syncJobId);
-    persistSetting(
+    settingsStore.persistSetting(
         FULL_SYNC_STORED_JOB_ID, Optional.ofNullable(syncJobId).map(UUID::toString).orElse(null));
+  }
+
+  public String getCurrentFullSyncSenderId() {
+    return currentFullSyncSenderId.get();
+  }
+
+  private void setCurrentFullSyncSenderId(String senderId) {
+    currentFullSyncSenderId.set(senderId);
+    settingsStore.persistSetting(FULL_SYNC_STORED_SENDER_ID, senderId);
   }
 
   public FullSyncSeedState getFullSyncJobState() {
@@ -135,7 +142,7 @@ public class FullSyncStateManager {
 
   private void resetCurrentFullSyncPage() {
     currentFullSyncPage.set(-1);
-    persistSetting(FULL_SYNC_STORED_PAGE, "-1");
+    settingsStore.persistSetting(FULL_SYNC_STORED_PAGE, "-1");
   }
 
   public Integer getCurrentFullSyncPage() {
@@ -144,7 +151,7 @@ public class FullSyncStateManager {
 
   private void setFullSyncMessagesTotal(@NonNull Integer value) {
     fullSyncMessagesTotal.set(value);
-    persistSetting(FULL_SYNC_STORED_MESSAGE_TOTAL, value.toString());
+    settingsStore.persistSetting(FULL_SYNC_STORED_MESSAGE_TOTAL, value.toString());
   }
 
   public Integer getFullSyncMessagesTotal() {
@@ -153,7 +160,7 @@ public class FullSyncStateManager {
 
   private void resetFullSyncMessagesProcessed() {
     fullSyncMessagesProcessed.set(0);
-    persistSetting(FULL_SYNC_STORED_MESSAGE_PROCESSED, "0");
+    settingsStore.persistSetting(FULL_SYNC_STORED_MESSAGE_PROCESSED, "0");
   }
 
   public Integer getFullSyncMessagesProcessed() {
@@ -162,7 +169,7 @@ public class FullSyncStateManager {
 
   public void incNumMessagesProcessed(int numProcessed) {
     fullSyncMessagesProcessed.getAndAdd(numProcessed);
-    persistSetting(
+    settingsStore.persistSetting(
         FULL_SYNC_STORED_MESSAGE_PROCESSED, String.valueOf(fullSyncMessagesProcessed.get()));
   }
 
@@ -170,11 +177,25 @@ public class FullSyncStateManager {
     currentFullSyncMessageCounter.getAndIncrement();
   }
 
-  public void startFullSync() {
+  private String validateOrDefaultSenderId(final String senderId) {
+    if (!isInMultiSenderMode && senderId == null) {
+      return singleSenderId;
+    }
+    if (senderId != null && validSenderIds.contains(senderId)) {
+      return senderId;
+    }
+    throw new SenderIdValidationException(
+        String.format(
+            "Validation of senderId failed, given senderId %s, valid senderId(s): %s.",
+            senderId, validSenderIds));
+  }
+
+  public void startFullSync(final String senderId) {
     if (Arrays.asList(COMPLETED, READY).contains(getFullSyncJobState())) {
       if (getFullSyncJobState() != READY) {
-        resetFullSync(false);
+        resetFullSync(false, senderId);
       }
+      setCurrentFullSyncSenderId(validateOrDefaultSenderId(senderId));
       setCurrentFullSyncJobId(UUID.randomUUID());
       setFullSyncJobState(SEEDING);
       return;
@@ -182,8 +203,15 @@ public class FullSyncStateManager {
     throw new StateChangeConflictingException(getFullSyncJobState(), SEEDING);
   }
 
-  public void submitFullSync() {
+  public void submitFullSync(final String senderId) {
     if (getFullSyncJobState() == SEEDING) {
+      if (isInMultiSenderMode && !getCurrentFullSyncSenderId().equals(senderId)) {
+        throw new StateChangeSenderIdConflictingException(
+            String.format(
+                "Mismatching senderIds for force stateChange - currentSenderId: %s, commands senderId: %s.",
+                getCurrentFullSyncSenderId(), senderId));
+      }
+
       setFullSyncJobState(SEEDED);
       setFullSyncMessagesTotal(currentFullSyncMessageCounter.get());
       currentFullSyncMessageCounter.set(0);
@@ -200,13 +228,24 @@ public class FullSyncStateManager {
     throw new StateChangeConflictingException(getFullSyncJobState(), SENDING);
   }
 
-  public void resetFullSync(boolean force) {
+  public void resetFullSync(boolean force, final String senderId) {
+    // disable force mode from different senderId
+    if (senderId != null
+        && getCurrentFullSyncSenderId() != null
+        && !senderId.equals(getCurrentFullSyncSenderId())
+        && force) {
+      throw new StateChangeSenderIdConflictingException(
+          String.format(
+              "Mismatching senderIds for force stateChange - currentSenderId: %s, commands senderId: %s.",
+              getCurrentFullSyncSenderId(), senderId));
+    }
     if (force || Arrays.asList(COMPLETED, FAILED).contains(getFullSyncJobState())) {
       rabbitAdmin.purgeQueue(Queues.PERSONDATA_FULL_INCOMING, BLOCKING_PURGE);
       rabbitAdmin.purgeQueue(Queues.PERSONDATA_FULL_OUTGOING, BLOCKING_PURGE);
       rabbitAdmin.purgeQueue(Queues.PERSONDATA_FULL_FAILED, BLOCKING_PURGE);
 
       setCurrentFullSyncJobId(null);
+      setCurrentFullSyncSenderId(null);
       setFullSyncJobState(READY);
       setFullSyncMessagesTotal(0);
       resetCurrentFullSyncPage();
@@ -219,13 +258,17 @@ public class FullSyncStateManager {
   public void completedFullSync() {
     if (getFullSyncJobState() == SENDING) {
       setFullSyncJobState(COMPLETED);
+      return;
     }
+    throw new StateChangeConflictingException(getFullSyncJobState(), COMPLETED);
   }
 
   public void failFullSync() {
     if (Arrays.asList(SEEDING, SENDING, COMPLETED).contains(getFullSyncJobState())) {
       setFullSyncJobState(FAILED);
+      return;
     }
+    throw new StateChangeConflictingException(getFullSyncJobState(), COMPLETED);
   }
 
   public Integer getNextPage() {
