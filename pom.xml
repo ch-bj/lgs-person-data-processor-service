@@ -11,7 +11,7 @@
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
-  <groupId>org.datarocks.lwgs</groupId>
+  <groupId>ch.ejpd.lgs</groupId>
   <artifactId>lwgs-person-data-processor-service</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <name>lwgs-person-data-processor-service</name>
@@ -22,7 +22,7 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
 
-    <lwgs.person.data.processor.version>1.3.2</lwgs.person.data.processor.version>
+    <lwgs.person.data.processor.version>1.4.2</lwgs.person.data.processor.version>
     <jackson-xml.version>2.14.0</jackson-xml.version>
     <springdoc.version>1.6.14</springdoc.version>
 
@@ -52,7 +52,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.datarocks.lwgs</groupId>
+      <groupId>ch.ejpd.lgs</groupId>
       <artifactId>person-data-processor</artifactId>
       <version>${lwgs.person.data.processor.version}</version>
       <exclusions>
@@ -302,11 +302,6 @@ https://hub.docker.com/layers/library/eclipse-temurin/17.0.5_8-jre-focal/images/
   </build>
 
   <repositories>
-    <repository>
-      <id>github-banzai</id>
-      <name>GitHub Datarocks Apache Maven Packages</name>
-      <url>https://maven.pkg.github.com/datarocks-ag/banzai</url>
-    </repository>
     <repository>
       <id>github-lwgs-pdp</id>
       <name>GitHub Datarocks Apache Maven Packages</name>

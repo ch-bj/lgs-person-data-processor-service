@@ -30,10 +30,6 @@ jobs:
       with:
         servers: |
           [{
-              "id": "github-banzai",
-              "username": "${{ secrets.GH_PACKAGE_USER }}",
-              "password": "${{ secrets.GH_PACKAGE_TOKEN }}"
-          },{
               "id": "github-lwgs-pdp",
               "username": "${{ secrets.GH_PACKAGE_USER }}",
               "password": "${{ secrets.GH_PACKAGE_TOKEN }}"
@@ -120,10 +116,6 @@ jobs:
         with:
           servers: |
             [{
-                "id": "github-banzai",
-                "username": "${{ secrets.GH_PACKAGE_USER }}",
-                "password": "${{ secrets.GH_PACKAGE_TOKEN }}"
-            },{
                 "id": "github-lwgs-pdp",
                 "username": "${{ secrets.GH_PACKAGE_USER }}",
                 "password": "${{ secrets.GH_PACKAGE_TOKEN }}"
