@@ -106,11 +106,12 @@ public class SedexOutboxMessageProcessor {
               .build();
 
       final JobMetaData metaData =
-          new JobMetaData(
-              inHeaders.getJobType(),
-              inHeaders.getJobId(),
-              jobCollectedPersonData.getPage(),
-              isLastPage);
+          JobMetaData.builder()
+              .type(inHeaders.getJobType())
+              .jobId(inHeaders.getJobId())
+              .pageNr(jobCollectedPersonData.getPage())
+              .isLastPage(isLastPage)
+              .build();
 
       sedexFileWriter.writeSedexPayload(
           jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
