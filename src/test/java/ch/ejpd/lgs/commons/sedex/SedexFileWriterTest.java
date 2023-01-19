@@ -98,7 +98,12 @@ class SedexFileWriterTest {
                     .messageId(messageId)
                     .page(0)
                     .build(),
-                new JobMetaData(JobType.FULL, jobId, 0, true)));
+                JobMetaData.builder()
+                    .jobId(jobId)
+                    .type(JobType.FULL)
+                    .pageNr(0)
+                    .isLastPage(true)
+                    .build()));
 
     assertTrue(sedexFileWriter.sedexDataFile(messageId).exists());
 
