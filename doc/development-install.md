@@ -42,11 +42,6 @@ personal access token with permission `read:packages`.
           <snapshots><enabled>true</enabled></snapshots>
         </repository>
         <repository>
-          <id>github-banzai</id>
-          <name>Banzai Packages</name>
-          <url>https://maven.pkg.github.com/datarocks-ag/banzai</url>
-        </repository>
-        <repository>
           <id>github-lwgs-pdp</id>
           <name>LWGS Person Data Processor Packages</name>
           <url>https://maven.pkg.github.com/datarocks-ag/lwgs-person-data-processor</url>
@@ -56,11 +51,6 @@ personal access token with permission `read:packages`.
   </profiles>
 
   <servers>
-    <server>
-      <id>github-banzai</id>
-      <username>#USER#</username>
-      <password>#PASS#</password>
-    </server>
     <server>
       <id>github-lwgs-pdp</id>
       <username>#USER#</username>
