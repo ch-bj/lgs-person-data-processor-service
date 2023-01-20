@@ -44,7 +44,7 @@ personal access token with permission `read:packages`.
         <repository>
           <id>github-lgs-pdp</id>
           <name>LWGS Person Data Processor Packages</name>
-          <url>https://maven.pkg.github.com/CH-BJ/lgs-person-data-processor</url>
+          <url>https://maven.pkg.github.com/ch-bj/lgs-person-data-processor</url>
         </repository>
       </repositories>
     </profile>
