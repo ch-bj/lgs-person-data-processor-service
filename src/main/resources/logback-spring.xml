@@ -81,17 +81,17 @@
         <appender-ref ref="ErrorRollingFile" />
     </root>
 
-    <logger name="org.datarocks.lwgs.searchindex.client.service.sync" level="info">
+    <logger name="ch.ejpd.lgs.searchindex.client.service.sync" level="info">
         <appender-ref ref="SyncJobRollingFile" />
     </logger>
 
-    <logger name="org.datarocks.lwgs.searchindex.client.service.sedex" level="info">
+    <logger name="ch.ejpd.lgs.searchindex.client.service.sedex" level="info">
         <appender-ref ref="SedexRollingFile" />
     </logger>
-    <logger name="org.datarocks.lwgs.searchindex.client.adapter.io" level="info">
+    <logger name="ch.ejpd.lgs.searchindex.client.adapter.io" level="info">
         <appender-ref ref="SedexRollingFile" />
     </logger>
-    <logger name="org.datarocks.lwgs.commons.sedex" level="info">
+    <logger name="ch.ejpd.lgs.commons.sedex" level="info">
         <appender-ref ref="SedexRollingFile" />
     </logger>
 </configuration>

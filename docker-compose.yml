@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   backend:
-    image: ghcr.io/datarocks-ag/lwgs-person-data-processor-service:latest
+    image: ghcr.io/CH-BJ/lgs-person-data-processor-service:latest
     restart: always
     ports:
       - "127.0.0.1:8080:8080"

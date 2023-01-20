@@ -27,7 +27,7 @@ jobs:
       with:
         servers: |
           [{
-              "id": "github-lwgs-pdp",
+              "id": "github-lgs-pdp",
               "username": "${{ secrets.GH_PACKAGE_USER }}",
               "password": "${{ secrets.GH_PACKAGE_TOKEN }}"
           }]

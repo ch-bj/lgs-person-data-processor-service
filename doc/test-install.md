@@ -21,7 +21,7 @@ Login into githubs docker repository (replacing `#USER#` with your github handle
 Checkout the project
 
 ```
- # git clone https://github.com/datarocks-ag/lwgs-person-data-processor-service.git
+ # git clone https://github.com/CH-BJ/lgs-person-data-processor-service.git
 ```
 
 Create a copy of `.env` from the example file

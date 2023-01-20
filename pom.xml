@@ -12,17 +12,17 @@
   </parent>
 
   <groupId>ch.ejpd.lgs</groupId>
-  <artifactId>lwgs-person-data-processor-service</artifactId>
+  <artifactId>lgs-person-data-processor-service</artifactId>
   <version>1.0.0-SNAPSHOT</version>
-  <name>lwgs-person-data-processor-service</name>
-  <description>LWGS Person Data Processor Service</description>
+  <name>lgs-person-data-processor-service</name>
+  <description>LGS Person Data Processor Service</description>
 
   <properties>
     <java.version>17</java.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
 
-    <lwgs.person.data.processor.version>1.4.2</lwgs.person.data.processor.version>
+    <lgs.person.data.processor.version>2.0.0</lgs.person.data.processor.version>
     <jackson-xml.version>2.14.0</jackson-xml.version>
     <springdoc.version>1.6.14</springdoc.version>
 
@@ -54,7 +54,7 @@
     <dependency>
       <groupId>ch.ejpd.lgs</groupId>
       <artifactId>person-data-processor</artifactId>
-      <version>${lwgs.person.data.processor.version}</version>
+      <version>${lgs.person.data.processor.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -294,7 +294,7 @@ https://hub.docker.com/layers/library/eclipse-temurin/17.0.5_8-jre-focal/images/
             <image>eclipse-temurin:17.0.5_8-jre-focal@sha256:00a5775f5eb7c24a19cb76ded742cbfcc50c61f062105af9730dadde217e4390</image>
           </from>
           <to>
-            <image>ghcr.io/datarocks-ag/lwgs-person-data-processor-service</image>
+            <image>ghcr.io/CH-BJ/lgs-person-data-processor-service</image>
           </to>
         </configuration>
       </plugin>
@@ -303,17 +303,17 @@ https://hub.docker.com/layers/library/eclipse-temurin/17.0.5_8-jre-focal/images/
 
   <repositories>
     <repository>
-      <id>github-lwgs-pdp</id>
-      <name>GitHub Datarocks Apache Maven Packages</name>
-      <url>https://maven.pkg.github.com/datarocks-ag/lwgs-person-data-processor</url>
+      <id>github-lgs-pdp</id>
+      <name>GitHub LGS Apache Maven Packages</name>
+      <url>https://maven.pkg.github.com/CH-BJ/lgs-person-data-processor</url>
     </repository>
   </repositories>
 
   <distributionManagement>
     <repository>
       <id>github</id>
-      <name>GitHub Datarocks Apache Maven Packages</name>
-      <url>https://maven.pkg.github.com/datarocks-ag/lwgs-person-data-processor-service</url>
+      <name>GitHub LGS Apache Maven Packages</name>
+      <url>https://maven.pkg.github.com/CH-BJ/lgs-person-data-processor-service</url>
     </repository>
   </distributionManagement>
 </project>

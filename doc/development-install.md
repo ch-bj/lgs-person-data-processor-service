@@ -42,9 +42,9 @@ personal access token with permission `read:packages`.
           <snapshots><enabled>true</enabled></snapshots>
         </repository>
         <repository>
-          <id>github-lwgs-pdp</id>
+          <id>github-lgs-pdp</id>
           <name>LWGS Person Data Processor Packages</name>
-          <url>https://maven.pkg.github.com/datarocks-ag/lwgs-person-data-processor</url>
+          <url>https://maven.pkg.github.com/CH-BJ/lgs-person-data-processor</url>
         </repository>
       </repositories>
     </profile>
@@ -52,7 +52,7 @@ personal access token with permission `read:packages`.
 
   <servers>
     <server>
-      <id>github-lwgs-pdp</id>
+      <id>github-lgs-pdp</id>
       <username>#USER#</username>
       <password>#PASS#</password>
     </server>
