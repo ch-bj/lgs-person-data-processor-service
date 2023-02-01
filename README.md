@@ -1,7 +1,7 @@
 # LGS Person Data Processor Service
 
-Reference implementation, wrapping the lwgs-person-data-processor library and implementing the 
-"LWGS Suchindex Client". Service allows to process and seed
+Reference implementation, wrapping the [lgs-person-data-processor](https://github.com/ch-bj/lgs-person-data-processor) 
+library and implementing the "LGS Suchindex Client". Service allows to process and seed
 personData to the central search index, part of Landesweite Grundstückssuche (LGS). Data is consumed via
 a RESTfull interface, and passed on through Sedex after successful processing. The service allows either full or 
 partial syncs.
