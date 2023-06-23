@@ -1,8 +1,7 @@
-# Installation of LWGS Person Data Processor Service (Test Setup)
+# Installation of LWGS Person Data Processor Service
 
-This document will describe the setup of a test environment of the lwgs person data processor
-service, and therefore, this is not intended to be used for a productive setup without further
-configuration.
+This document will describe the setup of the environment of the lwgs person data processor service.
+It is recommended to adjust the configuration to your needs especially for the productive environment.
 
 ## Prerequisites
 
@@ -42,6 +41,17 @@ SEDEX_RECIPIENT_ID=321
 SEDEX_MESSAGE_TYPE_FULL_EXPORT=2518
 SEDEX_MESSAGE_TYPE_INCREMENTAL=2519
 ```
+
+If the default values of the sync parameters do not suit you you can adjust them according to the [README](../README.md).
+
+```
+PARTIAL_SYNC_PAGE_SIZE=10000
+PARTIAL_SYNC_SCHEDULING_TYPE=FIXED_DELAY
+PARTIAL_SYNC_CRON_SCHEDULE=0 0 * * * ?
+PARTIAL_SYNC_FIXED_DELAY=300000
+FULL_SYNC_PAGE_SIZE=10000
+```
+
 
 ### Alterantive Database Configurations
 In order to use a different database backend as the default (postgres), you can configure this via the .env file 
