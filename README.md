@@ -25,8 +25,9 @@ partial syncs.
 ### Introduction
 
 
-For installation details have a look at the separate installation documentation: [Development LWGS PDPS Env](doc/development-install.md)
-or [Test LWGS PDPS Env](doc/test-install.md) for a full dockerized test environment.
+For installation details have a look at the separate installation documentation:
+- [Installation](doc/install.md) for the full dockerized environment
+- [Development Installation](doc/development-install.md) for the development environment
 
 If you have further questions please have a look at the [FAQ](doc/faq.md).
 
