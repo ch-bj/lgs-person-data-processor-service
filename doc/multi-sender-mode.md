@@ -2,7 +2,7 @@
 
 In case you want to use the lgs person data processor service to seed from
 multiple sources (land register instances), you can do so by assigning multiple
-sedex sender ids to the SEDEX_SENDER_ID environment variable within the `.env`.
+sedex sender ids (comma separated values) to the SEDEX_SENDER_ID environment variable within the `.env`.
 
 With this the multi-sender mode is active, which has the following implications
 / changes in the default behaviour of the service:
