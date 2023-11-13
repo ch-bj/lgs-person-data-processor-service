@@ -5,6 +5,9 @@ import java.util.UUID;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * Model class representing metadata for a job.
+ */
 @Data
 @Builder
 public class JobMetaData {

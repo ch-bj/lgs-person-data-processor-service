@@ -24,6 +24,9 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.support.ListenerExecutionFailedException;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Processor for handling Sedex outbox messages and writing Sedex files.
+ */
 @Slf4j
 public class SedexOutboxMessageProcessor {
   private final RabbitTemplate rabbitTemplate;
@@ -42,6 +45,11 @@ public class SedexOutboxMessageProcessor {
     this.throttleHandler = throttleHandler;
   }
 
+  /**
+   * Process the next Sedex outbox message by writing Sedex files.
+   *
+   * @return True if a message was processed, false otherwise.
+   */
   @Transactional
   public boolean processNextSedexOutboxMessage() {
     final Message message = rabbitTemplate.receive(Queues.SEDEX_OUTBOX);
@@ -51,10 +59,12 @@ public class SedexOutboxMessageProcessor {
     }
 
     try {
+      // Deserialize the incoming message
       final JobCollectedPersonData jobCollectedPersonData =
           BinarySerializerUtil.convertByteArrayToObject(
               message.getBody(), JobCollectedPersonData.class);
 
+      // Extract headers from the received message
       final CommonHeadersDao inHeaders =
           new CommonHeadersDao(message.getMessageProperties().getHeaders());
 
@@ -64,6 +74,7 @@ public class SedexOutboxMessageProcessor {
           jobCollectedPersonData.getMessageId(),
           inHeaders.getSenderId());
 
+      // Create a Sedex file writer based on configuration
       final SedexFileWriter sedexFileWriter =
           configuration.isInMultiSenderMode()
               ? new SedexFileWriter(
@@ -72,16 +83,19 @@ public class SedexOutboxMessageProcessor {
               : new SedexFileWriter(
                   configuration.getSedexOutboxPath(), configuration.shouldCreateDirectories());
 
+      // Determine Sedex message type based on job type
       final int sedexMessageType =
           (inHeaders.getJobType() == JobType.FULL)
               ? configuration.getSedexMessageTypeFullExport()
               : configuration.getSedexMessageTypeIncremental();
 
+      // Check if it's the last page of the job
       final boolean isLastPage =
           inHeaders.getJobType() == JobType.PARTIAL
               || (jobCollectedPersonData.getNumProcessed() == jobCollectedPersonData.getNumTotal()
                   && jobCollectedPersonData.getNumTotal() > 0);
 
+      // Save Sedex message details to the repository
       sedexMessageRepository.save(
           new SedexMessage(
               jobCollectedPersonData.getMessageId(),
@@ -94,6 +108,7 @@ public class SedexOutboxMessageProcessor {
               inHeaders.getJobType(),
               inHeaders.getJobId()));
 
+      // Build Sedex envelope
       final SedexEnvelope envelope =
           SedexEnvelope.builder()
               .messageId(jobCollectedPersonData.getMessageId().toString())
@@ -105,6 +120,7 @@ public class SedexOutboxMessageProcessor {
               .messageDate(inHeaders.getTimestamp())
               .build();
 
+      // Build job metadata
       final JobMetaData metaData =
           JobMetaData.builder()
               .type(inHeaders.getJobType())
@@ -113,10 +129,12 @@ public class SedexOutboxMessageProcessor {
               .isLastPage(isLastPage)
               .build();
 
+      // Write Sedex payload and envelope to the file
       sedexFileWriter.writeSedexPayload(
           jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
       sedexFileWriter.writeSedexEnvelope(jobCollectedPersonData.getMessageId(), envelope);
 
+      // Build outgoing headers for the sent Sedex message
       final CommonHeadersDao outHeaders =
           CommonHeadersDao.builder(inHeaders).jobState(JobState.SENT).timestamp().build();
 

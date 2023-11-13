@@ -22,6 +22,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 
+/**
+ * Unit tests for FullSyncStateManager class in a non-multi-sender configuration.
+ */
 @TestMethodOrder(OrderAnnotation.class)
 @ExtendWith(MockitoExtension.class)
 class FullSyncStateManagerTest {
@@ -33,6 +36,9 @@ class FullSyncStateManagerTest {
 
   private FullSyncStateManager fullSyncStateManager;
 
+  /**
+   * Setup method to initialize the test environment.
+   */
   @BeforeEach
   void initialize() {
     when(sedexConfiguration.getSedexSenderId()).thenReturn("LGS-123-XYZ");
@@ -43,6 +49,9 @@ class FullSyncStateManagerTest {
             settingRepository, queueStatsService, rabbitAdmin, sedexConfiguration);
   }
 
+  /**
+   * Cleanup method to reset the environment after each test.
+   */
   @AfterEach
   void cleanup() {
     fullSyncStateManager.resetFullSync(true, null);
@@ -50,6 +59,9 @@ class FullSyncStateManagerTest {
     reset(rabbitAdmin);
   }
 
+  /**
+   * Test loading persisted settings or using system defaults.
+   */
   @Test
   @Order(1)
   void loadSetting() {
@@ -82,6 +94,9 @@ class FullSyncStateManagerTest {
     verify(settingRepository, times(2)).findByKey(FULL_SYNC_STORED_JOB_ID.getKey());
   }
 
+  /**
+   * Test starting a full synchronization process.
+   */
   @Test
   void startFullSync() {
     assertEquals(FullSyncSeedState.READY, fullSyncStateManager.getFullSyncJobState());
@@ -103,6 +118,9 @@ class FullSyncStateManagerTest {
     assertTrue(fullSyncStateManager.isInStateSeeding());
   }
 
+  /**
+   * Test submitting a full synchronization process.
+   */
   @Test
   void submitFullSync() {
     fullSyncStateManager.startFullSync(null);
@@ -120,6 +138,9 @@ class FullSyncStateManagerTest {
     assertTrue(fullSyncStateManager.isInStateSeeded());
   }
 
+  /**
+   * Test starting the sending phase of a full synchronization process.
+   */
   @Test
   void startSendingFullSync() {
     fullSyncStateManager.startFullSync(null);
@@ -138,6 +159,9 @@ class FullSyncStateManagerTest {
     assertTrue(fullSyncStateManager.isInStateSending());
   }
 
+  /**
+   * Test resetting the full synchronization process.
+   */
   @Test
   void resetFullSync() {
     fullSyncStateManager.startFullSync(null);
@@ -155,6 +179,9 @@ class FullSyncStateManagerTest {
     assertEquals(FullSyncSeedState.READY, fullSyncStateManager.getFullSyncJobState());
   }
 
+  /**
+   * Test forcing a reset of the full synchronization process.
+   */
   @Test
   void forceResetFullSync() {
     fullSyncStateManager.startFullSync(null);
@@ -177,6 +204,9 @@ class FullSyncStateManagerTest {
     assertTrue(fullSyncStateManager.isFailedQueueEmpty());
   }
 
+  /**
+   * Test completing a full synchronization process.
+   */
   @Test
   void completedFullSync() {
     fullSyncStateManager.startFullSync(null);
@@ -192,6 +222,9 @@ class FullSyncStateManagerTest {
     assertEquals(FullSyncSeedState.COMPLETED, fullSyncStateManager.getFullSyncJobState());
   }
 
+  /**
+   * Test failing a full synchronization process.
+   */
   @Test
   void failFullSync() {
     fullSyncStateManager.startFullSync(null);

@@ -3,6 +3,9 @@ package ch.ejpd.lgs.searchindex.client.service.amqp;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * Constants class representing AMQP headers.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Headers {
   public static final String MESSAGE_CATEGORY = "MessageClass";

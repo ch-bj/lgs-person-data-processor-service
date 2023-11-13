@@ -10,11 +10,21 @@ import java.util.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Monitors a specified directory for file events (create, modify, delete) using the Java WatchService API.
+ */
 @Slf4j
 public class FileWatcher {
   private final WatchService watcher;
   private final Path path;
 
+  /**
+   * Constructs a FileWatcher for the specified directory.
+   *
+   * @param path              The path to the directory to be watched.
+   * @param createDirectories If true, attempt to create the directory if it does not exist.
+   * @throws WatchDirNotAccessibleException If there is an issue accessing or setting up the WatchService.
+   */
   public FileWatcher(@NonNull final Path path, boolean createDirectories)
       throws WatchDirNotAccessibleException {
     try {
@@ -33,6 +43,12 @@ public class FileWatcher {
     }
   }
 
+  /**
+   * Processes a single WatchEvent and converts it into a FileEvent.
+   *
+   * @param event The WatchEvent to be processed.
+   * @return The corresponding FileEvent or null if the event is an overflow.
+   */
   private FileEvent processEvent(WatchEvent<?> event) {
     WatchEvent.Kind<?> kind = event.kind();
 
@@ -50,6 +66,11 @@ public class FileWatcher {
         .build();
   }
 
+  /**
+   * Polls for file events and processes them into a list of FileEvent objects.
+   *
+   * @return A list of FileEvent objects representing the file events that occurred since the last poll.
+   */
   public List<FileEvent> poll() {
     log.debug("polling.");
 

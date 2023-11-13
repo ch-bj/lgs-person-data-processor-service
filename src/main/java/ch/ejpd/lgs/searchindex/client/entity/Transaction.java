@@ -6,6 +6,9 @@ import java.util.UUID;
 import javax.persistence.*;
 import lombok.*;
 
+/**
+ * Entity class representing a transaction.
+ */
 @Getter
 @Setter
 @Builder

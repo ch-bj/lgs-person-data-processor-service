@@ -30,6 +30,7 @@ import javax.xml.stream.XMLOutputFactory;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+// ... (Several methods within the SedexFileWriter class not commented for brevity)
 @Slf4j
 public class SedexFileWriter {
   private final Path sedexOutboxPath;
@@ -38,6 +39,12 @@ public class SedexFileWriter {
 
   private final Gson gson = new GsonBuilder().create();
 
+  /**
+   * Constructor for SedexFileWriter.
+   *
+   * @param sedexOutboxPath   The path to the Sedex outbox directory.
+   * @param createDirectories Flag indicating whether to create directories if they don't exist.
+   */
   public SedexFileWriter(final Path sedexOutboxPath, boolean createDirectories) {
     this.sedexOutboxPath = sedexOutboxPath;
     this.createDirectories = createDirectories;
@@ -82,6 +89,13 @@ public class SedexFileWriter {
     return sedexOutboxPath.resolve("data_" + fileIdentifier + ".zip").toFile();
   }
 
+  /**
+   * Writes a Sedex envelope to a file.
+   *
+   * @param fileIdentifier The unique identifier for the Sedex file.
+   * @param sedexEnvelope  The SedexEnvelope object to be written.
+   * @throws WritingSedexFilesFailedException If writing the Sedex envelope fails.
+   */
   public void writeSedexEnvelope(
       @NonNull final UUID fileIdentifier, @NonNull final SedexEnvelope sedexEnvelope)
       throws WritingSedexFilesFailedException {

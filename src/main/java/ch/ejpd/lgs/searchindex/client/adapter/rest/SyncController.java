@@ -51,6 +51,13 @@ public class SyncController {
     this.businessLogRepository = businessLogRepository;
   }
 
+  /**
+   * Adds seed data to the partial sync pool.
+   *
+   * @param request  The seed data request in JSON format.
+   * @param senderId The sender ID (optional).
+   * @return Response containing the transaction ID.
+   */
   @PostMapping(path = "partial/person-data", consumes = MediaType.APPLICATION_JSON_VALUE)
   public TransactionIdResponse addSeedToPartialSyncPool(
       @RequestBody @NonNull String request,
@@ -60,6 +67,11 @@ public class SyncController {
         .build();
   }
 
+  /**
+   * Retrieves partial sync queue statistics.
+   *
+   * @return Response containing the queue statistics.
+   */
   @GetMapping(path = "partial/stats")
   public QueueStatsResponse partialSyncQueueStats() {
     return QueueStatsResponse.builder()
@@ -69,6 +81,13 @@ public class SyncController {
         .build();
   }
 
+  /**
+   * Adds seed data to the full sync pool.
+   *
+   * @param request  The seed data request in JSON format.
+   * @param senderId The sender ID (optional).
+   * @return Response containing the transaction ID, if it exists. Otherwise, throw a response stating that a full sync is necessary.
+   */
   @PostMapping(path = "full/person-data", consumes = MediaType.APPLICATION_JSON_VALUE)
   public TransactionIdResponse addSeedToFullSyncPool(
       @RequestBody @NonNull String request,
@@ -83,6 +102,11 @@ public class SyncController {
         .build();
   }
 
+  /**
+   * Retrieves full sync queue statistics.
+   * 
+   * @return Response containing the queue statistics.
+   */
   @GetMapping(path = "full/stats")
   public QueueStatsResponse fullSyncQueueStats() {
     return QueueStatsResponse.builder()
@@ -92,6 +116,11 @@ public class SyncController {
         .build();
   }
 
+  /**
+   * Retrieves the current state of the full sync job.
+   * 
+   * @return Response containing the job ID and status
+   */
   @GetMapping(path = "full/state")
   public FullSyncSeedStateResponse fullSyncState() {
     return FullSyncSeedStateResponse.builder()
@@ -100,6 +129,12 @@ public class SyncController {
         .build();
   }
 
+  /**
+   * Triggers the start of a full sync job.
+   * 
+   * @param senderId The sender ID (optional).
+   * @return Response containing the sender ID, the job ID and the job status.
+   */
   @PutMapping(path = "full/trigger/start")
   public FullSyncSeedStateResponse triggerStartFullSync(
       @RequestHeader(value = Headers.X_LGS_SENDER_ID, required = false) String senderId) {
@@ -115,6 +150,12 @@ public class SyncController {
         .build();
   }
 
+  /**
+   * Triggers the submission of a full sync job.
+   * 
+   * @param senderId The sender ID (optional).
+   * @return Response containing the sender ID, the job ID and the job status.
+   */
   @PutMapping(path = "full/trigger/submit")
   public FullSyncSeedStateResponse triggerSubmitFullSync(
       @RequestHeader(value = Headers.X_LGS_SENDER_ID, required = false) String senderId) {
@@ -130,6 +171,13 @@ public class SyncController {
         .build();
   }
 
+  /**
+   * Triggers the reset of a full sync job.
+   * 
+   * @param force The reset of the sync job proceeds even if there are ongoing sync jobs which might get interrupted (optional).
+   * @param senderId The sender ID (optional).
+   * @return Response containing the sender ID and the job status.
+   */
   @PutMapping(path = "full/trigger/reset")
   public FullSyncSeedStateResponse triggerResetFullSync(
       @RequestParam(required = false) boolean force,
@@ -145,6 +193,12 @@ public class SyncController {
         .build();
   }
 
+  /**
+   * Retrieves a paginated list of sync jobs.
+   * 
+   * @param pageable Data will be displayed in pages (size per page is defined by the underlying data store).
+   * @return Response containing the paginated list of sync jobs.
+   */
   @GetMapping(path = "jobs")
   @PageableAsQueryParam
   public Page<SimpleSyncJobProjection> getJobs(
@@ -152,6 +206,12 @@ public class SyncController {
     return syncJobRepository.findAllProjectedBy(pageable);
   }
 
+  /**
+   * Retrieves details of a specific sync job.
+   * 
+   * @param jobId The ID of the sync job.
+   * @return Response containing detailed job details.
+   */
   @GetMapping(path = "job/{jobId}")
   @PageableAsQueryParam
   public SyncJob getJobForId(@PathVariable(name = "jobId") UUID jobId) {
@@ -160,6 +220,13 @@ public class SyncController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
+  /**
+   * Retrieves transactions associated with a specific sync job.
+   * 
+   * @param jobId The ID of the sync job.
+   * @param pageable Data will be displayed in pages (size per page is defined by the underlying data store).
+   * @return Response containing the paginated list of transactions associated with the sync job
+   */
   @GetMapping(path = "job/{jobId}/transactions")
   @PageableAsQueryParam
   public Page<Transaction> getJobForId(
@@ -168,6 +235,13 @@ public class SyncController {
     return transactionRepository.findAllByJobId(jobId, pageable);
   }
 
+  /**
+   * Retrieves a paginated list of all transactions.
+   * 
+   * @param pageable Data will be displayed in pages (size per page is defined by the underlying data store).
+   * @param senderId The sender ID (optional).
+   * @return Response containing the paginated list of all transactions.
+   */
   @GetMapping(path = "transactions")
   @PageableAsQueryParam
   public Page<Transaction> getTransactions(
@@ -176,6 +250,12 @@ public class SyncController {
     return transactionRepository.findAll(pageable);
   }
 
+  /**
+   * Retrieves details of a specific transation.
+   * 
+   * @param transactionId The ID of the transaction.
+   * @return Response containing the details of the specified transaction.
+   */
   @GetMapping(path = "transaction/{transactionId}")
   public Transaction getTransaction(@PathVariable(name = "transactionId") UUID transactionId) {
     return transactionRepository
@@ -183,6 +263,12 @@ public class SyncController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
+  /**
+   * Retrieves a list of business validation logs associated with a specific transaction.
+   *
+   * @param transactionId The ID of the transaction.
+   * @return A list of business validation logs for the specified transaction.
+   */
   @GetMapping(path = "transaction/{transactionId}/logs")
   public List<BusinessValidationLog> getTransactionBusinessLogs(
       @PathVariable(name = "transactionId") UUID transactionId) {

@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
+/**
+ * Model class representing processed person data with failure information.
+ */
 @Data
 @Builder
 public class ProcessedPersonDataFailed implements Serializable {

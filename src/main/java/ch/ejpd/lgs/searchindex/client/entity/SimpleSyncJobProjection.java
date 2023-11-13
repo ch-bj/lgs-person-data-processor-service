@@ -5,6 +5,9 @@ import ch.ejpd.lgs.searchindex.client.entity.type.JobType;
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * Projection interface for a simple synchronization job.
+ */
 public interface SimpleSyncJobProjection {
   Long getId();
 

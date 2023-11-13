@@ -13,12 +13,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service class for processing and handling business validation logs.
+ */
 @Service
 @Slf4j
 public class BusinessLogProcessor {
   private final BusinessLogRepository businessLogRepository;
   private final RabbitTemplate rabbitTemplate;
 
+  /**
+   * Constructor for BusinessLogProcessor.
+   * 
+   * @param businessLogRepository  Repository for storing business validation logs.
+   * @param rabbitTemplate        RabbitTemplate for interacting with RabbitMQ.
+   */
   @Autowired
   public BusinessLogProcessor(
       BusinessLogRepository businessLogRepository, RabbitTemplate rabbitTemplate) {
@@ -26,6 +35,11 @@ public class BusinessLogProcessor {
     this.rabbitTemplate = rabbitTemplate;
   }
 
+  /**
+   * Handles a business log message by saving it to the repository.
+   * 
+   * @param message  RabbitMQ message containing the business validation log.
+   */
   @Transactional
   public void handleBusinessLogMessage(Message message) {
     try {
@@ -37,6 +51,11 @@ public class BusinessLogProcessor {
     }
   }
 
+  /**
+   * RabbitMQ listener for business log messages.
+   * 
+   * @param message RabbitMQ message received from the BUSINESS_LOG queue.
+   */
   @RabbitListener(queues = Queues.BUSINESS_LOG, concurrency = "1-2")
   protected void listen(Message message) {
     CommonHeadersDao headers = new CommonHeadersDao(message.getMessageProperties().getHeaders());

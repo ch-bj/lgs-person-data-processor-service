@@ -2,6 +2,9 @@ package ch.ejpd.lgs.searchindex.client.service.exception;
 
 import ch.ejpd.lgs.searchindex.client.service.sync.FullSyncSeedState;
 
+/**
+ * Exception thrown when a conflicting state change is detected during full sync seed processing.
+ */
 public class StateChangeConflictingException extends StateManagerPreconditionException {
   private final FullSyncSeedState sourceState;
   private final FullSyncSeedState targetState;

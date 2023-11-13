@@ -16,6 +16,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+/**
+ * Configuration class for Web Security.
+ */
 @Configuration
 @EnableWebSecurity
 @Order(1)
@@ -32,6 +35,13 @@ public class WebSecurityConfiguration {
   @Value("${lwgs.searchindex.client.security.auth.api-key}")
   private String apiKey;
 
+  /**
+   * Configures security filters and settings.
+   *
+   * @param http HttpSecurity object for configuring security
+   * @return SecurityFilterChain
+   * @throws Exception if an error occurs during configuration
+   */
   @Bean
   @SuppressWarnings({"squid:S4502"})
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -64,6 +74,11 @@ public class WebSecurityConfiguration {
     return http.build();
   }
 
+  /**
+   * Configures CORS settings.
+   *
+   * @return CorsConfigurationSource
+   */
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

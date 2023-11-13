@@ -13,6 +13,9 @@ import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+/**
+ * Integration tests for the SearchIndexClientApplication class.
+ */
 @ActiveProfiles(profiles = "test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
@@ -33,6 +36,9 @@ class SearchIndexClientApplicationTests {
     rabbit.start();
   }
 
+  /**
+   * Test to ensure that the application context loads successfully.
+   */
   @Test
   void contextLoads() {
     assertNotNull(testRestTemplate);

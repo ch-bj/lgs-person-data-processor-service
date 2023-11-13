@@ -10,6 +10,9 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Unit tests for the SedexReceiptReader class, validating the functionality of reading Sedex receipts from strings and files.
+ */
 class SedexReceiptReaderTest {
   private final SedexReceiptReader receiptReader = new SedexReceiptReader();
   private static final int STATUS_CODE = 100;
@@ -35,6 +38,9 @@ class SedexReceiptReaderTest {
           + "<recipientId>3-CH-1</recipientId>\n"
           + "</receipt>";
 
+  /**
+   * Test the readFromString method to ensure it correctly reads Sedex receipts from XML strings.
+   */
   @Test
   void readFromString() {
     final Optional<SedexReceipt> receipt = receiptReader.readFromString(RAW_VALID_RECEIPT);
@@ -48,6 +54,9 @@ class SedexReceiptReaderTest {
             assertEquals(SedexStatus.MESSAGE_CORRECT_TRANSMITTED, receipt.get().getSedexStatus()));
   }
 
+  /**
+   * Test the readFromFile method to ensure it correctly reads Sedex receipts from XML files.
+   */
   @Test
   void readFromFile() {
     final Path testFile = getResourceAsPath("sedex/receipt.xml");
@@ -61,6 +70,9 @@ class SedexReceiptReaderTest {
         () -> assertEquals(MESSAGE_ID, receipt.get().getMessageId()));
   }
 
+  /**
+   * Test handling of malformed XML files to ensure failure when reading invalid XML.
+   */
   @Test
   void failOnMalformedXML() {
     final Path testFile = getResourceAsPath("sedex/receipt-invalid.xml");
@@ -71,6 +83,12 @@ class SedexReceiptReaderTest {
     assertFalse(receipt.isPresent());
   }
 
+  /**
+   * Helper method to get a resource file as a Path.
+   *
+   * @param resourceString The resource string representing the file.
+   * @return The Path to the resource file.
+   */
   private Path getResourceAsPath(String resourceString) {
     ClassLoader classLoader = getClass().getClassLoader();
     URL resourceUrl = classLoader.getResource(resourceString);

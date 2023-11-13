@@ -6,22 +6,42 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 
+/**
+ * Service class for handling full synchronization.
+ */
 @Slf4j
 public class FullSyncService extends AbstractSyncService {
   private final FullSyncStateManager fullSyncStateManager;
 
+  /**
+   * Constructor for FullSyncService.
+   *
+   * @param template              RabbitTemplate for interacting with RabbitMQ.
+   * @param fullSyncStateManager  State manager for tracking full synchronization state.
+   * @param pageSize              Number of items to process per page.
+   */
   public FullSyncService(
       RabbitTemplate template, FullSyncStateManager fullSyncStateManager, int pageSize) {
     super(template, pageSize);
     this.fullSyncStateManager = fullSyncStateManager;
   }
 
+  /**
+   * Check pre-conditions for transitioning to the "Sending" state.
+   *
+   * @return True if conditions are met, false otherwise.
+   */
   private boolean preCheckConditionsForStateSending() {
     return fullSyncStateManager.isInStateSeeded()
         && fullSyncStateManager.isIncomingQueueEmpty()
         && fullSyncStateManager.isFailedQueueEmpty();
   }
 
+  /**
+   * Check pre-conditions for processing pages.
+   *
+   * @return True if conditions are met, false otherwise.
+   */
   private boolean preCheckConditionsForProcessing() {
     return fullSyncStateManager.isInStateSending()
         && fullSyncStateManager.isIncomingQueueEmpty()
@@ -29,10 +49,18 @@ public class FullSyncService extends AbstractSyncService {
         && !fullSyncStateManager.isOutgoingQueueEmpty();
   }
 
+  /**
+   * Check pre-conditions for transitioning to the "Completed" state.
+   *
+   * @return True if conditions are met, false otherwise.
+   */
   private boolean preCheckConditionsForStateCompleted() {
     return fullSyncStateManager.isInStateSending() && fullSyncStateManager.isOutgoingQueueEmpty();
   }
 
+  /**
+   * Scheduled method to process the next page on the full outgoing queue.
+   */
   @Scheduled(
       fixedDelayString = "${lwgs.searchindex.client.sync.full.page-processor.fixed-delay:2000}")
   public void processNextPageOnQueueFullOutgoing() {
@@ -50,6 +78,9 @@ public class FullSyncService extends AbstractSyncService {
     }
   }
 
+  /**
+   * Scheduled method with fixed delay for full synchronization.
+   */
   @Scheduled(fixedDelayString = "${lwgs.searchindex.client.sync.full.fixed-delay:1000}")
   public void fixedDelayFull() {
     if (preCheckConditionsForStateSending()) {

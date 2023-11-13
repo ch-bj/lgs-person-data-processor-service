@@ -2,11 +2,16 @@ package ch.ejpd.lgs.searchindex.client.entity;
 
 import ch.ejpd.lgs.searchindex.client.entity.type.JobState;
 import ch.ejpd.lgs.searchindex.client.entity.type.JobType;
+
+import java.beans.Transient;
 import java.util.Date;
 import java.util.UUID;
 import javax.persistence.*;
 import lombok.*;
 
+/**
+ * Entity class representing a synchronization job.
+ */
 @Getter
 @Setter
 @Builder
@@ -30,6 +35,12 @@ public class SyncJob {
   @Transient private int numPersonMutations;
   private boolean hasErrors;
 
+  /**
+   * Sets the job state with a timestamp.
+   *
+   * @param state     The new state.
+   * @param timestamp The timestamp.
+   */
   public void setStateWithTimestamp(JobState state, Date timestamp) {
     this.jobState = state;
     switch (state) {

@@ -16,8 +16,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 
+/**
+ * Unit tests for the CommonHeadersDao class, validating its functionality for applying headers to AMQP messages,
+ * converting to a map, and using the builder pattern.
+ */
 class CommonHeadersDaoTest {
 
+  /**
+   * Test the apply method to ensure it correctly sets headers on a given AMQP message.
+   */
   @Test
   void apply() {
     final Message dummyMessage = new Message("".getBytes(), new MessageProperties());
@@ -37,6 +44,10 @@ class CommonHeadersDaoTest {
         () -> assertNotNull(dummyMessage.getMessageProperties().getHeader(Headers.TIMESTAMP)));
   }
 
+  /**
+   * Test the applyAndSetJobIdAsCorrelationId method to ensure it correctly sets job-related headers
+   * on a given AMQP message, including setting the correlation ID.
+   */
   @Test
   void applyAndSetJobIdAsCorrelationId() {
     final Message dummyMessage = new Message("".getBytes(), new MessageProperties());

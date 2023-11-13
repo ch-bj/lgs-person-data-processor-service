@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
+/**
+ * Model class representing processed person data.
+ */
 @Data
 @Builder
 public class ProcessedPersonData implements Serializable {

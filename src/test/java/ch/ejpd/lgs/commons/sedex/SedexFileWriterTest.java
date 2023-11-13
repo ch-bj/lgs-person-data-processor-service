@@ -24,19 +24,25 @@ import java.util.zip.ZipFile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Unit tests for the SedexFileWriter class, validating the functionality of writing Sedex envelopes and payloads.
+ */
 class SedexFileWriterTest {
+  // Constants for test directory and Sedex data file format
+  private static final String TEST_DIR = "/tmp/lwgs-sedex-test";
   private static final String PERSON_DATA_PREFIX = "GBPersonEvent-";
   private static final String PERSON_DATA_SUFFIX = ".json";
   private static final String SENDER_ID_A = "LGS-123-AAA";
 
-  private static final String TEST_DIR = "/tmp/lwgs-sedex-test";
-
+  // Test-specific variables
   private final UUID messageId = UUID.randomUUID();
   private final SedexFileWriter sedexFileWriter = new SedexFileWriter(Paths.get(TEST_DIR), true);
-
   private final Path envelope = Paths.get(TEST_DIR, messageId + ".xml");
   private final Path payload = Paths.get(TEST_DIR, messageId + ".zip");
 
+  /**
+   * Cleanup method to delete temporary files after each test.
+   */
   @AfterEach
   void cleanup() {
     try {
@@ -51,6 +57,9 @@ class SedexFileWriterTest {
     }
   }
 
+  /**
+   * Test the writeSedexEnvelope method to ensure it writes Sedex envelope files successfully.
+   */
   @Test
   void writeSedexEnvelope() {
     assertDoesNotThrow(
@@ -70,6 +79,9 @@ class SedexFileWriterTest {
     assertTrue(sedexFileWriter.sedexEnvelopeFile(messageId).exists());
   }
 
+  /**
+   * Test the writeSedexPayload method to ensure it writes Sedex payload files successfully.
+   */
   @Test
   void writeSedexPayload() {
     final UUID transactionOne = UUID.randomUUID();
@@ -115,6 +127,12 @@ class SedexFileWriterTest {
     assertTrue(files.contains(PERSON_DATA_PREFIX + transactionTwo + PERSON_DATA_SUFFIX));
   }
 
+  /**
+   * Helper method to get a list of file names in a zip file.
+   *
+   * @param zipFile The zip file to extract file names from.
+   * @return A list of file names in the zip file.
+   */
   private List<String> getZipContentFileList(File zipFile) {
     try {
       ZipFile zf = new ZipFile(zipFile);

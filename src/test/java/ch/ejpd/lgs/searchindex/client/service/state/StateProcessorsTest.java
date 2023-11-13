@@ -31,6 +31,10 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 
+/**
+ * Unit tests for the StateProcessors class, testing the processing logic for JobStateProcessor
+ * and TransactionStateProcessor.
+ */
 class StateProcessorsTest {
   private static final byte[] EMPTY_PAYLOAD = "{}".getBytes();
   private static final String SENDER_ID_A = "LGS-123-AAA";
@@ -48,6 +52,9 @@ class StateProcessorsTest {
       ArgumentCaptor.forClass(Transaction.class);
   final ArgumentCaptor<SyncJob> jobArgumentCaptor = ArgumentCaptor.forClass(SyncJob.class);
 
+  /**
+   * Test the processing of a new partial transaction.
+   */
   @Test
   void testProcessNewPartialTransaction() {
     final UUID transactionId = UUID.randomUUID();
@@ -69,6 +76,9 @@ class StateProcessorsTest {
     assertEquals(transactionId, transactionArgumentCaptor.getValue().getTransactionId());
   }
 
+  /**
+   * Test the processing of a new full transaction when the job is empty.
+   */
   @Test
   @Disabled("Needs rewrite")
   void testProcessNewFullTransactionWhenJobEmpty() {
@@ -100,6 +110,9 @@ class StateProcessorsTest {
         () -> assertEquals(1, jobArgumentCaptor.getValue().getNumPersonMutations()));
   }
 
+  /**
+   * Test the processing of a new full transaction when the job already exists.
+   */
   @Test
   @Disabled("Needs rewrite")
   void testProcessNewFullTransactionWhenJobExisting() {
@@ -139,6 +152,9 @@ class StateProcessorsTest {
         () -> assertEquals(2, jobArgumentCaptor.getValue().getNumPersonMutations()));
   }
 
+  /**
+   * Test the processing of a failed transaction.
+   */
   @Test
   void testProcessFailedTransaction() {
     final UUID jobId = UUID.randomUUID();
@@ -190,6 +206,9 @@ class StateProcessorsTest {
                 JobState.FAILED_PROCESSING, jobArgumentCaptor.getValue().getJobState()));
   }
 
+  /**
+   * Test the processing of a new job.
+   */
   @Test
   void testProcessNewJob() throws SerializationFailedException {
     final UUID jobId = UUID.randomUUID();
@@ -246,6 +265,9 @@ class StateProcessorsTest {
                 TransactionState.JOB_ASSOCIATED, transactionArgumentCaptor.getValue().getState()));
   }
 
+  /**
+   * Test the processing of a job update.
+   */
   @Test
   void testProcessJobUpdate() throws SerializationFailedException {
     final UUID jobId = UUID.randomUUID();

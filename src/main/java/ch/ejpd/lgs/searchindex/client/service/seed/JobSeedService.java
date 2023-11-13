@@ -13,6 +13,9 @@ import lombok.NonNull;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service class for seeding jobs to partial and full queues.
+ */
 @Service
 public class JobSeedService {
   private final RabbitTemplate rabbitTemplate;
@@ -24,6 +27,14 @@ public class JobSeedService {
   private final Set<String> validSenderIds;
   private final String singleSenderId;
 
+  /**
+   * Constructor for JobSeedService.
+   * 
+   * @param queueStatsService      Service for fetching queue statistics.
+   * @param rabbitTemplate         RabbitTemplate for interacting with RabbitMQ.
+   * @param fullSyncStateManager   State manager for full synchronization.
+   * @param configuration          Sedex configuration containing sender information.
+   */
   public JobSeedService(
       QueueStatsService queueStatsService,
       RabbitTemplate rabbitTemplate,
@@ -38,6 +49,13 @@ public class JobSeedService {
         this.isInMultiSenderMode ? configuration.getSedexSenderIds() : Set.of(this.singleSenderId);
   }
 
+  /**
+   * Seed data to the partial incoming queue.
+   * 
+   * @param payload   Data payload to be seeded.
+   * @param senderId  Sender ID for validation.
+   * @return UUID of the generated transaction.
+   */
   public UUID seedToPartial(@NonNull final String payload, final String senderId) {
     return seedToQueue(
         payload,
@@ -47,6 +65,13 @@ public class JobSeedService {
         validateOrDefaultSenderId(senderId));
   }
 
+  /**
+   * Seed data to the full incoming queue.
+   * 
+   * @param payload   Data payload to be seeded.
+   * @param senderId  Sender ID for validation.
+   * @return UUID of the generated transaction.
+   */
   public UUID seedToFull(String payload, final String senderId) {
     if (fullSyncStateManager.isInStateSeeding()) {
       final UUID transactionId =
@@ -76,6 +101,16 @@ public class JobSeedService {
             senderId, validSenderIds));
   }
 
+  /**
+   * Internal method for seeding data to a queue.
+   * 
+   * @param payload   Data payload to be seeded.
+   * @param topicName Name of the topic for RabbitMQ.
+   * @param jobType   Type of the job (partial or full).
+   * @param jobId     ID of the job (for full synchronization).
+   * @param senderId  Sender ID for validation.
+   * @return UUID of the generated transaction.
+   */
   private UUID seedToQueue(
       final String payload,
       final String topicName,

@@ -21,6 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.stereotype.Component;
 
+/**
+ * Processor for handling person data and processing it through a pipeline.
+ */
 @Component
 @Slf4j
 public class PersonDataProcessor {
@@ -36,6 +39,12 @@ public class PersonDataProcessor {
     this.pipeLine = pipeLine;
   }
 
+  /**
+   * RabbitMQ listener for processing partial person data.
+   *
+   * @param personData   Partial person data received from the queue.
+   * @param rawHeaders   Raw headers received from the message.
+   */
   @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_INCOMING, concurrency = "1-4")
   public void listenPartial(PersonData personData, @Headers Map<String, Object> rawHeaders) {
     final CommonHeadersDao headers = new CommonHeadersDao(rawHeaders);
@@ -58,6 +67,12 @@ public class PersonDataProcessor {
     }
   }
 
+  /**
+   * RabbitMQ listener for processing full person data.
+   *
+   * @param personData   Full person data received from the queue.
+   * @param rawHeaders   Raw headers received from the message.
+   */
   @RabbitListener(queues = Queues.PERSONDATA_FULL_INCOMING, concurrency = "1-4")
   public void listenFull(PersonData personData, @Headers Map<String, Object> rawHeaders) {
     final CommonHeadersDao headers = new CommonHeadersDao(rawHeaders);
@@ -80,6 +95,14 @@ public class PersonDataProcessor {
     }
   }
 
+  /**
+   * Process the given person data through the pipeline.
+   *
+   * @param personData   Person data to be processed.
+   * @param senderId     Sender ID associated with the person data.
+   * @return             Processed person data.
+   * @throws ProcessingPersonDataFailedException   If an error occurs during processing.
+   */
   private ProcessedPersonData process(
       @NonNull final PersonData personData, @NonNull final String senderId)
       throws ProcessingPersonDataFailedException {
@@ -121,6 +144,13 @@ public class PersonDataProcessor {
     }
   }
 
+  /**
+   * Send the processed person data to the specified topic and update the state.
+   *
+   * @param topicName             Name of the topic to send the data to.
+   * @param processedPersonData   Processed person data to be sent.
+   * @param senderId              Sender ID associated with the processed data.
+   */
   private void out(
       @NonNull final String topicName,
       @NonNull final ProcessedPersonData processedPersonData,

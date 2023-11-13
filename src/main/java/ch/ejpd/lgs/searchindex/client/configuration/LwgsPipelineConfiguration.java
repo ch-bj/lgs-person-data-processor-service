@@ -26,6 +26,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.util.FileCopyUtils;
 
+/**
+ * Configuration class for the LWGS search index pipeline.
+ */
 @Slf4j
 @Configuration
 public class LwgsPipelineConfiguration {
@@ -47,11 +50,13 @@ public class LwgsPipelineConfiguration {
   @Value("${lwgs.searchindex.encryption.message-digest}")
   private String messageDigest;
 
+  // Helper method to read supported attributes from JSON file
   private String readSupportedAttributesJson() throws IOException {
     return FileCopyUtils.copyToString(
         new InputStreamReader(supportedAttributesLocation.getInputStream()));
   }
 
+  // Helper method to read supported attributes schema from JSON file
   private String readSupportedAttributesSchemaJson() throws IOException {
     return FileCopyUtils.copyToString(
         new InputStreamReader(attributeSchemeLocation.getInputStream()));

@@ -22,6 +22,9 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Manages the state of the full synchronization process, including job state, sender ID, and job ID.
+ */
 @Slf4j
 @Component
 public class FullSyncStateManager {
@@ -177,6 +180,13 @@ public class FullSyncStateManager {
     currentFullSyncMessageCounter.getAndIncrement();
   }
 
+  /**
+   * Validates the provided sender ID or returns the default sender ID if in single-sender mode.
+   *
+   * @param senderId The sender ID to validate.
+   * @return The validated sender ID.
+   * @throws SenderIdValidationException If the provided sender ID is invalid.
+   */
   private String validateOrDefaultSenderId(final String senderId) {
     if (!isInMultiSenderMode && senderId == null) {
       return singleSenderId;

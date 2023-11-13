@@ -18,6 +18,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * Configuration class for RabbitMQ and AMQP components.
+ */
 @Getter
 @Configuration
 @EnableScheduling

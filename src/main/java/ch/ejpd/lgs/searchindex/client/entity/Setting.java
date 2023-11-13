@@ -5,6 +5,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import lombok.*;
 
+/**
+ * Entity representing a setting.
+ */
 @Entity
 @Getter
 @Setter

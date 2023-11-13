@@ -12,11 +12,21 @@ import lombok.extern.slf4j.Slf4j;
 public class SedexReceiptReader {
   private final XmlMapper mapper;
 
+  /**
+   * Constructor for SedexReceiptReader.
+   * Initializes the XML mapper with deserialization features.
+   */
   public SedexReceiptReader() {
     mapper = new XmlMapper();
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   }
 
+  /**
+   * Reads a SedexReceipt object from a file.
+   *
+   * @param path The path to the file containing the SedexReceipt data.
+   * @return Optional containing the SedexReceipt if reading is successful; empty otherwise.
+   */
   public Optional<SedexReceipt> readFromFile(Path path) {
     try {
       return Optional.ofNullable(mapper.readValue(path.toFile(), SedexReceipt.class));
@@ -25,6 +35,12 @@ public class SedexReceiptReader {
     }
   }
 
+  /**
+   * Reads a SedexReceipt object from a string.
+   *
+   * @param input The input string containing the SedexReceipt data.
+   * @return Optional containing the SedexReceipt if reading is successful; empty otherwise.
+   */
   public Optional<SedexReceipt> readFromString(String input) {
     try {
       return Optional.ofNullable(mapper.readValue(input, SedexReceipt.class));

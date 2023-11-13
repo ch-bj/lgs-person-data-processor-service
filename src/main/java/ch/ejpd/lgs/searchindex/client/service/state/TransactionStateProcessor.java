@@ -23,6 +23,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service class for processing and handling transaction state updates.
+ */
 @Service
 @Slf4j
 public class TransactionStateProcessor {
@@ -31,6 +34,12 @@ public class TransactionStateProcessor {
 
   private final Map<UUID, SyncJob> syncJobCache = new HashMap<>();
 
+    /**
+   * Constructor for TransactionStateProcessor.
+   * 
+   * @param syncJobRepository      Repository for storing synchronization job information.
+   * @param transactionRepository Repository for storing transaction information.
+   */
   @Autowired
   public TransactionStateProcessor(
       SyncJobRepository syncJobRepository, TransactionRepository transactionRepository) {
@@ -38,6 +47,11 @@ public class TransactionStateProcessor {
     this.transactionRepository = transactionRepository;
   }
 
+  /**
+   * Synchronized method to create a new synchronization job.
+   * 
+   * @param headers CommonHeadersDao containing message headers.
+   */
   @Synchronized
   private void createJob(CommonHeadersDao headers) {
     syncJobRepository.save(
@@ -49,6 +63,11 @@ public class TransactionStateProcessor {
             .build());
   }
 
+  /**
+   * Checks if a SyncJob exists for the given headers; if not, creates a new one.
+   * 
+   * @param headers CommonHeadersDao containing message headers.
+   */
   private void createJobIfNotExisting(CommonHeadersDao headers) {
     final UUID jobId = headers.getJobId();
     Optional<SyncJob> optionalSyncJob = Optional.ofNullable(syncJobCache.get(jobId));
@@ -65,6 +84,11 @@ public class TransactionStateProcessor {
     createJob(headers);
   }
 
+  /**
+   * Processes a new transaction message, creating a new transaction record.
+   * 
+   * @param headers CommonHeadersDao containing message headers.
+   */
   private void processNewTransactionMessage(CommonHeadersDao headers) {
     Transaction transaction =
         Transaction.builder()
@@ -89,6 +113,11 @@ public class TransactionStateProcessor {
     }
   }
 
+  /**
+   * Updates job state if required based on the headers.
+   * 
+   * @param headers CommonHeadersDao containing message headers.
+   */
   private void updateJobStateIfRequired(CommonHeadersDao headers) {
     Optional<UUID> optionalJobId = headers.getOptionalJobId();
 
@@ -107,6 +136,11 @@ public class TransactionStateProcessor {
     }
   }
 
+  /**
+   * Handles the incoming transaction message based on its state.
+   * 
+   * @param headers CommonHeadersDao containing message headers.
+   */
   @SuppressWarnings({"squid:S128"})
   @Transactional
   public void handleTransactionMessage(CommonHeadersDao headers) {
@@ -128,6 +162,11 @@ public class TransactionStateProcessor {
     }
   }
 
+  /**
+   * RabbitMQ listener for transaction state update messages.
+   * 
+   * @param message RabbitMQ message received from the TRANSACTION_STATE queue.
+   */
   @RabbitListener(queues = Queues.TRANSACTION_STATE, concurrency = "2-16", priority = "10")
   protected void listen(Message message) {
     CommonHeadersDao headers = new CommonHeadersDao(message.getMessageProperties().getHeaders());

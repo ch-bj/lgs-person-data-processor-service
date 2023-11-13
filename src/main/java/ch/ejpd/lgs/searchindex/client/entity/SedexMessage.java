@@ -7,6 +7,9 @@ import java.util.UUID;
 import javax.persistence.*;
 import lombok.*;
 
+/**
+ * Entity representing a Sedex message.
+ */
 @Getter
 @Setter
 @Builder

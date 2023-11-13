@@ -1,5 +1,8 @@
 package ch.ejpd.lgs.commons.sedex.model;
 
+/**
+ * Enum representing different categories for Sedex status codes.
+ */
 public enum SedexStatusCategory {
   SUCCESS,
   MESSAGE_ERROR,

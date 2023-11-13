@@ -25,6 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.Connection;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
+/**
+ * Abstract base class for synchronization services providing common functionality for
+ * processing messages from queues and sending messages to topics.
+ */
 @Slf4j
 public abstract class AbstractSyncService {
   private static final boolean ACK_SINGLE_MESSAGE = false;
@@ -34,11 +38,29 @@ public abstract class AbstractSyncService {
   private final RabbitTemplate rabbitTemplate;
   private final int pageSize;
 
+  /**
+   * Constructor for AbstractSyncService.
+   *
+   * @param rabbitTemplate RabbitMQ template for message operations.
+   * @param pageSize       Number of messages to process in each page.
+   */
   protected AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate, int pageSize) {
     this.rabbitTemplate = rabbitTemplate;
     this.pageSize = pageSize;
   }
 
+  /**
+   * Processes a page of messages from a queue, constructs a JobCollectedPersonData object, and sends it to a topic.
+   *
+   * @param inQueueName   Name of the input queue.
+   * @param outTopicName  Name of the output topic.
+   * @param senderId      Sender ID associated with the messages.
+   * @param currentJobId  ID of the current synchronization job.
+   * @param page          Page number.
+   * @param numProcessed  Number of processed messages.
+   * @param numTotal      Total number of messages to be processed.
+   * @return Number of processed messages in the current page.
+   */
   public int processFullQueuePaging(
       @NonNull final String inQueueName,
       @NonNull final String outTopicName,

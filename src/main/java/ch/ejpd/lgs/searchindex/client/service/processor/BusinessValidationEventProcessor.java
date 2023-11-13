@@ -20,6 +20,9 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Processor for handling business validation events and logging them.
+ */
 @Component
 @Slf4j
 public class BusinessValidationEventProcessor implements ProcessorEventListener {
@@ -34,6 +37,7 @@ public class BusinessValidationEventProcessor implements ProcessorEventListener 
   public void processorEvent(ProcessorEvent processorEvent) {
     log.warn("Received business validation event: " + processorEvent.toString());
 
+    // Determine the type of business validation event
     BusinessValidationEventType businessValidationEventType;
     if (processorEvent instanceof DuplicatedAttributeDroppedProcessorEvent) {
       businessValidationEventType = BusinessValidationEventType.DUPLICATED_ATTRIBUTE_DROPPED;
@@ -59,9 +63,11 @@ public class BusinessValidationEventProcessor implements ProcessorEventListener 
             .timestamp()
             .build();
 
+    // Send the log entry to the appropriate exchange and topic
     rabbitTemplate.convertAndSend(
         Exchanges.LWGS, Topics.PERSONDATA_BUSINESS_VALIDATION, log, headers::apply);
 
+    // If required attributes are missing, throw an exception
     if (processorEvent instanceof RequiredAttributesMissingProcessorEvent) {
       throw new BusinessValidationException(
           "Processing of gb person data failed: " + processorEvent.getMessage());

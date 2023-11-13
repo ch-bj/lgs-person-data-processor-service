@@ -3,6 +3,9 @@ package ch.ejpd.lgs.searchindex.client.service.amqp;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * Constants for topic names used in AMQP communication.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Topics {
   public static final String SEDEX_RECEIPTS = "topics.sedex.recepits";

@@ -13,6 +13,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
+/**
+ * Configuration class for scheduling synchronization services.
+ */
 @Configuration
 @EnableScheduling
 public class ScheduleSyncServiceJobConfiguration implements SchedulingConfigurer {

@@ -29,6 +29,10 @@ import lombok.NonNull;
   </eCH-0090:envelope>
 */
 
+/**
+ * Represents a Sedex envelope conforming to the eCH-0090 XML schema.
+ * Example structure from documentation is provided in the comment above.
+ */
 @Data
 @Builder
 @JacksonXmlRootElement(localName = "eCH-0090:envelope")

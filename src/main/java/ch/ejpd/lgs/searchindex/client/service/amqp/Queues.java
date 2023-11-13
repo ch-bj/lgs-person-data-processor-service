@@ -3,6 +3,9 @@ package ch.ejpd.lgs.searchindex.client.service.amqp;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * Class containing constants for AMQP queues.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Queues {
   public static final String SEDEX_RECEIPTS = "lwgs.sedex.recepits";

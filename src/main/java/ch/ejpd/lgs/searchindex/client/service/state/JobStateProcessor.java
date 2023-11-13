@@ -20,12 +20,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service class for processing and handling job state messages.
+ */
 @Service
 @Slf4j
 public class JobStateProcessor {
   private final SyncJobRepository syncJobRepository;
   private final TransactionRepository transactionRepository;
 
+  /**
+   * Constructor for JobStateProcessor.
+   * 
+   * @param syncJobRepository      Repository for storing synchronization job information.
+   * @param transactionRepository Repository for storing transaction information.
+   */
   @Autowired
   public JobStateProcessor(
       SyncJobRepository syncJobRepository, TransactionRepository transactionRepository) {
@@ -33,6 +42,12 @@ public class JobStateProcessor {
     this.transactionRepository = transactionRepository;
   }
 
+  /**
+   * Creates a new synchronization job from the given message and saves it to the repository.
+   * 
+   * @param headers  Common headers extracted from the RabbitMQ message.
+   * @param message  RabbitMQ message containing job-related information.
+   */
   private void createNewSyncJobFromMessage(CommonHeadersDao headers, Message message) {
     JobCollectedPersonData personData = null;
 
@@ -73,6 +88,12 @@ public class JobStateProcessor {
     }
   }
 
+  /**
+   * Handles a job state message by updating the corresponding synchronization job's state.
+   * 
+   * @param headers  Common headers extracted from the RabbitMQ message.
+   * @param message  RabbitMQ message containing job-related information.
+   */
   @Transactional
   public void handleJobMessage(final CommonHeadersDao headers, final Message message) {
     if (headers.getJobState() == JobState.NEW) {
@@ -87,6 +108,11 @@ public class JobStateProcessor {
         });
   }
 
+  /**
+   * RabbitMQ listener for job state messages.
+   * 
+   * @param message RabbitMQ message received from the JOB_STATE queue.
+   */
   @RabbitListener(queues = Queues.JOB_STATE)
   protected void listen(final Message message) {
     final CommonHeadersDao headers =

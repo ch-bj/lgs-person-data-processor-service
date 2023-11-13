@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
+/**
+ * Represents events related to a file (i.e. creation, modification, deletion).
+ */
 @Data
 @Builder
 public class FileEvent implements Serializable {

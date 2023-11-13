@@ -24,6 +24,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Processor for handling Sedex receipts and updating Sedex message states.
+ */
 @Component
 @Slf4j
 public class SedexReceiptProcessor {
@@ -39,6 +42,11 @@ public class SedexReceiptProcessor {
     this.receiptReader = new SedexReceiptReader();
   }
 
+  /**
+   * Listen for Sedex receipt messages and update Sedex message states accordingly.
+   *
+   * @param event File event representing the receipt file.
+   */
   @RabbitListener(queues = Queues.SEDEX_RECEIPTS)
   @Transactional
   public void listen(FileEvent event) {
@@ -65,11 +73,13 @@ public class SedexReceiptProcessor {
 
     final SedexMessage message = optionalSedexMessage.get();
 
+    // Update Sedex message state based on receipt status category
     if (status.getCategory() == SUCCESS) {
       message.setState(SedexMessageState.SUCCESSFUL);
       message.setUpdatedAt(Date.from(Instant.now()));
       sedexMessageRepository.save(message);
 
+      // Send a JOB_EVENT with COMPLETED state to Sedex status updated topic
       final CommonHeadersDao headers =
           CommonHeadersDao.builder()
               .messageCategory(MessageCategory.JOB_EVENT)
@@ -90,6 +100,7 @@ public class SedexReceiptProcessor {
       message.setUpdatedAt(Date.from(Instant.now()));
       sedexMessageRepository.save(message);
 
+      // Send a JOB_EVENT with FAILED state to Sedex status updated topic
       final CommonHeadersDao headers =
           CommonHeadersDao.builder()
               .messageCategory(MessageCategory.JOB_EVENT)

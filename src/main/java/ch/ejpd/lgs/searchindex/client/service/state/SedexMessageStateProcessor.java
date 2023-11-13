@@ -17,12 +17,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service class for processing and handling Sedex message state updates.
+ */
 @Service
 @Slf4j
 public class SedexMessageStateProcessor {
   private final SedexMessageRepository sedexMessageRepository;
   private final SyncJobRepository syncJobRepository;
 
+  /**
+   * Constructor for SedexMessageStateProcessor.
+   * 
+   * @param sedexMessageRepository Repository for storing Sedex message information.
+   * @param syncJobRepository      Repository for storing synchronization job information.
+   */
   @Autowired
   public SedexMessageStateProcessor(
       SedexMessageRepository sedexMessageRepository, SyncJobRepository syncJobRepository) {
@@ -30,6 +39,11 @@ public class SedexMessageStateProcessor {
     this.syncJobRepository = syncJobRepository;
   }
 
+  /**
+   * RabbitMQ listener for Sedex message state update messages.
+   * 
+   * @param message RabbitMQ message received from the SEDEX_STATE queue.
+   */
   @RabbitListener(queues = Queues.SEDEX_STATE)
   @Transactional
   public void listen(final Message message) {

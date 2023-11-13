@@ -5,6 +5,9 @@ import static ch.ejpd.lgs.searchindex.client.service.sync.FullSyncSeedState.READ
 import lombok.Getter;
 import lombok.NonNull;
 
+/**
+ * Enum representing settings related to full synchronization.
+ */
 @Getter
 public enum FullSyncSettings {
   FULL_SYNC_STORED_STATE("full.sync.state", READY.toString()),
@@ -18,11 +21,22 @@ public enum FullSyncSettings {
 
   private final String defaultValue;
 
+  /**
+   * Constructor for FullSyncSettings.
+   *
+   * @param key           The key associated with the setting.
+   * @param defaultValue  The default value for the setting.
+   */
   FullSyncSettings(@NonNull final String key, String defaultValue) {
     this.key = key;
     this.defaultValue = defaultValue;
   }
 
+  /**
+   * Returns the key of the setting.
+   *
+   * @return The key of the setting.
+   */
   @Override
   public String toString() {
     return key;

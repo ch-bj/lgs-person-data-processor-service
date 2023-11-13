@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
+/**
+ * Model class representing collected person data for a job.
+ */
 @Data
 @Builder
 public class JobCollectedPersonData implements Serializable {
