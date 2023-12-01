@@ -56,7 +56,7 @@ You have to do the following steps:
 - Send the partial-data again
 
 ### Partial Sync fails with 404
-The partial sync may fail with a message like the following:
+The partial sync may fail with a message like the following:\
 `call failed with: 404 - {"timestamp":"1970-01-01T00:00:00.000+00:00","status":404,"error":"Not Found","message":"No message available","path":"/app/lgs/api/v1/sync/partial/person-data"}`
 
 This may indicate that:
@@ -64,10 +64,10 @@ This may indicate that:
 - The backend-service ([lgs-person-data-processor](https://github.com/ch-bj/lgs-person-data-processor)) could not fetch RabbitMQ data
 - No new data was available since the last sync
 
-The first two points may indicate network problems between the applications or additionally implemented security measures like ambassador proxies, CGROUP limitations or service meshes.
+The first two points may indicate network problems between the applications or additionally implemented security measures like ambassador proxies, CGROUP limitations or service meshes.\
 Please make sure that all involved applications can see and reach their destination interface through the network, and that data is received on the other end.
 
-The third point usually indicates that no data was sent since the last sync and the RabbitMQ queue was empty. This can be verified by ensuring in the logs, that some of the syncs succeed.
+The third point usually indicates that no data was sent since the last sync and the RabbitMQ queue was empty. This can be verified by ensuring in the logs, that some of the syncs succeed.\
 This may happen when the sync frequency of the [sync options](../README.md) is too high. In these cases, the message can be safely ignored. If the error occurs too often, relaxing the sync frequency is recommended. One daily sync is usually a good frequency.
 
 ## How many resources are needed to run the processor?
