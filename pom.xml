@@ -13,7 +13,7 @@
 
   <groupId>ch.ejpd.lgs</groupId>
   <artifactId>lgs-person-data-processor-service</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
   <name>lgs-person-data-processor-service</name>
   <description>LGS Person Data Processor Service</description>
 

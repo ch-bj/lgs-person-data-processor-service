@@ -111,6 +111,7 @@ public class SedexOutboxMessageProcessor {
               .jobId(inHeaders.getJobId())
               .pageNr(jobCollectedPersonData.getPage())
               .isLastPage(isLastPage)
+              .landRegister(inHeaders.getSenderId())
               .build();
 
       sedexFileWriter.writeSedexPayload(
