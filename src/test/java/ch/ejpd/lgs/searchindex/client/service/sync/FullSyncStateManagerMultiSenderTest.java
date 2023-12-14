@@ -16,6 +16,8 @@ import ch.ejpd.lgs.searchindex.client.service.exception.StateChangeSenderIdConfl
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
+import ch.ejpd.lgs.searchindex.client.util.SenderIdUtil;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +36,7 @@ class FullSyncStateManagerMultiSenderTest {
   @Mock private QueueStatsService queueStatsService;
 
   @Mock private SedexConfiguration sedexConfiguration;
+  @Mock private SenderIdUtil senderIdUtil;
 
   private FullSyncStateManager fullSyncStateManager;
 
@@ -45,7 +48,7 @@ class FullSyncStateManagerMultiSenderTest {
 
     fullSyncStateManager =
         new FullSyncStateManager(
-            settingRepository, queueStatsService, rabbitAdmin, sedexConfiguration);
+            settingRepository, queueStatsService, rabbitAdmin, senderIdUtil);
   }
 
   @AfterEach

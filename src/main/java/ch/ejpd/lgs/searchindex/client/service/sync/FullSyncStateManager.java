@@ -7,15 +7,15 @@ import ch.ejpd.lgs.searchindex.client.configuration.SedexConfiguration;
 import ch.ejpd.lgs.searchindex.client.repository.SettingRepository;
 import ch.ejpd.lgs.searchindex.client.service.amqp.QueueStatsService;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
-import ch.ejpd.lgs.searchindex.client.service.exception.SenderIdValidationException;
 import ch.ejpd.lgs.searchindex.client.service.exception.StateChangeConflictingException;
 import ch.ejpd.lgs.searchindex.client.service.exception.StateChangeSenderIdConflictingException;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+
+import ch.ejpd.lgs.searchindex.client.util.SenderIdUtil;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -38,23 +38,18 @@ public class FullSyncStateManager {
   private final FullSyncSettingsStore settingsStore;
   private final QueueStatsService queueStatsService;
   private final RabbitAdmin rabbitAdmin;
-  private final boolean isInMultiSenderMode;
-  private final Set<String> validSenderIds;
-  private final String singleSenderId;
+  private final SenderIdUtil senderIdUtil;
 
   @Autowired
   public FullSyncStateManager(
       SettingRepository settingRepository,
       QueueStatsService queueStatsService,
       RabbitAdmin rabbitAdmin,
-      SedexConfiguration configuration) {
+      SenderIdUtil senderIdUtil) {
     this.settingsStore = new FullSyncSettingsStore(settingRepository);
     this.queueStatsService = queueStatsService;
     this.rabbitAdmin = rabbitAdmin;
-    this.singleSenderId = configuration.getSedexSenderId();
-    this.isInMultiSenderMode = configuration.isInMultiSenderMode();
-    this.validSenderIds =
-        this.isInMultiSenderMode ? configuration.getSedexSenderIds() : Set.of(this.singleSenderId);
+    this.senderIdUtil = senderIdUtil;
     loadPersistedSettingsOrSystemDefaults();
   }
 
@@ -177,25 +172,12 @@ public class FullSyncStateManager {
     currentFullSyncMessageCounter.getAndIncrement();
   }
 
-  private String validateOrDefaultSenderId(final String senderId) {
-    if (!isInMultiSenderMode && senderId == null) {
-      return singleSenderId;
-    }
-    if (senderId != null && validSenderIds.contains(senderId)) {
-      return senderId;
-    }
-    throw new SenderIdValidationException(
-        String.format(
-            "Validation of senderId failed, given senderId %s, valid senderId(s): %s.",
-            senderId, validSenderIds));
-  }
-
   public void startFullSync(final String senderId) {
     if (Arrays.asList(COMPLETED, READY).contains(getFullSyncJobState())) {
       if (getFullSyncJobState() != READY) {
         resetFullSync(false, senderId);
       }
-      setCurrentFullSyncSenderId(validateOrDefaultSenderId(senderId));
+      setCurrentFullSyncSenderId(senderIdUtil.getSenderId(senderId));
       setCurrentFullSyncJobId(UUID.randomUUID());
       setFullSyncJobState(SEEDING);
       return;
@@ -205,7 +187,7 @@ public class FullSyncStateManager {
 
   public void submitFullSync(final String senderId) {
     if (getFullSyncJobState() == SEEDING) {
-      if (isInMultiSenderMode && !getCurrentFullSyncSenderId().equals(senderId)) {
+      if (!getCurrentFullSyncSenderId().equals(senderIdUtil.getSenderId(senderId))) {
         throw new StateChangeSenderIdConflictingException(
             String.format(
                 "Mismatching senderIds for force stateChange - currentSenderId: %s, commands senderId: %s.",

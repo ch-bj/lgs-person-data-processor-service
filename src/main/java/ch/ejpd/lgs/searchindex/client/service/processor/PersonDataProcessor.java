@@ -42,8 +42,9 @@ public class PersonDataProcessor {
     try {
       out(
           Topics.PERSONDATA_PARTIAL_OUTGOING,
-          process(personData, headers.getSenderId()),
-          headers.getSenderId());
+          process(personData, headers.getSenderId(), null),
+          headers.getSenderId(),
+          null);
     } catch (ProcessingPersonDataFailedException e) {
       log.warn("Failed processing transaction: {}", e.getMessage());
       outFailed(
@@ -64,8 +65,9 @@ public class PersonDataProcessor {
     try {
       out(
           Topics.PERSONDATA_FULL_OUTGOING,
-          process(personData, headers.getSenderId()),
-          headers.getSenderId());
+          process(personData, headers.getSenderId(), headers.getLandRegister()),
+          headers.getSenderId(),
+          headers.getLandRegister());
     } catch (ProcessingPersonDataFailedException e) {
       log.warn("Failed processing transaction: {}", e.getMessage());
       outFailed(
@@ -81,13 +83,14 @@ public class PersonDataProcessor {
   }
 
   private ProcessedPersonData process(
-      @NonNull final PersonData personData, @NonNull final String senderId)
+      @NonNull final PersonData personData, @NonNull final String senderId, final String landRegister)
       throws ProcessingPersonDataFailedException {
     try {
       String processingResult =
           pipeLine.process(personData.getTransactionId().toString(), personData.getPayload());
       return ProcessedPersonData.builder()
           .senderId(senderId)
+          .landRegister(landRegister)
           .transactionId(personData.getTransactionId())
           .payload(processingResult)
           .build();
@@ -124,10 +127,12 @@ public class PersonDataProcessor {
   private void out(
       @NonNull final String topicName,
       @NonNull final ProcessedPersonData processedPersonData,
-      @NonNull final String senderId) {
+      @NonNull final String senderId,
+      final String landRegister) {
     final CommonHeadersDao headers =
         CommonHeadersDao.builder()
             .senderId(senderId)
+            .landRegister(landRegister)
             .messageCategory(MessageCategory.TRANSACTION_EVENT)
             .transactionId(processedPersonData.getTransactionId())
             .transactionState(TransactionState.PROCESSED)

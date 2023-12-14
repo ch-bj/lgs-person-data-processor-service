@@ -10,6 +10,7 @@ import ch.ejpd.lgs.searchindex.client.entity.type.JobType;
 import ch.ejpd.lgs.searchindex.client.entity.type.SedexMessageState;
 import ch.ejpd.lgs.searchindex.client.model.JobCollectedPersonData;
 import ch.ejpd.lgs.searchindex.client.model.JobMetaData;
+import ch.ejpd.lgs.searchindex.client.model.ProcessedPersonData;
 import ch.ejpd.lgs.searchindex.client.repository.SedexMessageRepository;
 import ch.ejpd.lgs.searchindex.client.service.amqp.CommonHeadersDao;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Exchanges;
@@ -18,6 +19,9 @@ import ch.ejpd.lgs.searchindex.client.service.amqp.Topics;
 import ch.ejpd.lgs.searchindex.client.util.BinarySerializerUtil;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -68,8 +72,15 @@ public class SedexOutboxMessageProcessor {
           jobCollectedPersonData.getMessageId(),
           inHeaders.getSenderId());
 
+      boolean isUsingLandRegister = inHeaders.getJobType().equals(JobType.FULL)
+        && !configuration.isInMultiSenderMode()
+        && jobCollectedPersonData != null
+        && jobCollectedPersonData.getProcessedPersonDataList().stream()
+          .map(ProcessedPersonData::getLandRegisterForGrouping)
+          .anyMatch(r -> !r.isEmpty());
+
       final SedexFileWriter sedexFileWriter =
-          configuration.isInMultiSenderMode()
+          configuration.isInMultiSenderMode() || inHeaders.getJobType().equals(JobType.FULL)
               ? new SedexFileWriter(
                   configuration.getSedexOutboxPath(inHeaders.getSenderId()),
                   configuration.shouldCreateDirectories())
@@ -116,12 +127,17 @@ public class SedexOutboxMessageProcessor {
               .pageNr(jobCollectedPersonData.getPage())
               .isLastPage(isLastPage)
               .version(mavenPropertiesConfiguration.getLgsPersonDataProcessorVersion())
-              .landRegister(inHeaders.getSenderId())
               .build();
-
-      sedexFileWriter.writeSedexPayload(
-          jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
-      sedexFileWriter.writeSedexEnvelope(jobCollectedPersonData.getMessageId(), envelope);
+      if (isUsingLandRegister) {
+        sedexFileWriter.writeSedexPayloadIntoMultipleFiles(
+                jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
+        sedexFileWriter.writeSedexEnvelopeIntoMultipleFiles(
+                jobCollectedPersonData, jobCollectedPersonData.getMessageId(), envelope);
+      } else {
+        sedexFileWriter.writeSedexPayload(
+                jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
+        sedexFileWriter.writeSedexEnvelope(jobCollectedPersonData.getMessageId(), envelope);
+      }
 
       final CommonHeadersDao outHeaders =
           CommonHeadersDao.builder(inHeaders).jobState(JobState.SENT).timestamp().build();
