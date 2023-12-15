@@ -15,7 +15,7 @@ public class ProcessedPersonData implements Serializable {
   private @NonNull UUID transactionId;
   private @NonNull String payload;
 
-  public String getLandRegisterForGrouping() {
+  public String getLandRegisterSafely() {
     return Optional.ofNullable(landRegister).orElse("");
   }
 }

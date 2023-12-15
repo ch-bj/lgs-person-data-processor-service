@@ -163,7 +163,7 @@ public class SedexFileWriter {
       throws WritingSedexFilesFailedException {
     Map<String, List<ProcessedPersonData>> personalDataByLandRegister =
         jobCollectedPersonData.getProcessedPersonDataList().stream()
-            .collect(groupingBy(ProcessedPersonData::getLandRegisterForGrouping, toList()));
+            .collect(groupingBy(ProcessedPersonData::getLandRegisterSafely, toList()));
 
     final Set<UUID> processedTransactions = new HashSet<>();
 
@@ -176,8 +176,9 @@ public class SedexFileWriter {
           metaData.getJobId().toString(),
           jobCollectedPersonData.getSenderId(),
           entry.getKey());
-
-      metaData.setLandRegister(entry.getKey());
+      if (!Strings.isBlank(entry.getKey())) {
+        metaData.setLandRegister(entry.getKey());
+      }
 
       setupOutputFile(sedexPayloadFile);
 
@@ -221,7 +222,7 @@ public class SedexFileWriter {
       throws WritingSedexFilesFailedException {
     Set<String> landRegisters =
         jobCollectedPersonData.getProcessedPersonDataList().stream()
-            .map(ProcessedPersonData::getLandRegisterForGrouping)
+            .map(ProcessedPersonData::getLandRegisterSafely)
             .collect(Collectors.toSet());
 
     for (String landRegister : landRegisters) {

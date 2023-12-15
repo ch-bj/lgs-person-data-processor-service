@@ -27,7 +27,7 @@ public class SenderIdUtil {
       return singleSenderId;
     }
 
-    if (isInMultiSenderMode && validSenderIds.contains(senderId)) {
+    if (isInMultiSenderMode && senderId!= null && validSenderIds.contains(senderId)) {
       return senderId;
     }
 

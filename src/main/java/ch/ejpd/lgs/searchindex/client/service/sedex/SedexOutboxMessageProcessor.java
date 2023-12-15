@@ -74,7 +74,7 @@ public class SedexOutboxMessageProcessor {
               && !configuration.isInMultiSenderMode()
               && jobCollectedPersonData != null
               && jobCollectedPersonData.getProcessedPersonDataList().stream()
-                  .map(ProcessedPersonData::getLandRegisterForGrouping)
+                  .map(ProcessedPersonData::getLandRegisterSafely)
                   .anyMatch(r -> !r.isEmpty());
 
       final SedexFileWriter sedexFileWriter =
