@@ -14,14 +14,10 @@ public class MavenPropertiesConfiguration {
     public final String LGS_PROCESSOR_VERSION = "lgs.person.data.processor.version";
 
     public MavenPropertiesConfiguration() throws IOException {
-        /*InputStream is = this.getClass().getClassLoader().getResourceAsStream("maven.properties");
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("maven.properties");
         Properties properties = new Properties();
         properties.load(is);
 
-        mavenProperties = properties;*/
-
-        Properties properties = new Properties();
-        properties.put(LGS_PROCESSOR_VERSION, "3.3.3");
         mavenProperties = properties;
     }
 
