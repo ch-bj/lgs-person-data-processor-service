@@ -13,10 +13,9 @@ import ch.ejpd.lgs.searchindex.client.repository.SettingRepository;
 import ch.ejpd.lgs.searchindex.client.service.amqp.QueueStatsService;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
 import ch.ejpd.lgs.searchindex.client.service.exception.StateChangeConflictingException;
+import ch.ejpd.lgs.searchindex.client.util.SenderIdUtil;
 import java.util.Optional;
 import java.util.UUID;
-
-import ch.ejpd.lgs.searchindex.client.util.SenderIdUtil;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,8 +42,7 @@ class FullSyncStateManagerTest {
     when(sedexConfiguration.isInMultiSenderMode()).thenReturn(false);
 
     fullSyncStateManager =
-        new FullSyncStateManager(
-            settingRepository, queueStatsService, rabbitAdmin, senderIdUtil);
+        new FullSyncStateManager(settingRepository, queueStatsService, rabbitAdmin, senderIdUtil);
   }
 
   @AfterEach

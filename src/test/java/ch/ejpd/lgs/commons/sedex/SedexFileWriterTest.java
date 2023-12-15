@@ -9,7 +9,7 @@ import ch.ejpd.lgs.searchindex.client.entity.type.JobType;
 import ch.ejpd.lgs.searchindex.client.model.JobCollectedPersonData;
 import ch.ejpd.lgs.searchindex.client.model.JobMetaData;
 import ch.ejpd.lgs.searchindex.client.model.ProcessedPersonData;
-
+import ch.ejpd.lgs.searchindex.client.service.exception.WritingSedexFilesFailedException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -25,8 +25,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import ch.ejpd.lgs.searchindex.client.service.exception.WritingSedexFilesFailedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -129,27 +127,27 @@ class SedexFileWriterTest {
     final UUID jobId = UUID.randomUUID();
 
     sedexFileWriter.writeSedexPayload(
-            messageId,
-            JobCollectedPersonData.builder()
-                    .senderId(SENDER_ID_A)
-                    .jobId(jobId)
-                    .processedPersonDataList(
-                            Arrays.asList(
-                                    ProcessedPersonData.builder()
-                                            .senderId(SENDER_ID_A)
-                                            .transactionId(transactionId)
-                                            .payload("{}")
-                                            .build()))
-                    .messageId(messageId)
-                    .page(0)
-                    .build(),
-            JobMetaData.builder()
-                    .jobId(jobId)
-                    .type(JobType.FULL)
-                    .pageNr(0)
-                    .isLastPage(true)
-                    .landRegister(SENDER_ID_A)
-                    .build());
+        messageId,
+        JobCollectedPersonData.builder()
+            .senderId(SENDER_ID_A)
+            .jobId(jobId)
+            .processedPersonDataList(
+                Arrays.asList(
+                    ProcessedPersonData.builder()
+                        .senderId(SENDER_ID_A)
+                        .transactionId(transactionId)
+                        .payload("{}")
+                        .build()))
+            .messageId(messageId)
+            .page(0)
+            .build(),
+        JobMetaData.builder()
+            .jobId(jobId)
+            .type(JobType.FULL)
+            .pageNr(0)
+            .isLastPage(true)
+            .landRegister(SENDER_ID_A)
+            .build());
 
     File file = sedexFileWriter.sedexDataFile(messageId);
     String content = getContentOfEntryInZip(METADATA_FILE_NAME, file);
@@ -168,16 +166,18 @@ class SedexFileWriterTest {
   }
 
   private String getContentOfEntryInZip(String entryName, File zipFile) {
-      try {
-          ZipFile zf = new ZipFile(zipFile);
-          ZipEntry entry = zf.getEntry(entryName);
-          InputStream stream = zf.getInputStream(entry);
+    try {
+      ZipFile zf = new ZipFile(zipFile);
+      ZipEntry entry = zf.getEntry(entryName);
+      InputStream stream = zf.getInputStream(entry);
 
-          return new BufferedReader(new InputStreamReader(stream))
-                  .lines().parallel().collect(Collectors.joining("\n"));
-      } catch (IOException e) {
-          e.printStackTrace();
-          throw new RuntimeException(e);
-      }
+      return new BufferedReader(new InputStreamReader(stream))
+          .lines()
+          .parallel()
+          .collect(Collectors.joining("\n"));
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new RuntimeException(e);
+    }
   }
 }

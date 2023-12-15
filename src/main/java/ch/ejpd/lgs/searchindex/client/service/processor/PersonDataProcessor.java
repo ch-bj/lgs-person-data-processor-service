@@ -83,7 +83,9 @@ public class PersonDataProcessor {
   }
 
   private ProcessedPersonData process(
-      @NonNull final PersonData personData, @NonNull final String senderId, final String landRegister)
+      @NonNull final PersonData personData,
+      @NonNull final String senderId,
+      final String landRegister)
       throws ProcessingPersonDataFailedException {
     try {
       String processingResult =

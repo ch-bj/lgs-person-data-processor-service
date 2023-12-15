@@ -19,9 +19,6 @@ import ch.ejpd.lgs.searchindex.client.service.amqp.Topics;
 import ch.ejpd.lgs.searchindex.client.util.BinarySerializerUtil;
 import java.time.Instant;
 import java.util.Date;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -72,12 +69,13 @@ public class SedexOutboxMessageProcessor {
           jobCollectedPersonData.getMessageId(),
           inHeaders.getSenderId());
 
-      boolean isUsingLandRegister = inHeaders.getJobType().equals(JobType.FULL)
-        && !configuration.isInMultiSenderMode()
-        && jobCollectedPersonData != null
-        && jobCollectedPersonData.getProcessedPersonDataList().stream()
-          .map(ProcessedPersonData::getLandRegisterForGrouping)
-          .anyMatch(r -> !r.isEmpty());
+      boolean isUsingLandRegister =
+          inHeaders.getJobType().equals(JobType.FULL)
+              && !configuration.isInMultiSenderMode()
+              && jobCollectedPersonData != null
+              && jobCollectedPersonData.getProcessedPersonDataList().stream()
+                  .map(ProcessedPersonData::getLandRegisterForGrouping)
+                  .anyMatch(r -> !r.isEmpty());
 
       final SedexFileWriter sedexFileWriter =
           configuration.isInMultiSenderMode() || inHeaders.getJobType().equals(JobType.FULL)
@@ -130,12 +128,12 @@ public class SedexOutboxMessageProcessor {
               .build();
       if (isUsingLandRegister) {
         sedexFileWriter.writeSedexPayloadIntoMultipleFiles(
-                jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
+            jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
         sedexFileWriter.writeSedexEnvelopeIntoMultipleFiles(
-                jobCollectedPersonData, jobCollectedPersonData.getMessageId(), envelope);
+            jobCollectedPersonData, jobCollectedPersonData.getMessageId(), envelope);
       } else {
         sedexFileWriter.writeSedexPayload(
-                jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
+            jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
         sedexFileWriter.writeSedexEnvelope(jobCollectedPersonData.getMessageId(), envelope);
       }
 

@@ -6,9 +6,8 @@ import ch.ejpd.lgs.searchindex.client.entity.type.TransactionState;
 import ch.ejpd.lgs.searchindex.client.model.PersonData;
 import ch.ejpd.lgs.searchindex.client.service.amqp.*;
 import ch.ejpd.lgs.searchindex.client.service.sync.FullSyncStateManager;
-import java.util.UUID;
-
 import ch.ejpd.lgs.searchindex.client.util.SenderIdUtil;
+import java.util.UUID;
 import lombok.NonNull;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;

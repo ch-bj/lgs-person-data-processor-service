@@ -31,7 +31,11 @@ public class SedexFileWriterService implements ThrottleHandler {
     this.configuration = sedexConfiguration;
     this.outboxMessageProcessor =
         new SedexOutboxMessageProcessor(
-            rabbitTemplate, sedexConfiguration, sedexMessageRepository, this, mavenPropertiesConfiguration);
+            rabbitTemplate,
+            sedexConfiguration,
+            sedexMessageRepository,
+            this,
+            mavenPropertiesConfiguration);
   }
 
   public void updateThrottling(boolean active) {

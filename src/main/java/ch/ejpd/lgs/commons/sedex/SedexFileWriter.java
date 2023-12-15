@@ -90,14 +90,14 @@ public class SedexFileWriter {
 
   protected File sedexEnvelopeFile(final String subdirectory, @NonNull final UUID fileIdentifier) {
     return Strings.isBlank(subdirectory)
-      ? sedexOutboxPath.resolve("envl_" + fileIdentifier + ".xml").toFile()
-      : sedexOutboxPath.resolve(subdirectory).resolve("envl_" + fileIdentifier + ".xml").toFile();
+        ? sedexOutboxPath.resolve("envl_" + fileIdentifier + ".xml").toFile()
+        : sedexOutboxPath.resolve(subdirectory).resolve("envl_" + fileIdentifier + ".xml").toFile();
   }
 
   protected File sedexDataFile(final String subdirectory, @NonNull final UUID fileIdentifier) {
     return Strings.isBlank(subdirectory)
-      ? sedexOutboxPath.resolve("data_" + fileIdentifier + ".zip").toFile()
-      : sedexOutboxPath.resolve(subdirectory).resolve("data_" + fileIdentifier + ".zip").toFile();
+        ? sedexOutboxPath.resolve("data_" + fileIdentifier + ".zip").toFile()
+        : sedexOutboxPath.resolve(subdirectory).resolve("data_" + fileIdentifier + ".zip").toFile();
   }
 
   public void writeSedexEnvelope(
@@ -157,24 +157,25 @@ public class SedexFileWriter {
   }
 
   public void writeSedexPayloadIntoMultipleFiles(
-          @NonNull final UUID fileIdentifier,
-          @NonNull final JobCollectedPersonData jobCollectedPersonData,
-          @NonNull final JobMetaData metaData)
-          throws WritingSedexFilesFailedException {
-    Map<String, List<ProcessedPersonData>> personalDataByLandRegister = jobCollectedPersonData.getProcessedPersonDataList().stream()
+      @NonNull final UUID fileIdentifier,
+      @NonNull final JobCollectedPersonData jobCollectedPersonData,
+      @NonNull final JobMetaData metaData)
+      throws WritingSedexFilesFailedException {
+    Map<String, List<ProcessedPersonData>> personalDataByLandRegister =
+        jobCollectedPersonData.getProcessedPersonDataList().stream()
             .collect(groupingBy(ProcessedPersonData::getLandRegisterForGrouping, toList()));
 
     final Set<UUID> processedTransactions = new HashSet<>();
 
-    for (Map.Entry<String, List<ProcessedPersonData>> entry : personalDataByLandRegister.entrySet()) {
+    for (Map.Entry<String, List<ProcessedPersonData>> entry :
+        personalDataByLandRegister.entrySet()) {
       final File sedexPayloadFile = sedexDataFile(entry.getKey(), fileIdentifier);
       log.info(
-              "Start writing sedex payload file {} [messageId: {}, senderId: {}, landRegister: {}]",
-              sedexPayloadFile.getAbsoluteFile(),
-              metaData.getJobId().toString(),
-              jobCollectedPersonData.getSenderId(),
-              entry.getKey());
-
+          "Start writing sedex payload file {} [messageId: {}, senderId: {}, landRegister: {}]",
+          sedexPayloadFile.getAbsoluteFile(),
+          metaData.getJobId().toString(),
+          jobCollectedPersonData.getSenderId(),
+          entry.getKey());
 
       metaData.setLandRegister(entry.getKey());
 
@@ -189,16 +190,18 @@ public class SedexFileWriter {
 
             if (!processedTransactions.contains(processedPersonData.getTransactionId())) {
               zipOutputStream.putNextEntry(
-                      new ZipEntry("GBPersonEvent-" + processedPersonData.getTransactionId() + ".json"));
+                  new ZipEntry(
+                      "GBPersonEvent-" + processedPersonData.getTransactionId() + ".json"));
               zipOutputStream.write(processedPersonData.getPayload().getBytes());
               processedTransactions.add(processedPersonData.getTransactionId());
 
             } else {
-              // This should never happen, but managed to produce this with restarting service during
+              // This should never happen, but managed to produce this with restarting service
+              // during
               // processing of messages.
               log.error(
-                      "Duplicate transactionId found: {}. Skipping processedPersonData.",
-                      processedPersonData.getTransactionId());
+                  "Duplicate transactionId found: {}. Skipping processedPersonData.",
+                  processedPersonData.getTransactionId());
             }
           }
         }
@@ -206,16 +209,20 @@ public class SedexFileWriter {
         log.error("Error writing sedex payload file: {}.", e.getMessage());
         cleanupOutputFile(sedexPayloadFile);
         throw new WritingSedexFilesFailedException(
-                WritingSedexFilesFailedException.FailureCause.FILE_WRITE_FAILED);
+            WritingSedexFilesFailedException.FailureCause.FILE_WRITE_FAILED);
       }
     }
   }
 
   public void writeSedexEnvelopeIntoMultipleFiles(
-          @NonNull final JobCollectedPersonData jobCollectedPersonData, @NonNull final UUID fileIdentifier, @NonNull final SedexEnvelope sedexEnvelope)
-          throws WritingSedexFilesFailedException {
-    Set<String> landRegisters = jobCollectedPersonData.getProcessedPersonDataList().stream()
-            .map(ProcessedPersonData::getLandRegisterForGrouping).collect(Collectors.toSet());
+      @NonNull final JobCollectedPersonData jobCollectedPersonData,
+      @NonNull final UUID fileIdentifier,
+      @NonNull final SedexEnvelope sedexEnvelope)
+      throws WritingSedexFilesFailedException {
+    Set<String> landRegisters =
+        jobCollectedPersonData.getProcessedPersonDataList().stream()
+            .map(ProcessedPersonData::getLandRegisterForGrouping)
+            .collect(Collectors.toSet());
 
     for (String landRegister : landRegisters) {
       final File sedexEnvelopeFile = sedexEnvelopeFile(landRegister, fileIdentifier);
@@ -228,7 +235,7 @@ public class SedexFileWriter {
         log.error("Error writing sedex envelope file: {}.", e.getMessage());
         cleanupOutputFile(sedexEnvelopeFile);
         throw new WritingSedexFilesFailedException(
-                WritingSedexFilesFailedException.FailureCause.FILE_WRITE_FAILED);
+            WritingSedexFilesFailedException.FailureCause.FILE_WRITE_FAILED);
       }
     }
   }

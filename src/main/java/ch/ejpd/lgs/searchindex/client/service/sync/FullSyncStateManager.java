@@ -3,19 +3,17 @@ package ch.ejpd.lgs.searchindex.client.service.sync;
 import static ch.ejpd.lgs.searchindex.client.service.sync.FullSyncSeedState.*;
 import static ch.ejpd.lgs.searchindex.client.service.sync.FullSyncSettings.*;
 
-import ch.ejpd.lgs.searchindex.client.configuration.SedexConfiguration;
 import ch.ejpd.lgs.searchindex.client.repository.SettingRepository;
 import ch.ejpd.lgs.searchindex.client.service.amqp.QueueStatsService;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
 import ch.ejpd.lgs.searchindex.client.service.exception.StateChangeConflictingException;
 import ch.ejpd.lgs.searchindex.client.service.exception.StateChangeSenderIdConflictingException;
+import ch.ejpd.lgs.searchindex.client.util.SenderIdUtil;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import ch.ejpd.lgs.searchindex.client.util.SenderIdUtil;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
