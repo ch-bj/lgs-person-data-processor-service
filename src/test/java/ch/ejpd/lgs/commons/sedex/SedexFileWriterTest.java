@@ -34,8 +34,10 @@ class SedexFileWriterTest {
   private static final String PERSON_DATA_SUFFIX = ".json";
   private static final String SENDER_ID_A = "LGS-123-AAA";
   private static final String EXPECTED_SENDER_ID_IN_METADATA = "\"landRegister\":\"LGS-123-AAA\"";
-  private static final String EXPECTED_METADATE_LAND_REGISTER_1 = "\"landRegister\":\"LandReg-001\"";
-  private static final String EXPECTED_METADATE_LAND_REGISTER_2 = "\"landRegister\":\"LandReg-002\"";
+  private static final String EXPECTED_METADATE_LAND_REGISTER_1 =
+      "\"landRegister\":\"LandReg-001\"";
+  private static final String EXPECTED_METADATE_LAND_REGISTER_2 =
+      "\"landRegister\":\"LandReg-002\"";
   private static final String LAND_REGISTER_KEY = "\"landRegister\"";
   private static final String TEST_DIR = "/tmp/lwgs-sedex-test";
   private static final String METADATA_FILE_NAME = "metadata.json";
@@ -140,66 +142,61 @@ class SedexFileWriterTest {
     String landRegister2 = "LandReg-002";
 
     // TODO kiril add transactions ids
-    List<ProcessedPersonData> personData = Arrays.asList(
+    List<ProcessedPersonData> personData =
+        Arrays.asList(
             ProcessedPersonData.builder()
-                    .senderId(SENDER_ID_A)
-                    .landRegister(null)
-                    .transactionId(noLandRegisterPerson1)
-                    .payload("{}")
-                    .build(),
+                .senderId(SENDER_ID_A)
+                .landRegister(null)
+                .transactionId(noLandRegisterPerson1)
+                .payload("{}")
+                .build(),
             ProcessedPersonData.builder()
-                    .senderId(SENDER_ID_A)
-                    .landRegister(null)
-                    .transactionId(noLandRegisterPerson2)
-                    .payload("{}")
-                    .build(),
+                .senderId(SENDER_ID_A)
+                .landRegister(null)
+                .transactionId(noLandRegisterPerson2)
+                .payload("{}")
+                .build(),
             ProcessedPersonData.builder()
-                    .senderId(SENDER_ID_A)
-                    .landRegister(landRegister1)
-                    .transactionId(landRegister1Person1)
-                    .payload("{}")
-                    .build(),
+                .senderId(SENDER_ID_A)
+                .landRegister(landRegister1)
+                .transactionId(landRegister1Person1)
+                .payload("{}")
+                .build(),
             ProcessedPersonData.builder()
-                    .senderId(SENDER_ID_A)
-                    .landRegister(landRegister1)
-                    .transactionId(landRegister1Person2)
-                    .payload("{}")
-                    .build(),
+                .senderId(SENDER_ID_A)
+                .landRegister(landRegister1)
+                .transactionId(landRegister1Person2)
+                .payload("{}")
+                .build(),
             ProcessedPersonData.builder()
-                    .senderId(SENDER_ID_A)
-                    .landRegister(landRegister1)
-                    .transactionId(landRegister1Person3)
-                    .payload("{}")
-                    .build(),
+                .senderId(SENDER_ID_A)
+                .landRegister(landRegister1)
+                .transactionId(landRegister1Person3)
+                .payload("{}")
+                .build(),
             ProcessedPersonData.builder()
-                    .senderId(SENDER_ID_A)
-                    .landRegister(landRegister2)
-                    .transactionId(landRegister2Person1)
-                    .payload("{}")
-                    .build(),
+                .senderId(SENDER_ID_A)
+                .landRegister(landRegister2)
+                .transactionId(landRegister2Person1)
+                .payload("{}")
+                .build(),
             ProcessedPersonData.builder()
-                    .senderId(SENDER_ID_A)
-                    .landRegister(landRegister2)
-                    .transactionId(landRegister2Person2)
-                    .payload("{}")
-                    .build()
-    );
+                .senderId(SENDER_ID_A)
+                .landRegister(landRegister2)
+                .transactionId(landRegister2Person2)
+                .payload("{}")
+                .build());
 
     sedexFileWriter.writeSedexPayloadIntoMultipleFiles(
-            messageId,
-            JobCollectedPersonData.builder()
-                    .senderId(SENDER_ID_A)
-                    .jobId(jobId)
-                    .processedPersonDataList(personData)
-                    .messageId(messageId)
-                    .page(0)
-                    .build(),
-            JobMetaData.builder()
-                    .jobId(jobId)
-                    .type(JobType.FULL)
-                    .pageNr(0)
-                    .isLastPage(true)
-                    .build());
+        messageId,
+        JobCollectedPersonData.builder()
+            .senderId(SENDER_ID_A)
+            .jobId(jobId)
+            .processedPersonDataList(personData)
+            .messageId(messageId)
+            .page(0)
+            .build(),
+        JobMetaData.builder().jobId(jobId).type(JobType.FULL).pageNr(0).isLastPage(true).build());
 
     File fileWithNoLandRegister = sedexFileWriter.sedexDataFile(messageId);
     String content = getContentOfEntryInZip(METADATA_FILE_NAME, fileWithNoLandRegister);
@@ -212,7 +209,8 @@ class SedexFileWriterTest {
     File fileForLandRegister1 = sedexFileWriter.sedexDataFile(landRegister1, messageId);
     String contentLR1 = getContentOfEntryInZip(METADATA_FILE_NAME, fileForLandRegister1);
     assertTrue(contentLR1.contains(EXPECTED_METADATE_LAND_REGISTER_1));
-    List<String> filesLR1 = getZipContentFileList(sedexFileWriter.sedexDataFile(landRegister1, messageId));
+    List<String> filesLR1 =
+        getZipContentFileList(sedexFileWriter.sedexDataFile(landRegister1, messageId));
     assertNotNull(filesLR1);
     assertTrue(filesLR1.contains(PERSON_DATA_PREFIX + landRegister1Person1 + PERSON_DATA_SUFFIX));
     assertTrue(filesLR1.contains(PERSON_DATA_PREFIX + landRegister1Person2 + PERSON_DATA_SUFFIX));
@@ -221,7 +219,8 @@ class SedexFileWriterTest {
     File fileForLandRegister2 = sedexFileWriter.sedexDataFile(landRegister2, messageId);
     String contentLR2 = getContentOfEntryInZip(METADATA_FILE_NAME, fileForLandRegister2);
     assertTrue(contentLR2.contains(EXPECTED_METADATE_LAND_REGISTER_2));
-    List<String> filesLR2 = getZipContentFileList(sedexFileWriter.sedexDataFile(landRegister2, messageId));
+    List<String> filesLR2 =
+        getZipContentFileList(sedexFileWriter.sedexDataFile(landRegister2, messageId));
     assertNotNull(filesLR2);
     assertTrue(filesLR2.contains(PERSON_DATA_PREFIX + landRegister2Person1 + PERSON_DATA_SUFFIX));
     assertTrue(filesLR2.contains(PERSON_DATA_PREFIX + landRegister2Person2 + PERSON_DATA_SUFFIX));
