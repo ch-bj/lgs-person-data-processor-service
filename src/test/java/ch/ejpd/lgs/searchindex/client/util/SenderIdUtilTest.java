@@ -72,22 +72,22 @@ class SenderIdUtilTest {
 
   @Test
   void getRegionId_givenMultipleSendersAndValidInput() {
-    assertNull(multiSenderUtil.getRegionId(LAND_REGISTER));
+    assertNull(multiSenderUtil.getLandRegister(LAND_REGISTER));
   }
 
   @Test
   void getRegionId_givenMultipleSendersAndNullInput() {
-    assertNull(multiSenderUtil.getRegionId(null));
+    assertNull(multiSenderUtil.getLandRegister(null));
   }
 
   @Test
   void getRegionId_givenMultipleSendersAndEmptyInput() {
-    assertNull(multiSenderUtil.getRegionId(null));
+    assertNull(multiSenderUtil.getLandRegister(null));
   }
 
   @Test
   void getRegionId_givenSingleSenderAndValidInput() {
-    assertEquals(LAND_REGISTER, singleSenderUtil.getRegionId(LAND_REGISTER));
+    assertEquals(LAND_REGISTER, singleSenderUtil.getLandRegister(LAND_REGISTER));
   }
 
   private SenderIdUtil generateMultipleSendersUtil() {

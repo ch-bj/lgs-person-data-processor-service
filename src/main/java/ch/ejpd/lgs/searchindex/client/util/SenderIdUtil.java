@@ -37,7 +37,7 @@ public class SenderIdUtil {
             senderId, validSenderIds));
   }
 
-  public String getRegionId(final String senderId) {
+  public String getLandRegister(final String senderId) {
     if (isInMultiSenderMode) {
       return null;
     }

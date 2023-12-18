@@ -51,7 +51,7 @@ public class JobSeedService {
               JobType.FULL,
               fullSyncStateManager.getCurrentFullSyncJobId(),
               senderIdUtil.getSenderId(senderId),
-              senderIdUtil.getRegionId(senderId));
+              senderIdUtil.getLandRegister(senderId));
 
       fullSyncStateManager.incFullSeedMessageCounter();
       return transactionId;
