@@ -78,7 +78,7 @@ public class SedexOutboxMessageProcessor {
                   .anyMatch(r -> !r.isEmpty());
 
       final SedexFileWriter sedexFileWriter =
-          configuration.isInMultiSenderMode() || inHeaders.getJobType().equals(JobType.FULL)
+          configuration.isInMultiSenderMode()
               ? new SedexFileWriter(
                   configuration.getSedexOutboxPath(inHeaders.getSenderId()),
                   configuration.shouldCreateDirectories())
