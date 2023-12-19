@@ -90,6 +90,21 @@ class SenderIdUtilTest {
     assertEquals(LAND_REGISTER, singleSenderUtil.getLandRegister(LAND_REGISTER));
   }
 
+  @Test
+  void sanitize_givenNullInput() {
+    assertEquals(null, singleSenderUtil.sanitize(null));
+  }
+
+  @Test
+  void sanitize_givenEmptyInput() {
+    assertEquals("", singleSenderUtil.sanitize(""));
+  }
+
+  @Test
+  void sanitize_givenSanitizationInput() {
+    assertEquals("a_b_c_d_e_f_g_h", singleSenderUtil.sanitize("a:b/c\\d<e>f|g*h"));
+  }
+
   private SenderIdUtil generateMultipleSendersUtil() {
     when(sedexConfiguration.getSedexSenderIds()).thenReturn(MULTIPLE_SENDER_IDS);
     when(sedexConfiguration.getSedexSenderId()).thenReturn(null);
