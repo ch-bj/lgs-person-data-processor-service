@@ -45,7 +45,8 @@ public class FullSyncService extends AbstractSyncService {
               fullSyncStateManager.getCurrentFullSyncJobId(),
               fullSyncStateManager.getNextPage(),
               fullSyncStateManager.getFullSyncMessagesProcessed(),
-              fullSyncStateManager.getFullSyncMessagesTotal());
+              fullSyncStateManager.getFullSyncMessagesTotal(),
+              fullSyncStateManager.getSenderIdUtil().isInMultiSenderMode());
       fullSyncStateManager.incNumMessagesProcessed(numProcessed);
     }
   }

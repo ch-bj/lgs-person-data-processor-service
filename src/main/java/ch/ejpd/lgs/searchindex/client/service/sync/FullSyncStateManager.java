@@ -99,6 +99,10 @@ public class FullSyncStateManager {
     return queueStatsService.getQueueCount(Queues.PERSONDATA_FULL_FAILED) == 0;
   }
 
+  public SenderIdUtil getSenderIdUtil() {
+    return senderIdUtil;
+  }
+
   private void setFullSyncJobState(FullSyncSeedState state) {
     log.info(
         "Changed job state [{} -> {}] of full sync job [jobId: {}, senderId: {}]",

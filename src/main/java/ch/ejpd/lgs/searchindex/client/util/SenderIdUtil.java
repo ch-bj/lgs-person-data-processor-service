@@ -42,17 +42,6 @@ public class SenderIdUtil {
       return null;
     }
 
-    return sanitize(senderId);
-  }
-
-  /**
-   * We create a directory or file with the name of the land register To avoid errors we sanitize
-   * the name.
-   *
-   * @param input to be sanitized
-   * @return input which does not contain forbidden characters
-   */
-  public String sanitize(String input) {
-    return input != null ? input.replaceAll("[\\\\/:*?\"<>|]", "_") : null;
+    return senderId;
   }
 }

@@ -1,7 +1,6 @@
 package ch.ejpd.lgs.commons.sedex;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,12 +9,8 @@ import ch.ejpd.lgs.searchindex.client.entity.type.JobType;
 import ch.ejpd.lgs.searchindex.client.model.JobCollectedPersonData;
 import ch.ejpd.lgs.searchindex.client.model.JobMetaData;
 import ch.ejpd.lgs.searchindex.client.model.ProcessedPersonData;
-import ch.ejpd.lgs.searchindex.client.service.exception.WritingSedexFilesFailedException;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -127,105 +122,6 @@ class SedexFileWriterTest {
     assertTrue(files.contains(PERSON_DATA_PREFIX + transactionTwo + PERSON_DATA_SUFFIX));
   }
 
-  @Test
-  void testLandRegionsInSedexPayload() throws WritingSedexFilesFailedException {
-    final UUID jobId = UUID.randomUUID();
-    UUID noLandRegisterPerson1 = UUID.randomUUID();
-    UUID noLandRegisterPerson2 = UUID.randomUUID();
-    UUID landRegister1Person1 = UUID.randomUUID();
-    UUID landRegister1Person2 = UUID.randomUUID();
-    UUID landRegister1Person3 = UUID.randomUUID();
-    UUID landRegister2Person1 = UUID.randomUUID();
-    UUID landRegister2Person2 = UUID.randomUUID();
-
-    String landRegister1 = "LandReg-001";
-    String landRegister2 = "LandReg-002";
-
-    // TODO kiril add transactions ids
-    List<ProcessedPersonData> personData =
-        Arrays.asList(
-            ProcessedPersonData.builder()
-                .senderId(SENDER_ID_A)
-                .landRegister(null)
-                .transactionId(noLandRegisterPerson1)
-                .payload("{}")
-                .build(),
-            ProcessedPersonData.builder()
-                .senderId(SENDER_ID_A)
-                .landRegister(null)
-                .transactionId(noLandRegisterPerson2)
-                .payload("{}")
-                .build(),
-            ProcessedPersonData.builder()
-                .senderId(SENDER_ID_A)
-                .landRegister(landRegister1)
-                .transactionId(landRegister1Person1)
-                .payload("{}")
-                .build(),
-            ProcessedPersonData.builder()
-                .senderId(SENDER_ID_A)
-                .landRegister(landRegister1)
-                .transactionId(landRegister1Person2)
-                .payload("{}")
-                .build(),
-            ProcessedPersonData.builder()
-                .senderId(SENDER_ID_A)
-                .landRegister(landRegister1)
-                .transactionId(landRegister1Person3)
-                .payload("{}")
-                .build(),
-            ProcessedPersonData.builder()
-                .senderId(SENDER_ID_A)
-                .landRegister(landRegister2)
-                .transactionId(landRegister2Person1)
-                .payload("{}")
-                .build(),
-            ProcessedPersonData.builder()
-                .senderId(SENDER_ID_A)
-                .landRegister(landRegister2)
-                .transactionId(landRegister2Person2)
-                .payload("{}")
-                .build());
-
-    sedexFileWriter.writeSedexPayloadIntoMultipleFiles(
-        messageId,
-        JobCollectedPersonData.builder()
-            .senderId(SENDER_ID_A)
-            .jobId(jobId)
-            .processedPersonDataList(personData)
-            .messageId(messageId)
-            .page(0)
-            .build(),
-        JobMetaData.builder().jobId(jobId).type(JobType.FULL).pageNr(0).isLastPage(true).build());
-
-    File fileWithNoLandRegister = sedexFileWriter.sedexDataFile(messageId);
-    String content = getContentOfEntryInZip(METADATA_FILE_NAME, fileWithNoLandRegister);
-    assertFalse(content.contains(LAND_REGISTER_KEY));
-    List<String> filesNoLR = getZipContentFileList(sedexFileWriter.sedexDataFile(messageId));
-    assertNotNull(filesNoLR);
-    assertTrue(filesNoLR.contains(PERSON_DATA_PREFIX + noLandRegisterPerson1 + PERSON_DATA_SUFFIX));
-    assertTrue(filesNoLR.contains(PERSON_DATA_PREFIX + noLandRegisterPerson2 + PERSON_DATA_SUFFIX));
-
-    File fileForLandRegister1 = sedexFileWriter.sedexDataFile(landRegister1, messageId);
-    String contentLR1 = getContentOfEntryInZip(METADATA_FILE_NAME, fileForLandRegister1);
-    assertTrue(contentLR1.contains(EXPECTED_METADATE_LAND_REGISTER_1));
-    List<String> filesLR1 =
-        getZipContentFileList(sedexFileWriter.sedexDataFile(landRegister1, messageId));
-    assertNotNull(filesLR1);
-    assertTrue(filesLR1.contains(PERSON_DATA_PREFIX + landRegister1Person1 + PERSON_DATA_SUFFIX));
-    assertTrue(filesLR1.contains(PERSON_DATA_PREFIX + landRegister1Person2 + PERSON_DATA_SUFFIX));
-    assertTrue(filesLR1.contains(PERSON_DATA_PREFIX + landRegister1Person3 + PERSON_DATA_SUFFIX));
-
-    File fileForLandRegister2 = sedexFileWriter.sedexDataFile(landRegister2, messageId);
-    String contentLR2 = getContentOfEntryInZip(METADATA_FILE_NAME, fileForLandRegister2);
-    assertTrue(contentLR2.contains(EXPECTED_METADATE_LAND_REGISTER_2));
-    List<String> filesLR2 =
-        getZipContentFileList(sedexFileWriter.sedexDataFile(landRegister2, messageId));
-    assertNotNull(filesLR2);
-    assertTrue(filesLR2.contains(PERSON_DATA_PREFIX + landRegister2Person1 + PERSON_DATA_SUFFIX));
-    assertTrue(filesLR2.contains(PERSON_DATA_PREFIX + landRegister2Person2 + PERSON_DATA_SUFFIX));
-  }
-
   private List<String> getZipContentFileList(File zipFile) {
     try {
       ZipFile zf = new ZipFile(zipFile);
@@ -235,23 +131,4 @@ class SedexFileWriterTest {
     }
     return null;
   }
-
-  private String getContentOfEntryInZip(String entryName, File zipFile) {
-    try {
-      ZipFile zf = new ZipFile(zipFile);
-      ZipEntry entry = zf.getEntry(entryName);
-      InputStream stream = zf.getInputStream(entry);
-
-      return new BufferedReader(new InputStreamReader(stream))
-          .lines()
-          .parallel()
-          .collect(Collectors.joining("\n"));
-    } catch (IOException e) {
-      e.printStackTrace();
-      throw new RuntimeException(e);
-    }
-  }
-
-  // TODO kiril add tests
-
 }

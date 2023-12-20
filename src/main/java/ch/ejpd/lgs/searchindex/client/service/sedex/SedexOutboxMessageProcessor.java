@@ -10,7 +10,6 @@ import ch.ejpd.lgs.searchindex.client.entity.type.JobType;
 import ch.ejpd.lgs.searchindex.client.entity.type.SedexMessageState;
 import ch.ejpd.lgs.searchindex.client.model.JobCollectedPersonData;
 import ch.ejpd.lgs.searchindex.client.model.JobMetaData;
-import ch.ejpd.lgs.searchindex.client.model.ProcessedPersonData;
 import ch.ejpd.lgs.searchindex.client.repository.SedexMessageRepository;
 import ch.ejpd.lgs.searchindex.client.service.amqp.CommonHeadersDao;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Exchanges;
@@ -69,14 +68,6 @@ public class SedexOutboxMessageProcessor {
           jobCollectedPersonData.getMessageId(),
           inHeaders.getSenderId());
 
-      boolean isUsingLandRegister =
-          inHeaders.getJobType().equals(JobType.FULL)
-              && !configuration.isInMultiSenderMode()
-              && jobCollectedPersonData != null
-              && jobCollectedPersonData.getProcessedPersonDataList().stream()
-                  .map(ProcessedPersonData::getLandRegisterSafely)
-                  .anyMatch(r -> !r.isEmpty());
-
       final SedexFileWriter sedexFileWriter =
           configuration.isInMultiSenderMode()
               ? new SedexFileWriter(
@@ -126,16 +117,9 @@ public class SedexOutboxMessageProcessor {
               .isLastPage(isLastPage)
               .version(mavenPropertiesConfiguration.getLgsPersonDataProcessorVersion())
               .build();
-      if (isUsingLandRegister) {
-        sedexFileWriter.writeSedexPayloadIntoMultipleFiles(
-            jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
-        sedexFileWriter.writeSedexEnvelopeIntoMultipleFiles(
-            jobCollectedPersonData, jobCollectedPersonData.getMessageId(), envelope);
-      } else {
-        sedexFileWriter.writeSedexPayload(
-            jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
-        sedexFileWriter.writeSedexEnvelope(jobCollectedPersonData.getMessageId(), envelope);
-      }
+      sedexFileWriter.writeSedexPayload(
+          jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
+      sedexFileWriter.writeSedexEnvelope(jobCollectedPersonData.getMessageId(), envelope);
 
       final CommonHeadersDao outHeaders =
           CommonHeadersDao.builder(inHeaders).jobState(JobState.SENT).timestamp().build();

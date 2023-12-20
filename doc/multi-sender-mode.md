@@ -15,10 +15,6 @@ When the single-sender mode is active this had the implementation:
 * REST call may have a `X-LGS-Sender-Id` header to identify the land register. The source system calling is the single register and it is set through the `SEDEX_SENDER_ID` environment variable.
 * In any state other than `READY` or `COMPLETED`, the full sync is locked to the one active source system identified by the `SEDEX_SENDER_ID` environment variable.
 * Incremental updates from multiple land registers can be performed in parallel.
-* With the single-sender-mode active, the sedex folder structure will be changed as follows (all paths relative to the sedex base directory):
-  * `SEDEX_BASE_DIRECTORY/outbox` -> the directory when no Land Register(`X-LGS-Sender-Id` header) is specified
-  * `SEDEX_BASE_DIRECTOR/outbox/<LAND_REGISTER>` -> the directory when Land Register(`X-LGS-Sender-Id` header) is specified
-  * `SEDEX_BASE_DIRECTORY/receipt` -> remains the same
 * Paging of incremental updates is on best effort and will be dependent on the mix of mutations within the queue. Nevertheless, the max page size will be guaranteed, only a minimum fill size can't be guaranteed.
 
 You can choose between 2 modes:

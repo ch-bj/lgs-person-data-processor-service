@@ -1,8 +1,6 @@
 package ch.ejpd.lgs.commons.sedex;
 
 import static com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator.Feature.WRITE_XML_DECLARATION;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
 
 import ch.ejpd.lgs.commons.sedex.model.SedexEnvelope;
 import ch.ejpd.lgs.searchindex.client.model.JobCollectedPersonData;
@@ -24,10 +22,8 @@ import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.xml.stream.XMLInputFactory;
@@ -88,18 +84,6 @@ public class SedexFileWriter {
     return sedexOutboxPath.resolve("data_" + fileIdentifier + ".zip").toFile();
   }
 
-  protected File sedexEnvelopeFile(final String subdirectory, @NonNull final UUID fileIdentifier) {
-    return Strings.isBlank(subdirectory)
-        ? sedexOutboxPath.resolve("envl_" + fileIdentifier + ".xml").toFile()
-        : sedexOutboxPath.resolve(subdirectory).resolve("envl_" + fileIdentifier + ".xml").toFile();
-  }
-
-  protected File sedexDataFile(final String subdirectory, @NonNull final UUID fileIdentifier) {
-    return Strings.isBlank(subdirectory)
-        ? sedexOutboxPath.resolve("data_" + fileIdentifier + ".zip").toFile()
-        : sedexOutboxPath.resolve(subdirectory).resolve("data_" + fileIdentifier + ".zip").toFile();
-  }
-
   public void writeSedexEnvelope(
       @NonNull final UUID fileIdentifier, @NonNull final SedexEnvelope sedexEnvelope)
       throws WritingSedexFilesFailedException {
@@ -124,6 +108,8 @@ public class SedexFileWriter {
       throws WritingSedexFilesFailedException {
     final File sedexPayloadFile = sedexDataFile(fileIdentifier);
     final Set<UUID> processedTransactions = new HashSet<>();
+
+    setLandRegister(jobCollectedPersonData, metaData);
 
     setupOutputFile(sedexPayloadFile);
 
@@ -156,88 +142,21 @@ public class SedexFileWriter {
     }
   }
 
-  public void writeSedexPayloadIntoMultipleFiles(
-      @NonNull final UUID fileIdentifier,
-      @NonNull final JobCollectedPersonData jobCollectedPersonData,
-      @NonNull final JobMetaData metaData)
-      throws WritingSedexFilesFailedException {
-    Map<String, List<ProcessedPersonData>> personalDataByLandRegister =
-        jobCollectedPersonData.getProcessedPersonDataList().stream()
-            .collect(groupingBy(ProcessedPersonData::getLandRegisterSafely, toList()));
-
-    final Set<UUID> processedTransactions = new HashSet<>();
-
-    for (Map.Entry<String, List<ProcessedPersonData>> entry :
-        personalDataByLandRegister.entrySet()) {
-      final File sedexPayloadFile = sedexDataFile(entry.getKey(), fileIdentifier);
-      log.info(
-          "Start writing sedex payload file {} [messageId: {}, senderId: {}, landRegister: {}]",
-          sedexPayloadFile.getAbsoluteFile(),
-          metaData.getJobId().toString(),
-          jobCollectedPersonData.getSenderId(),
-          entry.getKey());
-      if (!Strings.isBlank(entry.getKey())) {
-        metaData.setLandRegister(entry.getKey());
-      }
-
-      setupOutputFile(sedexPayloadFile);
-
-      try (FileOutputStream fileOutputStream = new FileOutputStream(sedexPayloadFile)) {
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
-          zipOutputStream.putNextEntry(new ZipEntry("metadata.json"));
-          zipOutputStream.write(gson.toJson(metaData).getBytes());
-
-          for (ProcessedPersonData processedPersonData : entry.getValue()) {
-
-            if (!processedTransactions.contains(processedPersonData.getTransactionId())) {
-              zipOutputStream.putNextEntry(
-                  new ZipEntry(
-                      "GBPersonEvent-" + processedPersonData.getTransactionId() + ".json"));
-              zipOutputStream.write(processedPersonData.getPayload().getBytes());
-              processedTransactions.add(processedPersonData.getTransactionId());
-
-            } else {
-              // This should never happen, but managed to produce this with restarting service
-              // during
-              // processing of messages.
-              log.error(
-                  "Duplicate transactionId found: {}. Skipping processedPersonData.",
-                  processedPersonData.getTransactionId());
-            }
-          }
-        }
-      } catch (Exception e) {
-        log.error("Error writing sedex payload file: {}.", e.getMessage());
-        cleanupOutputFile(sedexPayloadFile);
-        throw new WritingSedexFilesFailedException(
-            WritingSedexFilesFailedException.FailureCause.FILE_WRITE_FAILED);
-      }
+  private void setLandRegister(
+      JobCollectedPersonData jobCollectedPersonData, JobMetaData metaData) {
+    String landRegister = getLandRegister(jobCollectedPersonData.getProcessedPersonDataList());
+    if (!Strings.isBlank(landRegister)) {
+      metaData.setLandRegister(landRegister);
     }
   }
 
-  public void writeSedexEnvelopeIntoMultipleFiles(
-      @NonNull final JobCollectedPersonData jobCollectedPersonData,
-      @NonNull final UUID fileIdentifier,
-      @NonNull final SedexEnvelope sedexEnvelope)
-      throws WritingSedexFilesFailedException {
-    Set<String> landRegisters =
-        jobCollectedPersonData.getProcessedPersonDataList().stream()
-            .map(ProcessedPersonData::getLandRegisterSafely)
-            .collect(Collectors.toSet());
-
-    for (String landRegister : landRegisters) {
-      final File sedexEnvelopeFile = sedexEnvelopeFile(landRegister, fileIdentifier);
-
-      setupOutputFile(sedexEnvelopeFile);
-
-      try (FileOutputStream fileOutputStream = new FileOutputStream(sedexEnvelopeFile)) {
-        xmlMapper.writeValue(fileOutputStream, sedexEnvelope);
-      } catch (Exception e) {
-        log.error("Error writing sedex envelope file: {}.", e.getMessage());
-        cleanupOutputFile(sedexEnvelopeFile);
-        throw new WritingSedexFilesFailedException(
-            WritingSedexFilesFailedException.FailureCause.FILE_WRITE_FAILED);
-      }
+  private String getLandRegister(List<ProcessedPersonData> processedPersonData) {
+    if (processedPersonData == null
+        || processedPersonData.isEmpty()
+        || Strings.isBlank(processedPersonData.get(0).getLandRegister())) {
+      return null;
     }
+
+    return processedPersonData.get(0).getLandRegister();
   }
 }

@@ -1,6 +1,7 @@
 package ch.ejpd.lgs.searchindex.client.service.sync;
 
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 
 import ch.ejpd.lgs.searchindex.client.entity.type.JobState;
 import ch.ejpd.lgs.searchindex.client.entity.type.JobType;
@@ -9,6 +10,7 @@ import ch.ejpd.lgs.searchindex.client.model.ProcessedPersonData;
 import ch.ejpd.lgs.searchindex.client.service.amqp.CommonHeadersDao;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Exchanges;
 import ch.ejpd.lgs.searchindex.client.service.amqp.MessageCategory;
+import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
 import ch.ejpd.lgs.searchindex.client.service.exception.DeserializationFailedException;
 import ch.ejpd.lgs.searchindex.client.service.exception.SerializationFailedException;
 import ch.ejpd.lgs.searchindex.client.util.BinarySerializerUtil;
@@ -22,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.amqp.rabbit.connection.Connection;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
@@ -39,6 +42,84 @@ public abstract class AbstractSyncService {
     this.pageSize = pageSize;
   }
 
+  private int processFullQueueLandRegisters(
+      @NonNull final String outTopicName,
+      @NonNull final String senderId,
+      final UUID currentJobId,
+      final int page,
+      final int numProcessed,
+      final int numTotal,
+      List<ProcessedPersonData> processedPersonDataList,
+      Channel channel)
+      throws IOException {
+    log.info("Start breaking Processed Person Data into Land Registers");
+    int countProcessed = 0;
+    Map<String, List<ProcessedPersonData>> personalDataByLandRegister =
+        processedPersonDataList.stream()
+            .collect(groupingBy(ProcessedPersonData::getLandRegisterSafely, toList()));
+
+    for (Map.Entry<String, List<ProcessedPersonData>> entry :
+        personalDataByLandRegister.entrySet()) {
+      List<ProcessedPersonData> processedPersonData = entry.getValue();
+      String landRegister = entry.getKey();
+      countProcessed += processedPersonData.size();
+
+      final JobCollectedPersonData jobCollectedPersonData =
+          JobCollectedPersonData.builder()
+              .senderId(senderId)
+              .jobId(currentJobId)
+              .messageId(UUID.randomUUID())
+              .page(page)
+              .numProcessed(numProcessed + countProcessed)
+              .numTotal(numTotal)
+              .processedPersonDataList(processedPersonData)
+              .build();
+
+      log.info(
+          "Sending paged transactions to topic {}. [jobId:{}; page:{}; numTransactions:{}; "
+              + "numProcessed: {}; numTotal: {}; landRegister: {}]",
+          outTopicName,
+          currentJobId,
+          page,
+          processedPersonData.size(),
+          numProcessed + processedPersonData.size(),
+          numTotal,
+          landRegister);
+      try {
+        final byte[] byteProcessedSedexPersonData =
+            BinarySerializerUtil.convertObjectToByteArray(jobCollectedPersonData);
+
+        final CommonHeadersDao headersDao =
+            CommonHeadersDao.builder()
+                .senderId(senderId)
+                .messageCategory(MessageCategory.JOB_EVENT)
+                .jobState(JobState.NEW)
+                .jobId(jobCollectedPersonData.getJobId())
+                .jobType(JobType.FULL)
+                .timestamp(Instant.now())
+                .build();
+
+        final BasicProperties properties =
+            (new BasicProperties.Builder())
+                .headers(headersDao.toMap())
+                .correlationId(jobCollectedPersonData.getJobId().toString())
+                .build();
+
+        channel.basicPublish(
+            Exchanges.LWGS, outTopicName, properties, byteProcessedSedexPersonData);
+
+      } catch (SerializationFailedException e) {
+        log.warn(
+            "Serialization of JobCollectedPersonData failed. Rolling back all transactions[{}]",
+            getTransactionIds(processedPersonDataList));
+        channel.txRollback();
+      }
+    }
+    channel.txCommit();
+
+    return countProcessed;
+  }
+
   public int processFullQueuePaging(
       @NonNull final String inQueueName,
       @NonNull final String outTopicName,
@@ -46,7 +127,8 @@ public abstract class AbstractSyncService {
       final UUID currentJobId,
       final int page,
       final int numProcessed,
-      final int numTotal) {
+      final int numTotal,
+      final boolean isInMultiSenderMode) {
     log.debug("Start processing queue {}, page: {}.", inQueueName, page);
 
     final UUID jobId = currentJobId != null ? currentJobId : UUID.randomUUID();
@@ -61,6 +143,24 @@ public abstract class AbstractSyncService {
           channel.txCommit(); // Commit rejected messages
           log.debug("Nothing to process. Returning.");
           return 0;
+        }
+
+        boolean isAnyUsingLandRegister =
+            !isInMultiSenderMode
+                && Queues.PERSONDATA_FULL_OUTGOING.equals(inQueueName)
+                && processedPersonDataList.stream()
+                    .map(ProcessedPersonData::getLandRegisterSafely)
+                    .anyMatch(Strings::isNotBlank);
+        if (isAnyUsingLandRegister) {
+          return processFullQueueLandRegisters(
+              outTopicName,
+              senderId,
+              currentJobId,
+              page,
+              numProcessed,
+              numTotal,
+              processedPersonDataList,
+              channel);
         }
 
         final JobCollectedPersonData jobCollectedPersonData =
