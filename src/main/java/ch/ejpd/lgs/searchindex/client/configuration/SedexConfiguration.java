@@ -49,6 +49,10 @@ public class SedexConfiguration {
   @Getter
   private int sedexMessageClass;
 
+  @Value("${lwgs.searchindex.client.sedex.data.processor.version}")
+  @Getter
+  private String dataProcessorVersion;
+
   @Value("${lwgs.searchindex.client.sedex.create-directories:false}")
   private boolean createDirectories;
 

@@ -1,6 +1,5 @@
 package ch.ejpd.lgs.searchindex.client.service.sedex;
 
-import ch.ejpd.lgs.searchindex.client.configuration.MavenPropertiesConfiguration;
 import ch.ejpd.lgs.searchindex.client.configuration.SedexConfiguration;
 import ch.ejpd.lgs.searchindex.client.repository.SedexMessageRepository;
 import java.time.Duration;
@@ -25,8 +24,7 @@ public class SedexFileWriterService implements ThrottleHandler {
   public SedexFileWriterService(
       SedexConfiguration sedexConfiguration,
       RabbitTemplate rabbitTemplate,
-      SedexMessageRepository sedexMessageRepository,
-      MavenPropertiesConfiguration mavenPropertiesConfiguration) {
+      SedexMessageRepository sedexMessageRepository) {
 
     this.configuration = sedexConfiguration;
     this.outboxMessageProcessor =
@@ -34,8 +32,7 @@ public class SedexFileWriterService implements ThrottleHandler {
             rabbitTemplate,
             sedexConfiguration,
             sedexMessageRepository,
-            this,
-            mavenPropertiesConfiguration);
+            this);
   }
 
   public void updateThrottling(boolean active) {

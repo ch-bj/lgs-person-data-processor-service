@@ -2,7 +2,6 @@ package ch.ejpd.lgs.searchindex.client.service.sedex;
 
 import ch.ejpd.lgs.commons.sedex.SedexFileWriter;
 import ch.ejpd.lgs.commons.sedex.model.SedexEnvelope;
-import ch.ejpd.lgs.searchindex.client.configuration.MavenPropertiesConfiguration;
 import ch.ejpd.lgs.searchindex.client.configuration.SedexConfiguration;
 import ch.ejpd.lgs.searchindex.client.entity.SedexMessage;
 import ch.ejpd.lgs.searchindex.client.entity.type.JobState;
@@ -31,19 +30,16 @@ public class SedexOutboxMessageProcessor {
   private final SedexConfiguration configuration;
   private final SedexMessageRepository sedexMessageRepository;
   private final ThrottleHandler throttleHandler;
-  private final MavenPropertiesConfiguration mavenPropertiesConfiguration;
 
   public SedexOutboxMessageProcessor(
       @NonNull final RabbitTemplate rabbitTemplate,
       @NonNull final SedexConfiguration configuration,
       @NonNull final SedexMessageRepository sedexMessageRepository,
-      @NonNull final ThrottleHandler throttleHandler,
-      @NonNull final MavenPropertiesConfiguration mavenPropertiesConfiguration) {
+      @NonNull final ThrottleHandler throttleHandler) {
     this.rabbitTemplate = rabbitTemplate;
     this.configuration = configuration;
     this.sedexMessageRepository = sedexMessageRepository;
     this.throttleHandler = throttleHandler;
-    this.mavenPropertiesConfiguration = mavenPropertiesConfiguration;
   }
 
   @Transactional
@@ -115,7 +111,7 @@ public class SedexOutboxMessageProcessor {
               .jobId(inHeaders.getJobId())
               .pageNr(jobCollectedPersonData.getPage())
               .isLastPage(isLastPage)
-              .version(mavenPropertiesConfiguration.getLgsPersonDataProcessorVersion())
+              .version(configuration.getDataProcessorVersion())
               .build();
       sedexFileWriter.writeSedexPayload(
           jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
