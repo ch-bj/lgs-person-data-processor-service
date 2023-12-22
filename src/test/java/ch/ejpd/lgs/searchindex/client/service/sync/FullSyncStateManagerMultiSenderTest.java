@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import ch.ejpd.lgs.searchindex.client.entity.Setting;
+import ch.ejpd.lgs.searchindex.client.repository.LandRegisterRepository;
 import ch.ejpd.lgs.searchindex.client.repository.SettingRepository;
 import ch.ejpd.lgs.searchindex.client.service.amqp.QueueStatsService;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
@@ -29,6 +30,7 @@ class FullSyncStateManagerMultiSenderTest {
   private static final String SENDER_ID_A = "LGS-123-AAA";
   private static final String SENDER_ID_B = "LGS-123-BBB";
   @Mock private SettingRepository settingRepository;
+  @Mock private LandRegisterRepository landRegisterRepository;
   @Mock private RabbitAdmin rabbitAdmin;
   @Mock private QueueStatsService queueStatsService;
   @Mock private SenderIdUtil senderIdUtil;
@@ -38,7 +40,7 @@ class FullSyncStateManagerMultiSenderTest {
   @BeforeEach
   void initialize() {
     fullSyncStateManager =
-        new FullSyncStateManager(settingRepository, queueStatsService, rabbitAdmin, senderIdUtil);
+        new FullSyncStateManager(settingRepository, landRegisterRepository, queueStatsService, rabbitAdmin, senderIdUtil);
   }
 
   @AfterEach

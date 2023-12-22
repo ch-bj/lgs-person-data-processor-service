@@ -48,9 +48,9 @@ public abstract class AbstractSyncService {
       final UUID currentJobId,
       final int page,
       final int numProcessed,
-      final int numTotal,
       List<ProcessedPersonData> processedPersonDataList,
-      Channel channel)
+      Channel channel,
+      Map<String, Integer> landRegisterMapping)
       throws IOException {
     log.info("Start breaking Processed Person Data into Land Registers");
     int countProcessed = 0;
@@ -64,14 +64,16 @@ public abstract class AbstractSyncService {
       String landRegister = entry.getKey();
       countProcessed += processedPersonData.size();
 
+      Integer numTotalForLandRegister = landRegisterMapping.get(landRegister);
+
       final JobCollectedPersonData jobCollectedPersonData =
           JobCollectedPersonData.builder()
               .senderId(senderId)
               .jobId(currentJobId)
               .messageId(UUID.randomUUID())
               .page(page)
-              .numProcessed(numProcessed + countProcessed)
-              .numTotal(numTotal)
+              .numProcessed(processedPersonData.size())
+              .numTotal(numTotalForLandRegister)
               .processedPersonDataList(processedPersonData)
               .build();
 
@@ -83,7 +85,7 @@ public abstract class AbstractSyncService {
           page,
           processedPersonData.size(),
           numProcessed + processedPersonData.size(),
-          numTotal,
+          numTotalForLandRegister,
           landRegister);
       try {
         final byte[] byteProcessedSedexPersonData =
@@ -128,7 +130,8 @@ public abstract class AbstractSyncService {
       final int page,
       final int numProcessed,
       final int numTotal,
-      final boolean isInMultiSenderMode) {
+      final boolean isInMultiSenderMode,
+      Map<String, Integer> landRegisterCounts) {
     log.debug("Start processing queue {}, page: {}.", inQueueName, page);
 
     final UUID jobId = currentJobId != null ? currentJobId : UUID.randomUUID();
@@ -152,15 +155,8 @@ public abstract class AbstractSyncService {
                     .map(ProcessedPersonData::getLandRegisterSafely)
                     .anyMatch(Strings::isNotBlank);
         if (isAnyUsingLandRegister) {
-          return processFullQueueLandRegisters(
-              outTopicName,
-              senderId,
-              currentJobId,
-              page,
-              numProcessed,
-              numTotal,
-              processedPersonDataList,
-              channel);
+          return processFullQueueLandRegisters(outTopicName, senderId, currentJobId, page,
+                  numProcessed, processedPersonDataList, channel, landRegisterCounts);
         }
 
         final JobCollectedPersonData jobCollectedPersonData =

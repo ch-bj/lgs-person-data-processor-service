@@ -44,6 +44,7 @@ public class JobSeedService {
 
   public UUID seedToFull(String payload, final String senderId) {
     if (fullSyncStateManager.isInStateSeeding()) {
+      String landRegister = senderIdUtil.getLandRegister(senderId);
       final UUID transactionId =
           seedToQueue(
               payload,
@@ -51,8 +52,9 @@ public class JobSeedService {
               JobType.FULL,
               fullSyncStateManager.getCurrentFullSyncJobId(),
               senderIdUtil.getSenderId(senderId),
-              senderIdUtil.getLandRegister(senderId));
+              landRegister);
 
+      fullSyncStateManager.incLandRegisterMessageCounter(landRegister);
       fullSyncStateManager.incFullSeedMessageCounter();
       return transactionId;
     }

@@ -5,6 +5,7 @@ import ch.ejpd.lgs.searchindex.client.service.amqp.Topics;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
+import java.util.Map;
 
 @Slf4j
 public class FullSyncService extends AbstractSyncService {
@@ -37,6 +38,7 @@ public class FullSyncService extends AbstractSyncService {
       fixedDelayString = "${lwgs.searchindex.client.sync.full.page-processor.fixed-delay:2000}")
   public void processNextPageOnQueueFullOutgoing() {
     if (preCheckConditionsForProcessing()) {
+      Map<String, Integer> landRegisters = fullSyncStateManager.getLandRegisters();
       int numProcessed =
           processFullQueuePaging(
               Queues.PERSONDATA_FULL_OUTGOING,
@@ -46,7 +48,9 @@ public class FullSyncService extends AbstractSyncService {
               fullSyncStateManager.getNextPage(),
               fullSyncStateManager.getFullSyncMessagesProcessed(),
               fullSyncStateManager.getFullSyncMessagesTotal(),
-              fullSyncStateManager.getSenderIdUtil().isInMultiSenderMode());
+              fullSyncStateManager.getSenderIdUtil().isInMultiSenderMode(),
+              landRegisters);
+      fullSyncStateManager.decrLandRegisterMessageCounter(landRegisters);
       fullSyncStateManager.incNumMessagesProcessed(numProcessed);
     }
   }
