@@ -1,13 +1,12 @@
 package ch.ejpd.lgs.searchindex.client.entity;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
 
 @Entity(name = "land_register")
 @Data
@@ -15,13 +14,11 @@ import javax.persistence.Id;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LandRegister {
-    @Id
-    @Column
-    private String key;
+  @Id @Column private String key;
 
-    @Column(name = "sender_id")
-    private String senderId;
+  @Column(name = "sender_id")
+  private String senderId;
 
-    @Column(name = "messages")
-    private int messages;
+  @Column(name = "messages")
+  private int messages;
 }

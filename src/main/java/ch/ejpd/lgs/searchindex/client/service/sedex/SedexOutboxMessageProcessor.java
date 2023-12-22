@@ -113,6 +113,7 @@ public class SedexOutboxMessageProcessor {
               .isLastPage(isLastPage)
               .version(configuration.getDataProcessorVersion())
               .build();
+
       sedexFileWriter.writeSedexPayload(
           jobCollectedPersonData.getMessageId(), jobCollectedPersonData, metaData);
       sedexFileWriter.writeSedexEnvelope(jobCollectedPersonData.getMessageId(), envelope);

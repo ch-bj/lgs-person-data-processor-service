@@ -14,7 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-class SenderIdUtilTest {
+class SenderUtilTest {
 
   private static final String LAND_REGISTER = "Register01";
   @Mock private SedexConfiguration sedexConfiguration = mock(SedexConfiguration.class);
@@ -22,8 +22,8 @@ class SenderIdUtilTest {
   private static final Set<String> MULTIPLE_SENDER_IDS = Set.of("SendId01", "SendId02", "SendId03");
   private static final String SINGLE_SENDER_ID = "SendId05";
 
-  private SenderIdUtil singleSenderUtil;
-  private SenderIdUtil multiSenderUtil;
+  private SenderUtil singleSenderUtil;
+  private SenderUtil multiSenderUtil;
 
   @BeforeEach
   void setUp() {
@@ -90,16 +90,16 @@ class SenderIdUtilTest {
     assertEquals(LAND_REGISTER, singleSenderUtil.getLandRegister(LAND_REGISTER));
   }
 
-  private SenderIdUtil generateMultipleSendersUtil() {
+  private SenderUtil generateMultipleSendersUtil() {
     when(sedexConfiguration.getSedexSenderIds()).thenReturn(MULTIPLE_SENDER_IDS);
     when(sedexConfiguration.getSedexSenderId()).thenReturn(null);
     when(sedexConfiguration.isInMultiSenderMode()).thenReturn(true);
-    return new SenderIdUtil(sedexConfiguration);
+    return new SenderUtil(sedexConfiguration);
   }
 
-  private SenderIdUtil generateSingleSenderUtil() {
+  private SenderUtil generateSingleSenderUtil() {
     when(sedexConfiguration.getSedexSenderId()).thenReturn(SINGLE_SENDER_ID);
     when(sedexConfiguration.isInMultiSenderMode()).thenReturn(false);
-    return new SenderIdUtil(sedexConfiguration);
+    return new SenderUtil(sedexConfiguration);
   }
 }

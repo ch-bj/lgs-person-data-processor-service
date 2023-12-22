@@ -9,17 +9,17 @@ import ch.ejpd.lgs.searchindex.client.service.amqp.QueueStatsService;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
 import ch.ejpd.lgs.searchindex.client.service.exception.StateChangeConflictingException;
 import ch.ejpd.lgs.searchindex.client.service.exception.StateChangeSenderIdConflictingException;
-import ch.ejpd.lgs.searchindex.client.util.SenderIdUtil;
+import ch.ejpd.lgs.searchindex.client.util.SenderUtil;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -39,11 +39,13 @@ public class FullSyncStateManager {
   private final AtomicInteger fullSyncMessagesTotal = new AtomicInteger(0);
   private final AtomicInteger fullSyncMessagesProcessed = new AtomicInteger(0);
   private final AtomicInteger currentFullSyncMessageCounter = new AtomicInteger(0);
-  private final ConcurrentMap<String, Integer> fullSyncMessagesTotalByLandRegister = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, Integer> fullSyncMessagesTotalByLandRegister =
+      new ConcurrentHashMap<>();
+
   private final FullSyncSettingsStore settingsStore;
   private final QueueStatsService queueStatsService;
   private final RabbitAdmin rabbitAdmin;
-  private final SenderIdUtil senderIdUtil;
+  @Getter private final SenderUtil senderUtil;
 
   @Autowired
   public FullSyncStateManager(
@@ -51,11 +53,11 @@ public class FullSyncStateManager {
       LandRegisterRepository landRegisterRepository,
       QueueStatsService queueStatsService,
       RabbitAdmin rabbitAdmin,
-      SenderIdUtil senderIdUtil) {
+      SenderUtil senderUtil) {
     this.settingsStore = new FullSyncSettingsStore(settingRepository, landRegisterRepository);
     this.queueStatsService = queueStatsService;
     this.rabbitAdmin = rabbitAdmin;
-    this.senderIdUtil = senderIdUtil;
+    this.senderUtil = senderUtil;
     loadPersistedSettingsOrSystemDefaults();
   }
 
@@ -74,8 +76,8 @@ public class FullSyncStateManager {
           Integer.parseInt(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_TOTAL)));
       fullSyncMessagesProcessed.set(
           Integer.parseInt(settingsStore.loadPersistedSetting(FULL_SYNC_STORED_MESSAGE_PROCESSED)));
-      if (!senderIdUtil.isInMultiSenderMode()) {
-        settingsStore.loadPersistedLandRegisterSetting(senderIdUtil.getSingleSenderId());
+      if (!senderUtil.isInMultiSenderMode()) {
+        settingsStore.loadPersistedLandRegisterSetting(senderUtil.getSingleSenderId());
       }
     } catch (Exception e) {
       log.error("Failed to load defaults from db; reason: {}.", e.getMessage());
@@ -110,10 +112,6 @@ public class FullSyncStateManager {
     return queueStatsService.getQueueCount(Queues.PERSONDATA_FULL_FAILED) == 0;
   }
 
-  public SenderIdUtil getSenderIdUtil() {
-    return senderIdUtil;
-  }
-
   private void setFullSyncJobState(FullSyncSeedState state) {
     log.info(
         "Changed job state [{} -> {}] of full sync job [jobId: {}, senderId: {}]",
@@ -123,10 +121,9 @@ public class FullSyncStateManager {
         currentFullSyncSenderId);
     fullSyncSeedState.set(state);
     settingsStore.persistSetting(FULL_SYNC_STORED_STATE, state.toString());
-    if (!senderIdUtil.isInMultiSenderMode()) {
+    if (!senderUtil.isInMultiSenderMode()) {
       settingsStore.persistLandRegisterSetting(
-              new HashMap<>(fullSyncMessagesTotalByLandRegister),
-              currentFullSyncSenderId.get());
+          new HashMap<>(fullSyncMessagesTotalByLandRegister), currentFullSyncSenderId.get());
     }
   }
 
@@ -200,18 +197,17 @@ public class FullSyncStateManager {
     }
 
     fullSyncMessagesTotalByLandRegister.putIfAbsent(landRegister, 0);
-    fullSyncMessagesTotalByLandRegister.compute(landRegister, (k,v) -> v + 1);
+    fullSyncMessagesTotalByLandRegister.compute(landRegister, (k, v) -> v + 1);
   }
 
   public void decrLandRegisterMessageCounter(Map<String, Integer> landRegisters) {
-    Set<String> landRgstrs = landRegisters.keySet();
-    for (String landRegister: landRgstrs) {
-      // TODO check if landRegister exists
-      // TODO validate the count is not higher than the value in the concurrent hash map
-      fullSyncMessagesTotalByLandRegister.compute(landRegister, (k, v) -> v - landRegisters.get(landRegister));
+    for (String landRegister : landRegisters.keySet()) {
+      fullSyncMessagesTotalByLandRegister.compute(
+          landRegister, (k, v) -> v - landRegisters.get(landRegister));
     }
 
-    settingsStore.persistLandRegisterSetting(fullSyncMessagesTotalByLandRegister, currentFullSyncSenderId.get());
+    settingsStore.persistLandRegisterSetting(
+        fullSyncMessagesTotalByLandRegister, currentFullSyncSenderId.get());
   }
 
   public Map<String, Integer> getLandRegisters() {
@@ -219,7 +215,7 @@ public class FullSyncStateManager {
   }
 
   public void startFullSync(final String inputSenderId) {
-    String senderId = senderIdUtil.getSenderId(inputSenderId);
+    String senderId = senderUtil.getSenderId(inputSenderId);
     if (Arrays.asList(COMPLETED, READY).contains(getFullSyncJobState())) {
       if (getFullSyncJobState() != READY) {
         resetFullSync(false, senderId);
@@ -234,7 +230,7 @@ public class FullSyncStateManager {
 
   public void submitFullSync(final String senderId) {
     if (getFullSyncJobState() == SEEDING) {
-      if (!getCurrentFullSyncSenderId().equals(senderIdUtil.getSenderId(senderId))) {
+      if (!getCurrentFullSyncSenderId().equals(senderUtil.getSenderId(senderId))) {
         throw new StateChangeSenderIdConflictingException(
             String.format(
                 "Mismatching senderIds for force stateChange - currentSenderId: %s, commands senderId: %s.",
@@ -243,10 +239,9 @@ public class FullSyncStateManager {
 
       setFullSyncJobState(SEEDED);
       setFullSyncMessagesTotal(currentFullSyncMessageCounter.get());
-      if (!senderIdUtil.isInMultiSenderMode()) {
+      if (!senderUtil.isInMultiSenderMode()) {
         settingsStore.persistLandRegisterSetting(
-                new HashMap<>(fullSyncMessagesTotalByLandRegister),
-                currentFullSyncSenderId.get());
+            new HashMap<>(fullSyncMessagesTotalByLandRegister), currentFullSyncSenderId.get());
       }
       currentFullSyncMessageCounter.set(0);
       return;

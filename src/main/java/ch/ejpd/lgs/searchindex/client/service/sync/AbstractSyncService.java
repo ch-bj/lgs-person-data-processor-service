@@ -155,8 +155,15 @@ public abstract class AbstractSyncService {
                     .map(ProcessedPersonData::getLandRegisterSafely)
                     .anyMatch(Strings::isNotBlank);
         if (isAnyUsingLandRegister) {
-          return processFullQueueLandRegisters(outTopicName, senderId, currentJobId, page,
-                  numProcessed, processedPersonDataList, channel, landRegisterCounts);
+          return processFullQueueLandRegisters(
+              outTopicName,
+              senderId,
+              currentJobId,
+              page,
+              numProcessed,
+              processedPersonDataList,
+              channel,
+              landRegisterCounts);
         }
 
         final JobCollectedPersonData jobCollectedPersonData =

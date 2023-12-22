@@ -10,12 +10,12 @@ import org.springframework.stereotype.Component;
 @Component
 @Getter
 @Setter
-public class SenderIdUtil {
+public class SenderUtil {
   private final boolean isInMultiSenderMode;
   private final Set<String> validSenderIds;
   private final String singleSenderId;
 
-  public SenderIdUtil(SedexConfiguration configuration) {
+  public SenderUtil(SedexConfiguration configuration) {
     this.singleSenderId = configuration.getSedexSenderId();
     this.isInMultiSenderMode = configuration.isInMultiSenderMode();
     this.validSenderIds =

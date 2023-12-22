@@ -6,7 +6,7 @@ import ch.ejpd.lgs.searchindex.client.entity.type.TransactionState;
 import ch.ejpd.lgs.searchindex.client.model.PersonData;
 import ch.ejpd.lgs.searchindex.client.service.amqp.*;
 import ch.ejpd.lgs.searchindex.client.service.sync.FullSyncStateManager;
-import ch.ejpd.lgs.searchindex.client.util.SenderIdUtil;
+import ch.ejpd.lgs.searchindex.client.util.SenderUtil;
 import java.util.UUID;
 import lombok.NonNull;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -18,18 +18,18 @@ public class JobSeedService {
   private final QueueStatsService queueStatsService;
   private final FullSyncStateManager fullSyncStateManager;
   private static final String EMPTY_PAYLOAD = "";
-  private final SenderIdUtil senderIdUtil;
+  private final SenderUtil senderUtil;
 
   public JobSeedService(
       QueueStatsService queueStatsService,
       RabbitTemplate rabbitTemplate,
       FullSyncStateManager fullSyncStateManager,
       SedexConfiguration configuration,
-      SenderIdUtil senderIdUtil) {
+      SenderUtil senderUtil) {
     this.queueStatsService = queueStatsService;
     this.rabbitTemplate = rabbitTemplate;
     this.fullSyncStateManager = fullSyncStateManager;
-    this.senderIdUtil = senderIdUtil;
+    this.senderUtil = senderUtil;
   }
 
   public UUID seedToPartial(@NonNull final String payload, final String senderId) {
@@ -38,20 +38,20 @@ public class JobSeedService {
         Topics.PERSONDATA_PARTIAL_INCOMING,
         JobType.PARTIAL,
         null,
-        senderIdUtil.getSenderId(senderId),
+        senderUtil.getSenderId(senderId),
         null);
   }
 
   public UUID seedToFull(String payload, final String senderId) {
     if (fullSyncStateManager.isInStateSeeding()) {
-      String landRegister = senderIdUtil.getLandRegister(senderId);
+      String landRegister = senderUtil.getLandRegister(senderId);
       final UUID transactionId =
           seedToQueue(
               payload,
               Topics.PERSONDATA_FULL_INCOMING,
               JobType.FULL,
               fullSyncStateManager.getCurrentFullSyncJobId(),
-              senderIdUtil.getSenderId(senderId),
+              senderUtil.getSenderId(senderId),
               landRegister);
 
       fullSyncStateManager.incLandRegisterMessageCounter(landRegister);
