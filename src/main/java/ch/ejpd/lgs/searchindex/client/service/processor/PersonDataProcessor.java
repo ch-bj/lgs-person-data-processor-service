@@ -43,8 +43,7 @@ public class PersonDataProcessor {
       out(
           Topics.PERSONDATA_PARTIAL_OUTGOING,
           process(personData, headers.getSenderId(), null),
-          headers.getSenderId(),
-          null);
+          headers.getSenderId());
     } catch (ProcessingPersonDataFailedException e) {
       log.warn("Failed processing transaction: {}", e.getMessage());
       outFailed(
@@ -66,8 +65,7 @@ public class PersonDataProcessor {
       out(
           Topics.PERSONDATA_FULL_OUTGOING,
           process(personData, headers.getSenderId(), headers.getLandRegister()),
-          headers.getSenderId(),
-          headers.getLandRegister());
+          headers.getSenderId());
     } catch (ProcessingPersonDataFailedException e) {
       log.warn("Failed processing transaction: {}", e.getMessage());
       outFailed(
@@ -129,12 +127,10 @@ public class PersonDataProcessor {
   private void out(
       @NonNull final String topicName,
       @NonNull final ProcessedPersonData processedPersonData,
-      @NonNull final String senderId,
-      final String landRegister) {
+      @NonNull final String senderId) {
     final CommonHeadersDao headers =
         CommonHeadersDao.builder()
             .senderId(senderId)
-            .landRegister(landRegister)
             .messageCategory(MessageCategory.TRANSACTION_EVENT)
             .transactionId(processedPersonData.getTransactionId())
             .transactionState(TransactionState.PROCESSED)

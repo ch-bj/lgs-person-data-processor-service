@@ -109,7 +109,7 @@ public class SedexFileWriter {
     final File sedexPayloadFile = sedexDataFile(fileIdentifier);
     final Set<UUID> processedTransactions = new HashSet<>();
 
-    setLandRegister(jobCollectedPersonData, metaData);
+    setLandRegisterInMetadata(jobCollectedPersonData, metaData);
 
     setupOutputFile(sedexPayloadFile);
 
@@ -142,7 +142,7 @@ public class SedexFileWriter {
     }
   }
 
-  private void setLandRegister(
+  private void setLandRegisterInMetadata(
       JobCollectedPersonData jobCollectedPersonData, JobMetaData metaData) {
     String landRegister = getLandRegister(jobCollectedPersonData.getProcessedPersonDataList());
     if (!Strings.isBlank(landRegister)) {

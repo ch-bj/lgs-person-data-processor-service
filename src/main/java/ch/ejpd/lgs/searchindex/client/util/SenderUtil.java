@@ -5,7 +5,9 @@ import ch.ejpd.lgs.searchindex.client.service.exception.SenderIdValidationExcept
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 @Component
 @Getter
@@ -49,10 +51,11 @@ public class SenderUtil {
 
   public void validate(final String senderId) {
     if (senderId != null && senderId.length() > senderMaxLength) {
-      throw new SenderIdValidationException(
+      String reason =
           String.format(
               "Validation of senderId failed, given senderId %s, exceeds the maximum allowed length of : %s.",
-              senderId, senderMaxLength));
+              senderId, senderMaxLength);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, reason);
     }
   }
 }

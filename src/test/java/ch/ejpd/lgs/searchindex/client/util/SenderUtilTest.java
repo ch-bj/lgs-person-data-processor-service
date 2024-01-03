@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.web.server.ResponseStatusException;
 
 class SenderUtilTest {
 
@@ -107,14 +108,16 @@ class SenderUtilTest {
 
   @Test
   void validate_givenInvalidSenderId() {
-    SenderIdValidationException ex =
+    ResponseStatusException ex =
         assertThrows(
-            SenderIdValidationException.class,
+            ResponseStatusException.class,
             () -> generateLengthValidationSenderUtil().validate("TooLongRegisterName"));
 
     assertEquals(
         "Validation of senderId failed, given senderId TooLongRegisterName, exceeds the maximum allowed length of : 10.",
-        ex.getMessage());
+        ex.getReason());
+
+    assertEquals(400, ex.getRawStatusCode());
   }
 
   private SenderUtil generateMultipleSendersUtil() {
