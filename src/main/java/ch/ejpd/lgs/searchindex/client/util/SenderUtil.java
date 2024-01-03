@@ -50,9 +50,9 @@ public class SenderUtil {
   public void validate(final String senderId) {
     if (senderId != null && senderId.length() > senderMaxLength) {
       throw new SenderIdValidationException(
-              String.format(
-                      "Validation of senderId failed, given senderId %s, exceeds the maximum allowed length of : %s.",
-                      senderId, senderMaxLength));
+          String.format(
+              "Validation of senderId failed, given senderId %s, exceeds the maximum allowed length of : %s.",
+              senderId, senderMaxLength));
     }
   }
 }

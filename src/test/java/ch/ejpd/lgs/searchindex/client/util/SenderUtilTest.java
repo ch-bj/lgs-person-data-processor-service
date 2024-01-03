@@ -107,13 +107,14 @@ class SenderUtilTest {
 
   @Test
   void validate_givenInvalidSenderId() {
-    SenderIdValidationException ex = assertThrows(
+    SenderIdValidationException ex =
+        assertThrows(
             SenderIdValidationException.class,
             () -> generateLengthValidationSenderUtil().validate("TooLongRegisterName"));
 
     assertEquals(
-            "Validation of senderId failed, given senderId TooLongRegisterName, exceeds the maximum allowed length of : 10.",
-            ex.getMessage());
+        "Validation of senderId failed, given senderId TooLongRegisterName, exceeds the maximum allowed length of : 10.",
+        ex.getMessage());
   }
 
   private SenderUtil generateMultipleSendersUtil() {
