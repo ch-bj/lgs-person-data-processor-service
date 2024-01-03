@@ -56,6 +56,10 @@ public class SedexConfiguration {
   @Value("${lwgs.searchindex.client.sedex.create-directories:false}")
   private boolean createDirectories;
 
+  @Value("${lwgs.searchindex.client.sedex.sender.max.length:80}")
+  @Getter
+  private int maxSenderLength;
+
   public boolean isInMultiSenderMode() {
     return sedexSenderId.contains(",");
   }
