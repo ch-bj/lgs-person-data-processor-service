@@ -9,7 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 @Slf4j
 public class PartialFixedDelaySyncService extends AbstractSyncService {
-  public PartialFixedDelaySyncService(RabbitTemplate template, int pageSize, SenderUtil senderUtil) {
+  public PartialFixedDelaySyncService(
+      RabbitTemplate template, int pageSize, SenderUtil senderUtil) {
     super(template, pageSize, senderUtil);
   }
 

@@ -151,9 +151,7 @@ public class SedexFileWriter {
   }
 
   private String getLandRegister(List<ProcessedPersonData> processedPersonData) {
-    if (processedPersonData == null
-        || processedPersonData.isEmpty()
-        || Strings.isBlank(processedPersonData.get(0).getLandRegister())) {
+    if (processedPersonData == null || processedPersonData.isEmpty()) {
       return null;
     }
 

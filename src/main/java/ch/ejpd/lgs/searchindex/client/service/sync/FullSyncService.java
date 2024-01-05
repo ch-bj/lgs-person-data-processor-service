@@ -2,9 +2,8 @@ package ch.ejpd.lgs.searchindex.client.service.sync;
 
 import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Topics;
-import java.util.Map;
-
 import ch.ejpd.lgs.searchindex.client.util.SenderUtil;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,7 +13,10 @@ public class FullSyncService extends AbstractSyncService {
   private final FullSyncStateManager fullSyncStateManager;
 
   public FullSyncService(
-      RabbitTemplate template, FullSyncStateManager fullSyncStateManager, int pageSize, SenderUtil senderUtil) {
+      RabbitTemplate template,
+      FullSyncStateManager fullSyncStateManager,
+      int pageSize,
+      SenderUtil senderUtil) {
     super(template, pageSize, senderUtil);
     this.fullSyncStateManager = fullSyncStateManager;
   }

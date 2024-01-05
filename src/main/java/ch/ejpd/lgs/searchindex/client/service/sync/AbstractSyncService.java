@@ -40,10 +40,11 @@ public abstract class AbstractSyncService {
 
   private final SenderUtil senderUtil;
 
-  protected AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate, int pageSize, SenderUtil senderUtil) {
+  protected AbstractSyncService(
+      @NonNull RabbitTemplate rabbitTemplate, int pageSize, SenderUtil senderUtil) {
     this.rabbitTemplate = rabbitTemplate;
     this.pageSize = pageSize;
-      this.senderUtil = senderUtil;
+    this.senderUtil = senderUtil;
   }
 
   private int processFullQueueLandRegisters(
@@ -135,7 +136,7 @@ public abstract class AbstractSyncService {
       final int numProcessed,
       final int numTotal,
       final boolean isInMultiSenderMode,
-      Map<String, Integer> landRegisterCounts) {
+      Map<String, Integer> personDataPerRegister) {
     log.debug("Start processing queue {}, page: {}.", inQueueName, page);
 
     final UUID jobId = currentJobId != null ? currentJobId : UUID.randomUUID();
@@ -152,13 +153,14 @@ public abstract class AbstractSyncService {
           return 0;
         }
 
-        boolean isAnyUsingLandRegister =
+        boolean isAnyLandRegisterSpecified =
             !isInMultiSenderMode
                 && Queues.PERSONDATA_FULL_OUTGOING.equals(inQueueName)
                 && processedPersonDataList.stream()
                     .map(ProcessedPersonData::getLandRegisterSafely)
                     .anyMatch(Strings::isNotBlank);
-        if (isAnyUsingLandRegister) {
+
+        if (isAnyLandRegisterSpecified) {
           return processFullQueueLandRegisters(
               outTopicName,
               senderId,
@@ -167,7 +169,7 @@ public abstract class AbstractSyncService {
               numProcessed,
               processedPersonDataList,
               channel,
-              landRegisterCounts);
+              personDataPerRegister);
         }
 
         final JobCollectedPersonData jobCollectedPersonData =
@@ -300,17 +302,15 @@ public abstract class AbstractSyncService {
 
             boolean inMultiSenderMode = senderUtil.isInMultiSenderMode();
             final Map<String, List<ProcessedPersonData>> senderIdMappedProcessedPersonData =
-                    inMultiSenderMode
-                ? processedPersonDataList.stream()
-                    .collect(groupingBy(ProcessedPersonData::getSenderId))
-                : processedPersonDataList.stream()
-                            .collect(groupingBy(ProcessedPersonData::getLandRegisterSafely));
+                inMultiSenderMode
+                    ? processedPersonDataList.stream()
+                        .collect(groupingBy(ProcessedPersonData::getSenderId))
+                    : processedPersonDataList.stream()
+                        .collect(groupingBy(ProcessedPersonData::getLandRegisterSafely));
 
             for (Map.Entry<String, List<ProcessedPersonData>> entry :
                 senderIdMappedProcessedPersonData.entrySet()) {
-              String senderId = inMultiSenderMode
-                      ? entry.getKey()
-                      : senderUtil.getSingleSenderId();
+              String senderId = inMultiSenderMode ? entry.getKey() : senderUtil.getSingleSenderId();
               sendPartialMessage(channel, outTopicName, senderId, entry.getValue());
             }
 
