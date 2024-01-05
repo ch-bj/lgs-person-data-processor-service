@@ -3,6 +3,8 @@ package ch.ejpd.lgs.searchindex.client.configuration;
 import ch.ejpd.lgs.searchindex.client.service.sync.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import ch.ejpd.lgs.searchindex.client.util.SenderUtil;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,8 +33,8 @@ public class ScheduleSyncServiceJobConfiguration implements SchedulingConfigurer
       value = "lwgs.searchindex.client.sync.partial.scheduling-type",
       havingValue = "EVENT_DRIVEN")
   public PartialEventDrivenSyncService partialEventDrivenSyncService(
-      @Value("${lwgs.searchindex.client.sync.partial.page-size:5000}") int pageSize) {
-    return new PartialEventDrivenSyncService(template, pageSize);
+      @Value("${lwgs.searchindex.client.sync.partial.page-size:5000}") int pageSize, SenderUtil senderUtil) {
+    return new PartialEventDrivenSyncService(template, pageSize, senderUtil);
   }
 
   @Bean
@@ -40,8 +42,8 @@ public class ScheduleSyncServiceJobConfiguration implements SchedulingConfigurer
       value = "lwgs.searchindex.client.sync.partial.scheduling-type",
       havingValue = "FIXED_DELAY")
   public PartialFixedDelaySyncService partialFixedDelaySyncService(
-      @Value("${lwgs.searchindex.client.sync.partial.page-size:5000}") int pageSize) {
-    return new PartialFixedDelaySyncService(template, pageSize);
+      @Value("${lwgs.searchindex.client.sync.partial.page-size:5000}") int pageSize, SenderUtil senderUtil) {
+    return new PartialFixedDelaySyncService(template, pageSize, senderUtil);
   }
 
   @Bean
@@ -49,14 +51,14 @@ public class ScheduleSyncServiceJobConfiguration implements SchedulingConfigurer
       value = "lwgs.searchindex.client.sync.partial.scheduling-type",
       havingValue = "CRON_SCHEDULE")
   public PartialScheduledSyncService partialScheduledSyncService(
-      @Value("${lwgs.searchindex.client.sync.partial.page-size:5000}") int pageSize) {
-    return new PartialScheduledSyncService(template, pageSize);
+      @Value("${lwgs.searchindex.client.sync.partial.page-size:5000}") int pageSize, SenderUtil senderUtil) {
+    return new PartialScheduledSyncService(template, pageSize, senderUtil);
   }
 
   @Bean
   public FullSyncService fullSyncService(
-      @Value("${lwgs.searchindex.client.sync.full.page-size:5000}") int pageSize) {
-    return new FullSyncService(template, fullSyncStateManager, pageSize);
+      @Value("${lwgs.searchindex.client.sync.full.page-size:5000}") int pageSize, SenderUtil senderUtil) {
+    return new FullSyncService(template, fullSyncStateManager, pageSize, senderUtil);
   }
 
   @Bean(destroyMethod = "shutdown")

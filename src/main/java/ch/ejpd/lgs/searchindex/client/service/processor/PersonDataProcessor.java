@@ -42,7 +42,7 @@ public class PersonDataProcessor {
     try {
       out(
           Topics.PERSONDATA_PARTIAL_OUTGOING,
-          process(personData, headers.getSenderId(), null),
+          process(personData, headers.getSenderId(), headers.getLandRegister()),
           headers.getSenderId());
     } catch (ProcessingPersonDataFailedException e) {
       log.warn("Failed processing transaction: {}", e.getMessage());

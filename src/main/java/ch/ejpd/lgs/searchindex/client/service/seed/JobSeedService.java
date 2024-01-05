@@ -39,7 +39,7 @@ public class JobSeedService {
         JobType.PARTIAL,
         null,
         senderUtil.getSenderId(senderId),
-        null);
+        senderUtil.getLandRegister(senderId));
   }
 
   public UUID seedToFull(String payload, final String senderId) {

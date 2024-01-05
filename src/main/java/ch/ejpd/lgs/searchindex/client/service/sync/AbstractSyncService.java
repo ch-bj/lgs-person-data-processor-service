@@ -14,6 +14,7 @@ import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
 import ch.ejpd.lgs.searchindex.client.service.exception.DeserializationFailedException;
 import ch.ejpd.lgs.searchindex.client.service.exception.SerializationFailedException;
 import ch.ejpd.lgs.searchindex.client.util.BinarySerializerUtil;
+import ch.ejpd.lgs.searchindex.client.util.SenderUtil;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.GetResponse;
@@ -37,9 +38,12 @@ public abstract class AbstractSyncService {
   private final RabbitTemplate rabbitTemplate;
   private final int pageSize;
 
-  protected AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate, int pageSize) {
+  private final SenderUtil senderUtil;
+
+  protected AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate, int pageSize, SenderUtil senderUtil) {
     this.rabbitTemplate = rabbitTemplate;
     this.pageSize = pageSize;
+      this.senderUtil = senderUtil;
   }
 
   private int processFullQueueLandRegisters(
@@ -293,13 +297,21 @@ public abstract class AbstractSyncService {
           }
 
           try {
+
+            boolean inMultiSenderMode = senderUtil.isInMultiSenderMode();
             final Map<String, List<ProcessedPersonData>> senderIdMappedProcessedPersonData =
-                processedPersonDataList.stream()
-                    .collect(groupingBy(ProcessedPersonData::getSenderId));
+                    inMultiSenderMode
+                ? processedPersonDataList.stream()
+                    .collect(groupingBy(ProcessedPersonData::getSenderId))
+                : processedPersonDataList.stream()
+                            .collect(groupingBy(ProcessedPersonData::getLandRegisterSafely));
 
             for (Map.Entry<String, List<ProcessedPersonData>> entry :
                 senderIdMappedProcessedPersonData.entrySet()) {
-              sendPartialMessage(channel, outTopicName, entry.getKey(), entry.getValue());
+              String senderId = inMultiSenderMode
+                      ? entry.getKey()
+                      : senderUtil.getSingleSenderId();
+              sendPartialMessage(channel, outTopicName, senderId, entry.getValue());
             }
 
           } catch (SerializationFailedException e) {
