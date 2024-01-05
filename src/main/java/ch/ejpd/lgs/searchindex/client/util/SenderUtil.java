@@ -16,14 +16,12 @@ public class SenderUtil {
   private final boolean isInMultiSenderMode;
   private final Set<String> validSenderIds;
   private final String singleSenderId;
-  private final int senderMaxLength;
 
   public SenderUtil(SedexConfiguration configuration) {
     this.singleSenderId = configuration.getSedexSenderId();
     this.isInMultiSenderMode = configuration.isInMultiSenderMode();
     this.validSenderIds =
         this.isInMultiSenderMode ? configuration.getSedexSenderIds() : Set.of(this.singleSenderId);
-    this.senderMaxLength = configuration.getMaxSenderLength();
   }
 
   public String getSenderId(final String senderId) {
@@ -47,15 +45,5 @@ public class SenderUtil {
     }
 
     return senderId;
-  }
-
-  public void validate(final String senderId) {
-    if (senderId != null && senderId.length() > senderMaxLength) {
-      String reason =
-          String.format(
-              "Validation of senderId failed, given senderId %s, exceeds the maximum allowed length of : %s.",
-              senderId, senderMaxLength);
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, reason);
-    }
   }
 }

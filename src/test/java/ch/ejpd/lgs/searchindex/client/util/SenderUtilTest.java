@@ -91,35 +91,6 @@ class SenderUtilTest {
     assertEquals(LAND_REGISTER, singleSenderUtil.getLandRegister(LAND_REGISTER));
   }
 
-  @Test
-  void validate_givenNull() {
-    generateLengthValidationSenderUtil().validate(null);
-  }
-
-  @Test
-  void validate_givenEmptyString() {
-    generateLengthValidationSenderUtil().validate("");
-  }
-
-  @Test
-  void validate_givenValidSenderId() {
-    generateLengthValidationSenderUtil().validate(LAND_REGISTER);
-  }
-
-  @Test
-  void validate_givenInvalidSenderId() {
-    ResponseStatusException ex =
-        assertThrows(
-            ResponseStatusException.class,
-            () -> generateLengthValidationSenderUtil().validate("TooLongRegisterName"));
-
-    assertEquals(
-        "Validation of senderId failed, given senderId TooLongRegisterName, exceeds the maximum allowed length of : 10.",
-        ex.getReason());
-
-    assertEquals(400, ex.getRawStatusCode());
-  }
-
   private SenderUtil generateMultipleSendersUtil() {
     when(sedexConfiguration.getSedexSenderIds()).thenReturn(MULTIPLE_SENDER_IDS);
     when(sedexConfiguration.getSedexSenderId()).thenReturn(null);
@@ -130,11 +101,6 @@ class SenderUtilTest {
   private SenderUtil generateSingleSenderUtil() {
     when(sedexConfiguration.getSedexSenderId()).thenReturn(SINGLE_SENDER_ID);
     when(sedexConfiguration.isInMultiSenderMode()).thenReturn(false);
-    return new SenderUtil(sedexConfiguration);
-  }
-
-  private SenderUtil generateLengthValidationSenderUtil() {
-    when(sedexConfiguration.getMaxSenderLength()).thenReturn(10);
     return new SenderUtil(sedexConfiguration);
   }
 }
