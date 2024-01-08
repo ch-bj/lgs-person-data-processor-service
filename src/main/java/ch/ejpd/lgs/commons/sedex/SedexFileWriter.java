@@ -6,6 +6,7 @@ import ch.ejpd.lgs.commons.sedex.model.SedexEnvelope;
 import ch.ejpd.lgs.searchindex.client.model.JobCollectedPersonData;
 import ch.ejpd.lgs.searchindex.client.model.JobMetaData;
 import ch.ejpd.lgs.searchindex.client.model.ProcessedPersonData;
+import ch.ejpd.lgs.searchindex.client.service.exception.SenderIdValidationException;
 import ch.ejpd.lgs.searchindex.client.service.exception.WritingSedexFilesFailedException;
 import com.ctc.wstx.stax.WstxInputFactory;
 import com.ctc.wstx.stax.WstxOutputFactory;
@@ -153,6 +154,18 @@ public class SedexFileWriter {
   private String getLandRegister(List<ProcessedPersonData> processedPersonData) {
     if (processedPersonData == null || processedPersonData.isEmpty()) {
       return null;
+    }
+
+    long numberOfDistinctLandRegisters =
+        processedPersonData.parallelStream()
+            .map(ProcessedPersonData::getLandRegisterSafely)
+            .distinct()
+            .limit(2)
+            .count();
+
+    if (numberOfDistinctLandRegisters > 1) {
+      throw new SenderIdValidationException(
+          "Trying to process payload with more than one land register");
     }
 
     return processedPersonData.get(0).getLandRegister();

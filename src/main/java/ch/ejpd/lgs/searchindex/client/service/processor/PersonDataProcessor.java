@@ -50,6 +50,7 @@ public class PersonDataProcessor {
           Topics.PERSONDATA_PARTIAL_FAILED,
           ProcessedPersonDataFailed.builder()
               .senderId(headers.getSenderId())
+              .landRegister(headers.getLandRegister())
               .transactionId(personData.getTransactionId())
               .failureReason(e.getMessage())
               .payload(personData.getPayload())
@@ -72,6 +73,7 @@ public class PersonDataProcessor {
           Topics.PERSONDATA_FULL_FAILED,
           ProcessedPersonDataFailed.builder()
               .senderId(headers.getSenderId())
+              .landRegister(headers.getLandRegister())
               .transactionId(personData.getTransactionId())
               .failureReason(e.getMessage())
               .payload(personData.getPayload())
@@ -157,6 +159,7 @@ public class PersonDataProcessor {
     final CommonHeadersDao headers =
         CommonHeadersDao.builder()
             .senderId(senderId)
+            .landRegister(processedPeronData.getLandRegister())
             .messageCategory(MessageCategory.TRANSACTION_EVENT)
             .transactionId(processedPeronData.getTransactionId())
             .transactionState(TransactionState.FAILED)

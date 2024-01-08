@@ -5,7 +5,9 @@ import ch.ejpd.lgs.searchindex.client.service.exception.SenderIdValidationExcept
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 @Component
 @Getter
@@ -14,6 +16,7 @@ public class SenderUtil {
   private final boolean isInMultiSenderMode;
   private final Set<String> validSenderIds;
   private final String singleSenderId;
+  private static final String SENDER_ID_REGEX = "[a-zA-Z0-9-_]*";
 
   public SenderUtil(SedexConfiguration configuration) {
     this.singleSenderId = configuration.getSedexSenderId();
@@ -43,5 +46,17 @@ public class SenderUtil {
     }
 
     return senderId;
+  }
+
+  public void validate(final String senderId) {
+    if (senderId == null) {
+      return;
+    }
+
+    if (!senderId.matches(SENDER_ID_REGEX)) {
+      throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST,
+              "Invalid X-LGS-Sender-Id header. Valid characters: A-Z, a-z, -, _");
+    }
   }
 }

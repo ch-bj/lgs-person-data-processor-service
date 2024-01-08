@@ -13,10 +13,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.web.server.ResponseStatusException;
 
 class SenderUtilTest {
 
-  private static final String LAND_REGISTER = "Register01";
+  private static final String LAND_REGISTER = "Kreuzlingen";
   @Mock private SedexConfiguration sedexConfiguration = mock(SedexConfiguration.class);
 
   private static final Set<String> MULTIPLE_SENDER_IDS = Set.of("SendId01", "SendId02", "SendId03");
@@ -88,6 +89,40 @@ class SenderUtilTest {
   @Test
   void getRegionId_givenSingleSenderAndValidInput() {
     assertEquals(LAND_REGISTER, singleSenderUtil.getLandRegister(LAND_REGISTER));
+  }
+
+  @Test
+  void validate_givenNull() {
+    singleSenderUtil.validate(null);
+  }
+
+  @Test
+  void validate_givenEmptyString() {
+    singleSenderUtil.validate("");
+  }
+
+  @Test
+  void validate_valid() {
+    singleSenderUtil.validate("Kreuzlingen");
+  }
+
+  @Test
+  void validate_allUpperCaseLetters() {
+    singleSenderUtil.validate("ABCDEFGHIKLMNOPQRSTVXYZ");
+  }
+  @Test
+  void validate_allLowerCaseLetters() {
+    singleSenderUtil.validate("abcdefghiklmnopqrstvxyz");
+  }
+
+  @Test
+  void validate_dash() {
+    singleSenderUtil.validate("a-b");
+  }
+
+  @Test
+  void validate_forbiddenCharacters() {
+    assertThrows(ResponseStatusException.class, () -> singleSenderUtil.validate("a@b"));
   }
 
   private SenderUtil generateMultipleSendersUtil() {
