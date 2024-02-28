@@ -22,7 +22,7 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
 
-    <lgs.person.data.processor.version>2.0.3</lgs.person.data.processor.version>
+    <lgs.person.data.processor.version>1.0.0-SNAPSHOT</lgs.person.data.processor.version>
     <jackson-xml.version>2.14.0</jackson-xml.version>
     <springdoc.version>1.6.14</springdoc.version>
 
@@ -290,8 +290,8 @@
         <configuration>
           <from>
             <!-- Use hash to ensure truly reproducible builds
-https://hub.docker.com/layers/library/eclipse-temurin/17.0.5_8-jre-focal/images/sha256-00a5775f5eb7c24a19cb76ded742cbfcc50c61f062105af9730dadde217e4390?context=explore            -->
-            <image>eclipse-temurin:17.0.5_8-jre-focal@sha256:00a5775f5eb7c24a19cb76ded742cbfcc50c61f062105af9730dadde217e4390</image>
+https://hub.docker.com/layers/library/eclipse-temurin/17.0.10_7-jre-focal/images/sha256-491d0a884e751e5e2aa230933280401623a1962e0ed65137f3cc09665b645eab?context=explore           -->
+            <image>eclipse-temurin:17.0.10_7-jre-focal@sha256:491d0a884e751e5e2aa230933280401623a1962e0ed65137f3cc09665b645eab</image>
           </from>
           <to>
             <image>ghcr.io/ch-bj/lgs-person-data-processor-service</image>
