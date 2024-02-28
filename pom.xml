@@ -28,7 +28,7 @@
 
     <hsqldb.version>2.7.1</hsqldb.version>
     <oracle.jdbc.version>21.8.0.0</oracle.jdbc.version>
-    <postgresql.version>42.5.1</postgresql.version>
+    <postgresql.version>42.7.2</postgresql.version>
     <commons-io.version>2.11.0</commons-io.version>
 
     <testcontainers.version>1.17.6</testcontainers.version>
