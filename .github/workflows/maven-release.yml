@@ -43,7 +43,7 @@ jobs:
     - name: Maven build package
       run: mvn -B package -Dmaven.test.skip
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: lgs-person-data-processor-service-artifacts
         path: |
