@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.7</version>
+    <version>2.7.18</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
@@ -26,16 +26,16 @@
     <jackson-xml.version>2.14.0</jackson-xml.version>
     <springdoc.version>1.6.14</springdoc.version>
 
-    <hsqldb.version>2.7.1</hsqldb.version>
-    <oracle.jdbc.version>21.8.0.0</oracle.jdbc.version>
-    <postgresql.version>42.5.1</postgresql.version>
+    <hsqldb.version>2.7.2</hsqldb.version>
+    <oracle.jdbc.version>23.3.0.23.09</oracle.jdbc.version>
+    <postgresql.version>42.7.2</postgresql.version>
     <commons-io.version>2.11.0</commons-io.version>
 
     <testcontainers.version>1.17.6</testcontainers.version>
 
     <maven-fmt.version>2.19</maven-fmt.version>
-    <maven-jacoco.version>0.8.8</maven-jacoco.version>
-    <maven-jib.version>3.3.1</maven-jib.version>
+    <maven-jacoco.version>0.8.11</maven-jacoco.version>
+    <maven-jib.version>3.4.1</maven-jib.version>
 
     <sonar.language>java</sonar.language>
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
@@ -290,8 +290,8 @@
         <configuration>
           <from>
             <!-- Use hash to ensure truly reproducible builds
-https://hub.docker.com/layers/library/eclipse-temurin/17.0.5_8-jre-focal/images/sha256-00a5775f5eb7c24a19cb76ded742cbfcc50c61f062105af9730dadde217e4390?context=explore            -->
-            <image>eclipse-temurin:17.0.5_8-jre-focal@sha256:00a5775f5eb7c24a19cb76ded742cbfcc50c61f062105af9730dadde217e4390</image>
+https://hub.docker.com/layers/library/eclipse-temurin/17.0.10_7-jre-focal/images/sha256-491d0a884e751e5e2aa230933280401623a1962e0ed65137f3cc09665b645eab?context=explore           -->
+            <image>eclipse-temurin:17.0.10_7-jre-focal@sha256:491d0a884e751e5e2aa230933280401623a1962e0ed65137f3cc09665b645eab</image>
           </from>
           <to>
             <image>ghcr.io/ch-bj/lgs-person-data-processor-service</image>
