@@ -62,6 +62,14 @@ public class CommonHeadersDao {
     return getOptionalSenderId().orElseThrow(MessageHeaderMissingException::new);
   }
 
+  public Optional<String> getOptionalLandRegister() {
+    return getAsString(Headers.LAND_REGISTER);
+  }
+
+  public String getLandRegister() {
+    return getOptionalLandRegister().orElse(null);
+  }
+
   public Optional<UUID> getOptionalTransactionId() {
     return getAsString(Headers.TRANSACTION_ID).map(UUID::fromString);
   }
@@ -132,6 +140,7 @@ public class CommonHeadersDao {
         .jobState(header.getOptionalJobState().orElse(null))
         .jobType(header.getOptionalJobType().orElse(null))
         .senderId(header.getOptionalSenderId().orElse(null))
+        .landRegister(header.getLandRegister())
         .transactionId(header.getOptionalTransactionId().orElse(null))
         .transactionState(header.getOptionalTransactionState().orElse(null))
         .timestamp(header.getOptionalTimestamp().orElse(null));
@@ -142,6 +151,7 @@ public class CommonHeadersDao {
   public static class CommonHeaderBuilder {
     private MessageCategory messageCategory;
     private String senderId;
+    private String landRegister;
     private UUID jobId;
     private JobState jobState;
     private JobType jobType;
@@ -174,6 +184,7 @@ public class CommonHeadersDao {
       Optional.ofNullable(jobState).ifPresent(v -> newHeaders.put(Headers.JOB_STATE, v.toString()));
       Optional.ofNullable(jobType).ifPresent(v -> newHeaders.put(Headers.JOB_TYPE, v.toString()));
       Optional.ofNullable(senderId).ifPresent(v -> newHeaders.put(Headers.SENDER_ID, v));
+      Optional.ofNullable(landRegister).ifPresent(v -> newHeaders.put(Headers.LAND_REGISTER, v));
       Optional.ofNullable(transactionId)
           .ifPresent(v -> newHeaders.put(Headers.TRANSACTION_ID, v.toString()));
       Optional.ofNullable(transactionState)

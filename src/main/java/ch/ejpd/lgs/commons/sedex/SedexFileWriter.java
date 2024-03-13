@@ -6,6 +6,7 @@ import ch.ejpd.lgs.commons.sedex.model.SedexEnvelope;
 import ch.ejpd.lgs.searchindex.client.model.JobCollectedPersonData;
 import ch.ejpd.lgs.searchindex.client.model.JobMetaData;
 import ch.ejpd.lgs.searchindex.client.model.ProcessedPersonData;
+import ch.ejpd.lgs.searchindex.client.service.exception.SenderIdValidationException;
 import ch.ejpd.lgs.searchindex.client.service.exception.WritingSedexFilesFailedException;
 import com.ctc.wstx.stax.WstxInputFactory;
 import com.ctc.wstx.stax.WstxOutputFactory;
@@ -21,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -29,6 +31,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 
 @Slf4j
 public class SedexFileWriter {
@@ -107,6 +110,8 @@ public class SedexFileWriter {
     final File sedexPayloadFile = sedexDataFile(fileIdentifier);
     final Set<UUID> processedTransactions = new HashSet<>();
 
+    setLandRegisterInMetadata(jobCollectedPersonData, metaData);
+
     setupOutputFile(sedexPayloadFile);
 
     try (FileOutputStream fileOutputStream = new FileOutputStream(sedexPayloadFile)) {
@@ -136,5 +141,33 @@ public class SedexFileWriter {
       throw new WritingSedexFilesFailedException(
           WritingSedexFilesFailedException.FailureCause.FILE_WRITE_FAILED);
     }
+  }
+
+  private void setLandRegisterInMetadata(
+      JobCollectedPersonData jobCollectedPersonData, JobMetaData metaData) {
+    String landRegister = getLandRegister(jobCollectedPersonData.getProcessedPersonDataList());
+    if (!Strings.isBlank(landRegister)) {
+      metaData.setLandRegister(landRegister);
+    }
+  }
+
+  private String getLandRegister(List<ProcessedPersonData> processedPersonData) {
+    if (processedPersonData == null || processedPersonData.isEmpty()) {
+      return null;
+    }
+
+    long numberOfDistinctLandRegisters =
+        processedPersonData.parallelStream()
+            .map(ProcessedPersonData::getLandRegisterSafely)
+            .distinct()
+            .limit(2)
+            .count();
+
+    if (numberOfDistinctLandRegisters > 1) {
+      throw new SenderIdValidationException(
+          "Trying to process payload with more than one land register");
+    }
+
+    return processedPersonData.get(0).getLandRegister();
   }
 }

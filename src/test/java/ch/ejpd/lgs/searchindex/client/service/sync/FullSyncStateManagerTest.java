@@ -7,12 +7,13 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import ch.ejpd.lgs.searchindex.client.configuration.SedexConfiguration;
 import ch.ejpd.lgs.searchindex.client.entity.Setting;
+import ch.ejpd.lgs.searchindex.client.repository.LandRegisterRepository;
 import ch.ejpd.lgs.searchindex.client.repository.SettingRepository;
 import ch.ejpd.lgs.searchindex.client.service.amqp.QueueStatsService;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
 import ch.ejpd.lgs.searchindex.client.service.exception.StateChangeConflictingException;
+import ch.ejpd.lgs.searchindex.client.util.SenderUtil;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.*;
@@ -25,22 +26,21 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 @TestMethodOrder(OrderAnnotation.class)
 @ExtendWith(MockitoExtension.class)
 class FullSyncStateManagerTest {
+  private static final String SINGLE_SENDER_ID = "LGS-123-XYZ";
   @Mock private SettingRepository settingRepository;
+  @Mock private LandRegisterRepository landRegisterRepository;
   @Mock private RabbitAdmin rabbitAdmin;
   @Mock private QueueStatsService queueStatsService;
 
-  @Mock private SedexConfiguration sedexConfiguration;
+  @Mock private SenderUtil senderUtil;
 
   private FullSyncStateManager fullSyncStateManager;
 
   @BeforeEach
   void initialize() {
-    when(sedexConfiguration.getSedexSenderId()).thenReturn("LGS-123-XYZ");
-    when(sedexConfiguration.isInMultiSenderMode()).thenReturn(false);
-
     fullSyncStateManager =
         new FullSyncStateManager(
-            settingRepository, queueStatsService, rabbitAdmin, sedexConfiguration);
+            settingRepository, landRegisterRepository, queueStatsService, rabbitAdmin, senderUtil);
   }
 
   @AfterEach
@@ -105,6 +105,7 @@ class FullSyncStateManagerTest {
 
   @Test
   void submitFullSync() {
+    when(senderUtil.getSenderId(isNull())).thenReturn(SINGLE_SENDER_ID);
     fullSyncStateManager.startFullSync(null);
     assertThrows(StateChangeConflictingException.class, fullSyncStateManager::completedFullSync);
     assertThrows(
@@ -122,6 +123,7 @@ class FullSyncStateManagerTest {
 
   @Test
   void startSendingFullSync() {
+    when(senderUtil.getSenderId(isNull())).thenReturn(SINGLE_SENDER_ID);
     fullSyncStateManager.startFullSync(null);
     fullSyncStateManager.submitFullSync(null);
     assertThrows(StateChangeConflictingException.class, fullSyncStateManager::completedFullSync);
@@ -140,6 +142,7 @@ class FullSyncStateManagerTest {
 
   @Test
   void resetFullSync() {
+    when(senderUtil.getSenderId(isNull())).thenReturn(SINGLE_SENDER_ID);
     fullSyncStateManager.startFullSync(null);
     fullSyncStateManager.submitFullSync(null);
     fullSyncStateManager.startSendingFullSync();
@@ -157,6 +160,7 @@ class FullSyncStateManagerTest {
 
   @Test
   void forceResetFullSync() {
+    when(senderUtil.getSenderId(isNull())).thenReturn(SINGLE_SENDER_ID);
     fullSyncStateManager.startFullSync(null);
     fullSyncStateManager.submitFullSync(null);
     fullSyncStateManager.startSendingFullSync();
@@ -179,6 +183,7 @@ class FullSyncStateManagerTest {
 
   @Test
   void completedFullSync() {
+    when(senderUtil.getSenderId(isNull())).thenReturn(SINGLE_SENDER_ID);
     fullSyncStateManager.startFullSync(null);
     fullSyncStateManager.submitFullSync(null);
     fullSyncStateManager.startSendingFullSync();
@@ -194,6 +199,7 @@ class FullSyncStateManagerTest {
 
   @Test
   void failFullSync() {
+    when(senderUtil.getSenderId(isNull())).thenReturn(SINGLE_SENDER_ID);
     fullSyncStateManager.startFullSync(null);
     fullSyncStateManager.submitFullSync(null);
     fullSyncStateManager.startSendingFullSync();

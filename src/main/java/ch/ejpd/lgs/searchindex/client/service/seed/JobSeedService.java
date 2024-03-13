@@ -5,9 +5,8 @@ import ch.ejpd.lgs.searchindex.client.entity.type.JobType;
 import ch.ejpd.lgs.searchindex.client.entity.type.TransactionState;
 import ch.ejpd.lgs.searchindex.client.model.PersonData;
 import ch.ejpd.lgs.searchindex.client.service.amqp.*;
-import ch.ejpd.lgs.searchindex.client.service.exception.SenderIdValidationException;
 import ch.ejpd.lgs.searchindex.client.service.sync.FullSyncStateManager;
-import java.util.Set;
+import ch.ejpd.lgs.searchindex.client.util.SenderUtil;
 import java.util.UUID;
 import lombok.NonNull;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -19,23 +18,18 @@ public class JobSeedService {
   private final QueueStatsService queueStatsService;
   private final FullSyncStateManager fullSyncStateManager;
   private static final String EMPTY_PAYLOAD = "";
-
-  private final boolean isInMultiSenderMode;
-  private final Set<String> validSenderIds;
-  private final String singleSenderId;
+  private final SenderUtil senderUtil;
 
   public JobSeedService(
       QueueStatsService queueStatsService,
       RabbitTemplate rabbitTemplate,
       FullSyncStateManager fullSyncStateManager,
-      SedexConfiguration configuration) {
+      SedexConfiguration configuration,
+      SenderUtil senderUtil) {
     this.queueStatsService = queueStatsService;
     this.rabbitTemplate = rabbitTemplate;
     this.fullSyncStateManager = fullSyncStateManager;
-    this.singleSenderId = configuration.getSedexSenderId();
-    this.isInMultiSenderMode = configuration.isInMultiSenderMode();
-    this.validSenderIds =
-        this.isInMultiSenderMode ? configuration.getSedexSenderIds() : Set.of(this.singleSenderId);
+    this.senderUtil = senderUtil;
   }
 
   public UUID seedToPartial(@NonNull final String payload, final String senderId) {
@@ -44,36 +38,27 @@ public class JobSeedService {
         Topics.PERSONDATA_PARTIAL_INCOMING,
         JobType.PARTIAL,
         null,
-        validateOrDefaultSenderId(senderId));
+        senderUtil.getSenderId(senderId),
+        senderUtil.getLandRegister(senderId));
   }
 
   public UUID seedToFull(String payload, final String senderId) {
     if (fullSyncStateManager.isInStateSeeding()) {
+      String landRegister = senderUtil.getLandRegister(senderId);
       final UUID transactionId =
           seedToQueue(
               payload,
               Topics.PERSONDATA_FULL_INCOMING,
               JobType.FULL,
               fullSyncStateManager.getCurrentFullSyncJobId(),
-              validateOrDefaultSenderId(senderId));
+              senderUtil.getSenderId(senderId),
+              landRegister);
 
+      fullSyncStateManager.incLandRegisterMessageCounter(landRegister);
       fullSyncStateManager.incFullSeedMessageCounter();
       return transactionId;
     }
     return null;
-  }
-
-  private String validateOrDefaultSenderId(final String senderId) {
-    if (!isInMultiSenderMode && senderId == null) {
-      return singleSenderId;
-    }
-    if (validSenderIds.contains(senderId)) {
-      return senderId;
-    }
-    throw new SenderIdValidationException(
-        String.format(
-            "Validation of senderId failed, given senderId %s, valid senderId(s): %s.",
-            senderId, validSenderIds));
   }
 
   private UUID seedToQueue(
@@ -81,11 +66,13 @@ public class JobSeedService {
       final String topicName,
       final JobType jobType,
       final UUID jobId,
-      final String senderId) {
+      final String senderId,
+      final String landRegister) {
     final UUID transactionId = UUID.randomUUID();
     final CommonHeadersDao headers =
         CommonHeadersDao.builder()
             .senderId(senderId)
+            .landRegister(landRegister)
             .jobType(jobType)
             .jobId(jobId)
             .messageCategory(MessageCategory.TRANSACTION_EVENT)

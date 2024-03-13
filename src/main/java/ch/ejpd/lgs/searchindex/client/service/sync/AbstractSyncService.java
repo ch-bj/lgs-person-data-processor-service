@@ -1,6 +1,7 @@
 package ch.ejpd.lgs.searchindex.client.service.sync;
 
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 
 import ch.ejpd.lgs.searchindex.client.entity.type.JobState;
 import ch.ejpd.lgs.searchindex.client.entity.type.JobType;
@@ -9,9 +10,11 @@ import ch.ejpd.lgs.searchindex.client.model.ProcessedPersonData;
 import ch.ejpd.lgs.searchindex.client.service.amqp.CommonHeadersDao;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Exchanges;
 import ch.ejpd.lgs.searchindex.client.service.amqp.MessageCategory;
+import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
 import ch.ejpd.lgs.searchindex.client.service.exception.DeserializationFailedException;
 import ch.ejpd.lgs.searchindex.client.service.exception.SerializationFailedException;
 import ch.ejpd.lgs.searchindex.client.util.BinarySerializerUtil;
+import ch.ejpd.lgs.searchindex.client.util.SenderUtil;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.GetResponse;
@@ -22,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.amqp.rabbit.connection.Connection;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
@@ -34,9 +38,93 @@ public abstract class AbstractSyncService {
   private final RabbitTemplate rabbitTemplate;
   private final int pageSize;
 
-  protected AbstractSyncService(@NonNull RabbitTemplate rabbitTemplate, int pageSize) {
+  private final SenderUtil senderUtil;
+
+  protected AbstractSyncService(
+      @NonNull RabbitTemplate rabbitTemplate, int pageSize, SenderUtil senderUtil) {
     this.rabbitTemplate = rabbitTemplate;
     this.pageSize = pageSize;
+    this.senderUtil = senderUtil;
+  }
+
+  private int processFullQueueLandRegisters(
+      @NonNull final String outTopicName,
+      @NonNull final String senderId,
+      final UUID currentJobId,
+      final int page,
+      final int numProcessed,
+      List<ProcessedPersonData> processedPersonDataList,
+      Channel channel,
+      Map<String, Integer> landRegisterMapping)
+      throws IOException {
+    log.info("Start breaking Processed Person Data into Land Registers");
+    int countProcessed = 0;
+    Map<String, List<ProcessedPersonData>> personalDataByLandRegister =
+        processedPersonDataList.stream()
+            .collect(groupingBy(ProcessedPersonData::getLandRegisterSafely, toList()));
+
+    for (Map.Entry<String, List<ProcessedPersonData>> entry :
+        personalDataByLandRegister.entrySet()) {
+      List<ProcessedPersonData> processedPersonData = entry.getValue();
+      String landRegister = entry.getKey();
+      countProcessed += processedPersonData.size();
+
+      Integer numTotalForLandRegister = landRegisterMapping.get(landRegister);
+
+      final JobCollectedPersonData jobCollectedPersonData =
+          JobCollectedPersonData.builder()
+              .senderId(senderId)
+              .jobId(currentJobId)
+              .messageId(UUID.randomUUID())
+              .page(page)
+              .numProcessed(processedPersonData.size())
+              .numTotal(numTotalForLandRegister)
+              .processedPersonDataList(processedPersonData)
+              .build();
+
+      log.info(
+          "Sending paged transactions to topic {}. [jobId:{}; page:{}; numTransactions:{}; "
+              + "numProcessed: {}; numTotal: {}; landRegister: {}]",
+          outTopicName,
+          currentJobId,
+          page,
+          processedPersonData.size(),
+          numProcessed + processedPersonData.size(),
+          numTotalForLandRegister,
+          landRegister);
+      try {
+        final byte[] byteProcessedSedexPersonData =
+            BinarySerializerUtil.convertObjectToByteArray(jobCollectedPersonData);
+
+        final CommonHeadersDao headersDao =
+            CommonHeadersDao.builder()
+                .senderId(senderId)
+                .messageCategory(MessageCategory.JOB_EVENT)
+                .jobState(JobState.NEW)
+                .jobId(jobCollectedPersonData.getJobId())
+                .jobType(JobType.FULL)
+                .timestamp(Instant.now())
+                .build();
+
+        final BasicProperties properties =
+            (new BasicProperties.Builder())
+                .headers(headersDao.toMap())
+                .correlationId(jobCollectedPersonData.getJobId().toString())
+                .build();
+
+        channel.basicPublish(
+            Exchanges.LWGS, outTopicName, properties, byteProcessedSedexPersonData);
+
+      } catch (SerializationFailedException e) {
+        log.warn(
+            "Serialization of JobCollectedPersonData failed. Rolling back all transactions[{}]",
+            getTransactionIds(processedPersonDataList));
+        channel.txRollback();
+      }
+    }
+    channel.txCommit();
+
+    return countProcessed;
   }
 
   public int processFullQueuePaging(
@@ -46,7 +134,9 @@ public abstract class AbstractSyncService {
       final UUID currentJobId,
       final int page,
       final int numProcessed,
-      final int numTotal) {
+      final int numTotal,
+      final boolean isInMultiSenderMode,
+      Map<String, Integer> personDataPerRegister) {
     log.debug("Start processing queue {}, page: {}.", inQueueName, page);
 
     final UUID jobId = currentJobId != null ? currentJobId : UUID.randomUUID();
@@ -61,6 +151,25 @@ public abstract class AbstractSyncService {
           channel.txCommit(); // Commit rejected messages
           log.debug("Nothing to process. Returning.");
           return 0;
+        }
+
+        boolean isAnyLandRegisterSpecified =
+            !isInMultiSenderMode
+                && Queues.PERSONDATA_FULL_OUTGOING.equals(inQueueName)
+                && processedPersonDataList.stream()
+                    .map(ProcessedPersonData::getLandRegisterSafely)
+                    .anyMatch(Strings::isNotBlank);
+
+        if (isAnyLandRegisterSpecified) {
+          return processFullQueueLandRegisters(
+              outTopicName,
+              senderId,
+              currentJobId,
+              page,
+              numProcessed,
+              processedPersonDataList,
+              channel,
+              personDataPerRegister);
         }
 
         final JobCollectedPersonData jobCollectedPersonData =
@@ -190,13 +299,19 @@ public abstract class AbstractSyncService {
           }
 
           try {
+
+            boolean inMultiSenderMode = senderUtil.isInMultiSenderMode();
             final Map<String, List<ProcessedPersonData>> senderIdMappedProcessedPersonData =
-                processedPersonDataList.stream()
-                    .collect(groupingBy(ProcessedPersonData::getSenderId));
+                inMultiSenderMode
+                    ? processedPersonDataList.stream()
+                        .collect(groupingBy(ProcessedPersonData::getSenderId))
+                    : processedPersonDataList.stream()
+                        .collect(groupingBy(ProcessedPersonData::getLandRegisterSafely));
 
             for (Map.Entry<String, List<ProcessedPersonData>> entry :
                 senderIdMappedProcessedPersonData.entrySet()) {
-              sendPartialMessage(channel, outTopicName, entry.getKey(), entry.getValue());
+              String senderId = inMultiSenderMode ? entry.getKey() : senderUtil.getSingleSenderId();
+              sendPartialMessage(channel, outTopicName, senderId, entry.getValue());
             }
 
           } catch (SerializationFailedException e) {

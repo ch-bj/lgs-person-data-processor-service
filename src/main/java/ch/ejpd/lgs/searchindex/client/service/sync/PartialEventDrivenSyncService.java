@@ -5,6 +5,7 @@ import ch.ejpd.lgs.searchindex.client.model.ProcessedPersonData;
 import ch.ejpd.lgs.searchindex.client.service.amqp.CommonHeadersDao;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Queues;
 import ch.ejpd.lgs.searchindex.client.service.amqp.Topics;
+import ch.ejpd.lgs.searchindex.client.util.SenderUtil;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -14,8 +15,9 @@ import org.springframework.messaging.handler.annotation.Payload;
 
 @Slf4j
 public class PartialEventDrivenSyncService extends AbstractSyncService {
-  public PartialEventDrivenSyncService(RabbitTemplate template, int pageSize) {
-    super(template, pageSize);
+  public PartialEventDrivenSyncService(
+      RabbitTemplate template, int pageSize, SenderUtil senderUtil) {
+    super(template, pageSize, senderUtil);
   }
 
   @RabbitListener(queues = Queues.PERSONDATA_PARTIAL_OUTGOING)

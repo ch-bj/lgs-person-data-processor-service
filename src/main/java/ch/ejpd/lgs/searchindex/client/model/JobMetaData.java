@@ -12,4 +12,6 @@ public class JobMetaData {
   private final UUID jobId;
   private final int pageNr;
   private final boolean isLastPage;
+  private String landRegister;
+  private final String version;
 }
