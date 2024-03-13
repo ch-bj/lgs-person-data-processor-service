@@ -38,6 +38,12 @@ services:
       resources:
         limits:
           memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-fH", "Authorization: token ${REST_API_KEY}", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   postgres:
     image: 'postgres:15-alpine'
     restart: always
@@ -55,6 +61,12 @@ services:
       resources:
         limits:
           memory: 1G
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   rabbitmq:
     image: rabbitmq:3-management-alpine
     restart: always
@@ -75,6 +87,12 @@ services:
       resources:
         limits:
           memory: 4G
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   prometheus:
     image: prom/prometheus
     restart: always
@@ -89,6 +107,12 @@ services:
       resources:
         limits:
           memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   grafana:
     image: grafana/grafana
     restart: always
@@ -110,6 +134,12 @@ services:
       resources:
         limits:
           memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   log_data: {}

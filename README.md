@@ -13,11 +13,22 @@ partial syncs.
 
 ### Interface to the Application
 
+A documentation of the API interfaces can be found in the Swagger UI after the application is started:
+
+http://localhost:8080/swagger-ui/index.html
+
 
 ### The LWGS Person Data Processor Service
 
 
 ### Connection to the Central LWGS Index
+
+
+### Healthchecks
+
+The basic healthchecks to verify that each service is properly bootstrapped and its dependencies are available, are implemented in the [docker-compose.yml](docker-compose.yml) of this repository.
+
+For further information on how to monitor each service, please refer to the official documentation of each product.
 
 
 ## Using the LWGS Person Data Processor Service
