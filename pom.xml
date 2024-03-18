@@ -31,7 +31,7 @@
     <postgresql.version>42.7.2</postgresql.version>
     <commons-io.version>2.11.0</commons-io.version>
 
-    <testcontainers.version>1.17.6</testcontainers.version>
+    <testcontainers.version>1.19.7</testcontainers.version>
 
     <maven-fmt.version>2.19</maven-fmt.version>
     <maven-jacoco.version>0.8.11</maven-jacoco.version>
