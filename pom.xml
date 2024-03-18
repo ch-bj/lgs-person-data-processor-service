@@ -33,7 +33,7 @@
 
     <testcontainers.version>1.17.6</testcontainers.version>
 
-    <maven-fmt.version>2.19</maven-fmt.version>
+    <maven-fmt.version>2.23</maven-fmt.version>
     <maven-jacoco.version>0.8.11</maven-jacoco.version>
     <maven-jib.version>3.4.1</maven-jib.version>
 
