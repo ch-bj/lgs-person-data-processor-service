@@ -62,7 +62,7 @@ jobs:
           mkdir -p release
           cp -r README.md COPYRIGHT LICENSE doc docker docker-compose.yml release/
       - name: Download artefact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: lgs-person-data-processor-service-artifacts
           path: ./release/
